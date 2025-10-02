@@ -1,0 +1,89 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    color: #212529;
+}
+
+.topbar {
+    position: sticky;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: bold;
+}
+
+header h1 {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    ;
+    margin-bottom: 0.5rem;
+    color: rgb(0, 0, 0);
+
+    #font span:nth-child(1) {
+        color: red;
+    }
+
+    #font span:nth-child(2) {
+        color: green;
+    }
+
+    #font span:nth-child(3) {
+        color: blue;
+    }
+
+}
+
+/* Logos */
+.top-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+}
+
+/* Page Title */
+h2 {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease-in-out;
+}
+
+.back-link:hover {
+    color: #dc3545;
+}
+
+@media (max-width: 576px) {
+
+    .table th,
+    .table td {
+        font-size: 0.85rem;
+    }
+
+    .btn-sm {
+        font-size: 0.75rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+}

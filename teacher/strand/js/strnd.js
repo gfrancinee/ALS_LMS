@@ -1,0 +1,566 @@
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Get the user role from the global variable we set in the PHP file
+    const userRole = window.userRole;
+
+    // SECTION 1: ELEMENT REFERENCES
+    const strandId = window.strandId;
+
+    // Modals
+    const uploadModal = document.getElementById('uploadModal');
+    const editModal = document.getElementById('editMaterialModal');
+    const assessmentModal = document.getElementById('assessmentModal');
+    const questionsModal = document.getElementById('questionsModal');
+    const participantModal = document.getElementById('participantModal');
+    const mediaModal = document.getElementById('mediaModal');
+
+    // Forms, Containers & Alerts
+    const uploadForm = document.getElementById('materialUploadForm');
+    const editForm = document.querySelector('#editMaterialModal form');
+    const assessmentForm = document.getElementById('assessmentForm');
+    const assessmentListContainer = document.getElementById('assessmentList');
+    const participantListContainer = document.getElementById('participantList');
+    const assessmentAlert = document.getElementById('assessmentAlert');
+    const questionForm = document.querySelector('#questionsModal form');
+    const uploadAlert = document.getElementById('uploadAlert');
+    const uploadAlertModal = document.getElementById('uploadAlertModal');
+
+    // Participant Modal Elements
+    const addSelectedStudentsBtn = document.getElementById('addSelectedStudentsBtn');
+    const studentSearchInput = document.getElementById('studentSearchInput');
+
+    // Material Upload Elements
+    const materialType = document.getElementById('materialType');
+    const inputContainer = document.getElementById('materialInputContainer');
+
+    // Question Builder Elements
+    const formBuilder = document.getElementById("formBuilder");
+    const addQuestionBtn = document.getElementById("addQuestionBtn");
+    const questionTemplate = document.getElementById("questionTemplate");
+
+    // SECTION 2: FUNCTIONS
+    // --- Materials ---
+    function injectMaterialInput() {
+        if (!materialType || !inputContainer) return;
+        const type = materialType.value;
+        inputContainer.innerHTML = '';
+        if (type === 'link') {
+            inputContainer.innerHTML = `<label for="materialLink" class="form-label">URL</label><input type="url" id="materialLink" name="materialLink" class="form-control" placeholder="https://example.com" required>`;
+        } else if (type) {
+            inputContainer.innerHTML = `<label for="materialFile" class="form-label">Upload ${type.charAt(0).toUpperCase() + type.slice(1)}</label><input type="file" id="materialFile" name="materialFile" class="form-control" accept="${getAcceptType(type)}" required>`;
+        }
+    }
+
+    function getAcceptType(type) {
+        switch (type) {
+            case 'file': return '.pdf,.doc,.docx,.ppt,.pptx';
+            case 'video': return 'video/*';
+            case 'image': return 'image/*';
+            case 'audio': return 'audio/*';
+            default: return '*/*';
+        }
+    }
+
+    // --- AJAX Refresh Functions ---
+    window.refreshMaterialList = function () {
+        location.reload();
+    };
+
+    window.refreshAssessmentList = function () {
+        if (!strandId || !assessmentListContainer) return;
+        fetch(`../../ajax/get-assessments.php?strand_id=${strandId}`)
+            .then(r => r.text()).then(html => {
+                assessmentListContainer.innerHTML = html;
+            }).catch(err => console.error('Failed to refresh assessments:', err));
+    };
+
+    // --- Question Builder ---
+    if (formBuilder && addQuestionBtn && questionTemplate) {
+        function refreshIndices() {
+            Array.from(formBuilder.children).forEach((blk, i) => {
+                blk.querySelector(".q-index").textContent = i + 1;
+            });
+        }
+        function buildAnswerArea(block, type) {
+            const area = block.querySelector(".answer-area");
+            area.innerHTML = "";
+            if (type === "mcq") {
+                for (let i = 0; i < 4; i++) {
+                    const opt = document.createElement("div");
+                    opt.className = "input-group mb-2";
+                    opt.innerHTML = `<span class="input-group-text">${String.fromCharCode(65 + i)}</span><input type="text" class="form-control" name="options[]" placeholder="Option ${i + 1}">`;
+                    area.appendChild(opt);
+                }
+                area.innerHTML += `<label class="form-label mt-2">Correct Answer</label><select class="form-select" name="correct_answer" required><option value="">Select</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>`;
+            } else if (type === "true_false") {
+                area.innerHTML = `<label class="form-label">Correct Answer</label><select class="form-select" name="correct_answer" required><option value="">Select</option><option value="True">True</option><option value="False">False</option></select>`;
+            } else if (type === "short_answer" || type === "essay") {
+                area.innerHTML = `<label class="form-label">Expected Answer</label><input type="text" class="form-control" name="correct_answer" placeholder="Enter correct answer (optional)">`;
+            }
+        }
+        function addQuestion() {
+            const clone = questionTemplate.content.cloneNode(true);
+            const block = clone.querySelector(".question-block");
+            block.querySelector(".remove-question").addEventListener("click", () => { block.remove(); refreshIndices(); });
+            block.querySelector(".move-up").addEventListener("click", () => { if (block.previousElementSibling) { formBuilder.insertBefore(block, block.previousElementSibling); refreshIndices(); } });
+            block.querySelector(".move-down").addEventListener("click", () => { if (block.nextElementSibling) { formBuilder.insertBefore(block.nextElementSibling, block); refreshIndices(); } });
+            const typeSelect = block.querySelector(".question-type");
+            typeSelect.addEventListener("change", () => buildAnswerArea(block, typeSelect.value));
+            formBuilder.appendChild(clone);
+            refreshIndices();
+        }
+        addQuestionBtn.addEventListener("click", addQuestion);
+    }
+
+    // --- Participants Functions ---
+    // 1. The corrected displayParticipants function
+    function displayParticipants(participants) {
+        const listContainer = document.getElementById('participantList');
+        listContainer.innerHTML = ''; // Clear existing list
+
+        if (participants.length === 0) {
+            listContainer.innerHTML = '<div class="alert alert-info">No participants have been added to this strand yet.</div>';
+            return;
+        }
+
+        participants.forEach(participant => {
+            let avatarSrc = participant.avatar_url ? `../../${participant.avatar_url}` : 'icon';
+            const adminLabel = participant.role === 'admin' ? '<span class="badge bg-success ms-2">Admin</span>' : '';
+
+            const participantHtml = `
+                <div class="card mb-2 participant-card">
+                    <div class="card-body d-flex justify-content-between align-items-center py-2">
+                        <div class="d-flex align-items-center">
+                            ${avatarSrc !== 'icon'
+                    ? `<img src="${avatarSrc}" class="rounded-circle me-3" alt="Avatar" width="40" height="40" style="object-fit: cover;">`
+                    : `<i class="bi bi-person-circle me-3" style="font-size: 40px; color: #6c757d;"></i>`
+                }
+                            <div>
+                                <h6 class="mb-0">${participant.fname} ${participant.lname} ${adminLabel}</h6>
+                            </div>
+                        </div>
+                        <div>
+                            ${participant.role !== 'admin'
+                    ? `<button class="btn btn-sm btn-outline-danger remove-participant-btn" data-participant-id="${participant.participant_id}"><i class="bi bi-trash"></i> Remove</button>`
+                    : ''
+                }
+                        </div>
+                    </div>
+                </div>
+            `;
+            listContainer.insertAdjacentHTML('beforeend', participantHtml);
+        });
+    }
+
+    // 2. The refreshParticipantList function
+    async function refreshParticipantList() {
+        if (!participantListContainer) return;
+        participantListContainer.innerHTML = '<p>Loading participants...</p>';
+        try {
+            // --- CORRECTED PATH: Go up TWO levels to the root ---
+            const response = await fetch(`../../ajax/get_strand_participants.php?strand_id=${strandId}`);
+            const participants = await response.json();
+            if (participants.error) throw new Error(participants.error);
+            displayParticipants(participants);
+        } catch (error) {
+            console.error('Failed to refresh participant list:', error);
+            participantListContainer.innerHTML = '<p class="text-danger">Could not load participant list.</p>';
+        }
+    }
+
+
+    // 3. The loadAvailableStudents function (this one is likely okay, but included for completeness)
+    async function loadAvailableStudents() {
+        const studentListContainer = document.getElementById('availableStudentsList');
+        studentListContainer.innerHTML = '<p>Loading students...</p>';
+        try {
+            const response = await fetch(`../../ajax/get_available_students.php?strand_id=${window.strandId}`);
+            const students = await response.json();
+            if (students.error) throw new Error(students.error);
+
+            if (students.length === 0) {
+                studentListContainer.innerHTML = '<p>No new students are available to add.</p>';
+                return;
+            }
+
+            let html = students.map(s => `
+            <div class="form-check student-item">
+                <input class="form-check-input" type="checkbox" value="${s.id}" id="student-${s.id}">
+                <label class="form-check-label" for="student-${s.id}">${s.fname} ${s.lname}</label>
+            </div>`).join('');
+            studentListContainer.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to load students:', error);
+            studentListContainer.innerHTML = '<p class="text-danger">Could not load student list.</p>';
+        }
+    }
+
+    // SECTION 3: EVENT LISTENERS
+    // --- Material Listeners ---
+    if (materialType) materialType.addEventListener('change', injectMaterialInput);
+    if (uploadModal) uploadModal.addEventListener('shown.bs.modal', injectMaterialInput);
+
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const fd = new FormData(this);
+            fetch('../../ajax/upload_material.php', { method: 'POST', body: fd })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        bootstrap.Modal.getInstance(uploadModal).hide();
+                        refreshMaterialList();
+                    } else { alert(data.message); }
+                }).catch(err => console.error(err));
+        });
+    }
+
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const id = button.getAttribute('data-id');
+            const label = button.getAttribute('data-label');
+            const type = button.getAttribute('data-type');
+            const filePath = button.getAttribute('data-file');
+            const linkUrl = button.getAttribute('data-link');
+            editModal.querySelector('#edit-id').value = id;
+            editModal.querySelector('#edit-label').value = label;
+            editModal.querySelector('#edit-type').value = type;
+            const container = editModal.querySelector('#edit-materialInputContainer');
+            container.innerHTML = '';
+            if (type === 'link') {
+                container.innerHTML = `<label for="edit-link" class="form-label">Material Link</label><input type="url" class="form-control" id="edit-link" name="link" value="${linkUrl || ''}" required>`;
+            } else {
+                container.innerHTML = `<label class="form-label">Replace File</label><input type="file" class="form-control" name="file">${filePath ? `<small class="text-muted">Current: <a href="${filePath}" target="_blank">View</a></small>` : ''}`;
+            }
+        });
+    }
+
+    if (editForm) {
+        editForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const fd = new FormData(this);
+            fetch('../../ajax/update_material.php', { method: 'POST', body: fd })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        bootstrap.Modal.getInstance(editModal).hide();
+                        refreshMaterialList();
+                    } else { alert(data.message); }
+                }).catch(err => alert("Update failed. Please try again."));
+        });
+    }
+
+    // --- Assessment Listener ---
+    if (assessmentForm) {
+        assessmentForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fetch('../../ajax/save-assessment.php', { method: 'POST', body: new FormData(assessmentForm) })
+                .then(r => r.json()).then(data => {
+                    if (data.status === 'success') {
+                        bootstrap.Modal.getInstance(assessmentModal).hide();
+                        refreshAssessmentList();
+                    } else { alert(data.message); }
+                }).catch(err => console.error(err));
+        });
+    }
+
+    // --- QUESTIONS modal — populate hidden inputs before open ---
+    if (questionsModal) {
+        questionsModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const assessmentId = button.getAttribute('data-assessment-id');
+
+            console.log("The assessment ID from the clicked button is:", assessmentId);
+
+            const assessmentInput = document.getElementById('assessmentIdInput');
+            const strandInput = document.getElementById('questionStrandId');
+
+            if (assessmentInput) {
+                assessmentInput.value = assessmentId;
+            }
+            if (strandInput) {
+                strandInput.value = window.strandId;
+            }
+        });
+    }
+
+    // --- Save Questions Listener ---
+    if (questionForm) {
+        questionForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const assessmentId = this.querySelector('#assessmentIdInput').value;
+            const questionBlocks = this.querySelectorAll('.question-block');
+            const questionsData = [];
+
+            questionBlocks.forEach(block => {
+                const questionText = block.querySelector('.question-text').value;
+                const questionType = block.querySelector('.question-type').value;
+
+                let options = [];
+                if (questionType === 'mcq') {
+                    block.querySelectorAll('input[name="options[]"]').forEach(opt => {
+                        options.push(opt.value);
+                    });
+                }
+
+                const correctAnswerSelect = block.querySelector('select[name="correct_answer"]');
+                const correctAnswerInput = block.querySelector('input[name="correct_answer"]');
+                const correctAnswer = correctAnswerSelect ? correctAnswerSelect.value : (correctAnswerInput ? correctAnswerInput.value : null);
+
+                // Basic validation to ensure question text is not empty
+                if (questionText.trim() !== '') {
+                    questionsData.push({
+                        text: questionText,
+                        type: questionType,
+                        options: options,
+                        answer: correctAnswer
+                    });
+                }
+            });
+
+            // Prepare data for sending
+            const dataToSend = {
+                strand_id: window.strandId,
+                assessment_id: assessmentId,
+                questions: questionsData
+            };
+
+            try {
+                const response = await fetch('../../ajax/save_questions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSend)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    alert(result.message);
+                    bootstrap.Modal.getInstance(questionsModal).hide();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Failed to save questions:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+    }
+
+    // --- Populates the Question Modal with the correct Assessment ID ---
+    if (questionsModal) {
+        questionsModal.addEventListener('show.bs.modal', function (event) {
+            // Get the button that triggered the modal
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            // Extract the assessment ID from the button's data-assessment-id attribute
+            const assessmentId = button.getAttribute('data-assessment-id');
+
+            // Find the hidden input field inside the modal's form
+            const assessmentInput = document.getElementById('assessmentIdInput');
+
+            // Set the value of the hidden input
+            if (assessmentInput) {
+                assessmentInput.value = assessmentId;
+            }
+        });
+    }
+
+    // --- Universal Media Modal Listener ---
+    if (mediaModal) {
+        // This event fires just before the modal is shown
+        mediaModal.addEventListener('show.bs.modal', function (event) {
+            // Get the icon link that was clicked to open the modal
+            const button = event.relatedTarget;
+
+            // Extract the data we stored in the link's data-* attributes
+            const type = button.getAttribute('data-type');
+            const url = button.getAttribute('data-url');
+            const label = button.getAttribute('data-label');
+
+            // Get the elements inside the modal that we need to update
+            const modalTitle = document.getElementById('mediaModalLabel');
+            const modalBody = document.getElementById('mediaModalBody');
+            const downloadLink = document.getElementById('mediaDownloadLink');
+
+            // 1. Update the modal's title
+            modalTitle.textContent = label;
+
+            let contentHTML = '';
+
+            // 2. Build the correct HTML content based on the media type
+            switch (type) {
+                case 'image':
+                    contentHTML = `<img src="${url}" class="img-fluid w-100" alt="${label}">`;
+                    downloadLink.style.display = 'inline-block';
+                    break;
+                case 'video':
+                    contentHTML = `<video controls autoplay class="w-100" style="max-height: 70vh;"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+                    downloadLink.style.display = 'inline-block';
+                    break;
+                case 'audio':
+                    contentHTML = `<audio controls autoplay class="w-100"><source src="${url}" type="audio/mpeg">Your browser does not support the audio element.</audio>`;
+                    downloadLink.style.display = 'inline-block';
+                    break;
+                case 'file': // For PDFs
+                    contentHTML = `<iframe src="${url}" style="width:100%; height:75vh; border:0;"></iframe>`;
+                    downloadLink.style.display = 'inline-block';
+                    break;
+                default:
+                    contentHTML = `<p class="text-center">Cannot preview this file type.</p>`;
+                    downloadLink.style.display = 'none'; // Hide download for unknown types
+            }
+
+            // 3. Inject the new content and update the download link
+            modalBody.innerHTML = contentHTML;
+            downloadLink.href = url;
+        });
+
+        // Deleting a learning material modal
+        const deleteMaterialModal = document.getElementById('deleteMaterialModal');
+        let materialIdToDelete = null; // Variable to hold the ID
+        let materialCardToDelete = null; // Variable to hold the card element
+
+        if (deleteMaterialModal) {
+            // 1. When the modal is about to be shown, grab the material ID
+            deleteMaterialModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                materialIdToDelete = button.getAttribute('data-bs-id');
+                materialCardToDelete = button.closest('.card');
+            });
+
+            // 2. When the final "Yes, Delete" button is clicked
+            const confirmBtn = document.getElementById('confirmDeleteMaterialBtn');
+            confirmBtn.addEventListener('click', function () {
+                if (materialIdToDelete) {
+                    // Send the request to the server
+                    fetch('ajax/delete_material.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'material_id=' + materialIdToDelete
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // If successful, remove the card from the page
+                                if (materialCardToDelete) {
+                                    materialCardToDelete.remove();
+                                }
+                                // Hide the modal
+                                const modalInstance = bootstrap.Modal.getInstance(deleteMaterialModal);
+                                modalInstance.hide();
+                            } else {
+                                alert('Error: ' + (data.message || 'Could not delete the material.'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred. Please try again.');
+                        });
+                }
+            });
+        }
+
+        // --- Participant Listeners ---
+        if (participantModal) {
+            participantModal.addEventListener('show.bs.modal', loadAvailableStudents);
+        }
+
+        if (studentSearchInput) {
+            studentSearchInput.addEventListener('keyup', () => {
+                const filter = studentSearchInput.value.toLowerCase();
+                document.querySelectorAll('.student-item').forEach(item => {
+                    const label = item.querySelector('label').textContent.toLowerCase();
+                    item.style.display = label.includes(filter) ? '' : 'none';
+                });
+            });
+        }
+
+        if (addSelectedStudentsBtn) {
+            addSelectedStudentsBtn.addEventListener('click', async () => {
+                const selectedIds = Array.from(document.querySelectorAll('#availableStudentsList .form-check-input:checked')).map(cb => cb.value);
+                if (selectedIds.length === 0) {
+                    alert('Please select at least one student.');
+                    return;
+                }
+                try {
+                    const response = await fetch('../../ajax/add_participant.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ strand_id: window.strandId, student_ids: selectedIds })
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        alert(result.message);
+                        bootstrap.Modal.getInstance(participantModal).hide();
+                        refreshParticipantList();
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error('Failed to add participants:', error);
+                    alert('An error occurred while adding participants.');
+                }
+            });
+        }
+
+        if (participantListContainer) {
+            participantListContainer.addEventListener('click', async (event) => {
+                const button = event.target.closest('.remove-participant-btn');
+                if (button) {
+                    const participantId = button.dataset.participantId; // Correctly get the participantId
+                    if (confirm('Are you sure you want to remove this participant?')) {
+                        try {
+                            const response = await fetch('../../ajax/remove_participant.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ strand_id: window.strandId, participant_id: participantId }) // Correctly send participant_id
+                            });
+
+                            const result = await response.json();
+                            if (result.status === 'success') {
+                                refreshParticipantList();
+                            } else {
+                                throw new Error(result.message);
+                            }
+                        } catch (error) {
+                            console.error('Failed to remove participant:', error);
+                            alert('An error occurred while removing the participant.');
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. IMPORTANT: This event fires when the modal is closed
+        mediaModal.addEventListener('hide.bs.modal', function () {
+            const modalBody = document.getElementById('mediaModalBody');
+            // This clears the content, stopping any video or audio from playing in the background
+            modalBody.innerHTML = '';
+        });
+    }
+
+    // ======================================================
+    // SECTION 4: INITIAL PAGE LOAD & TAB CONTROLS
+    // ======================================================
+    const assessmentsTabBtn = document.querySelector('a[href="#assessments"]');
+    if (assessmentsTabBtn) {
+        refreshAssessmentList();
+        assessmentsTabBtn.addEventListener('shown.bs.tab', refreshAssessmentList);
+    }
+
+    const participantsTabBtn = document.querySelector('a[href="#participants"]');
+    if (participantsTabBtn) {
+        participantsTabBtn.addEventListener('shown.bs.tab', refreshParticipantList);
+        // If the tab is already active on page load, refresh the list
+        if (document.querySelector('#participants').classList.contains('active')) {
+            refreshParticipantList();
+        }
+    }
+
+});

@@ -1,0 +1,10 @@
+Array
+(
+    [id] => 1
+    [strand_title] => Practical Research
+    [strand_code] => PR2-G12
+    [grade_level] => Grade 12
+    [creator_id] => 10
+    [description] => learning strand
+    [date_created] => 2025-09-11 23:13:47
+)

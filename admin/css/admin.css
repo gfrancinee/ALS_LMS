@@ -1,0 +1,107 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+}
+
+/* Topbar */
+.topbar {
+    position: sticky;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: bold;
+}
+
+header h1 {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    ;
+    margin-bottom: 0.5rem;
+    color: rgb(0, 0, 0);
+
+    #font span:nth-child(1) {
+        color: red;
+    }
+
+    #font span:nth-child(2) {
+        color: green;
+    }
+
+    #font span:nth-child(3) {
+        color: blue;
+    }
+
+}
+
+/* Logos */
+.top-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+}
+
+/* Center the main content fluidly */
+main.text-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    color: black;
+    margin-top: 50px;
+}
+
+/* Style all dark outline buttons uniformly */
+.solid-btn {
+    background-color: #eaeaea;
+    /* Bootstrap dark */
+    color: #000000;
+    border: none;
+    transition: all 0.2s ease;
+    text-align: center;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Red hover effect */
+.solid-btn:hover,
+.solid-btn:focus {
+    background-color: #dc3545;
+    /* Bootstrap red */
+    border-color: #dc3545;
+    color: #fff;
+    text-decoration: none;
+}
+
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .sidebar {
+        padding: 1rem;
+    }
+
+    main {
+        padding: 1rem;
+    }
+}
