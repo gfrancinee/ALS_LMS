@@ -1,0 +1,17 @@
+# Ignore media files
+*.mp4
+*.jpg
+*.png
+
+# Ignore debug logs and temp files
+*.log
+*.tmp
+debug_*.txt
+
+# Ignore IDE settings
+.vscode/
+.DS_Store
+
+# Ignore uploads folder
+uploads/
+strand/video/
