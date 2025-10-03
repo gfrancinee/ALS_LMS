@@ -66,14 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         location.reload();
     };
 
-    window.refreshAssessmentList = function () {
-        if (!strandId || !assessmentListContainer) return;
-        fetch(`../ajax/get-assessments.php?strand_id=${strandId}`)
-            .then(r => r.text()).then(html => {
-                assessmentListContainer.innerHTML = html;
-            }).catch(err => console.error('Failed to refresh assessments:', err));
-    };
-
     // --- Question Builder ---
     if (formBuilder && addQuestionBtn && questionTemplate) {
         function refreshIndices() {
@@ -110,6 +102,28 @@ document.addEventListener('DOMContentLoaded', () => {
             refreshIndices();
         }
         addQuestionBtn.addEventListener("click", addQuestion);
+    }
+
+    // --- Refresh Assessment List ---
+    async function refreshAssessmentList() {
+        try {
+            // This line requires window.strandId to be set in your strand.php file
+            const response = await fetch(`../ajax/get-assessments.php?strand_id=${window.strandId}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok.');
+            }
+            const html = await response.text();
+            const assessmentList = document.getElementById('assessmentList');
+            if (assessmentList) {
+                assessmentList.innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Failed to refresh assessment list:', error);
+            const assessmentList = document.getElementById('assessmentList');
+            if (assessmentList) {
+                assessmentList.innerHTML = '<div class="alert alert-danger">Error loading assessments.</div>';
+            }
+        }
     }
 
     // --- Participants Functions ---
@@ -339,23 +353,118 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    assessmentList.addEventListener('click', async (e) => {
-        if (e.target.classList.contains('toggle-status-btn')) {
-            const id = e.target.dataset.id;
-            const status = e.target.dataset.status;
+    // Listener for submitting the EDIT Assessment Form
+    const editAssessmentForm = document.getElementById('editAssessmentForm');
+    if (editAssessmentForm) {
+        editAssessmentForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // This is the line that prevents the page from reloading
+
+            const id = document.getElementById('editAssessmentId').value;
+            const title = document.getElementById('editAssessmentTitle').value;
+            const description = document.getElementById('editAssessmentDesc').value;
+            const duration = document.getElementById('editAssessmentDuration').value;
+            const attempts = document.getElementById('editAssessmentAttempts').value;
 
             try {
-                const response = await fetch('../ajax/toggle_assessment_status.php', {
+                const response = await fetch('../ajax/update_assessment.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id, status: status })
+                    body: JSON.stringify({
+                        id: id,
+                        title: title,
+                        description: description,
+                        duration: duration,
+                        attempts: attempts
+                    })
                 });
                 const result = await response.json();
                 if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('editAssessmentModal')).hide();
                     refreshAssessmentList();
+                } else {
+                    alert('Error updating assessment: ' + result.message);
                 }
             } catch (error) {
-                console.error('Error toggling status:', error);
+                console.error('Error updating assessment:', error);
+                alert('An error occurred while updating the assessment.');
+            }
+        });
+    }
+
+    // This single listener now handles all clicks (Edit, Open/Close, Delete) inside the assessment list
+    const assessmentList = document.getElementById('assessmentList');
+    if (assessmentList) {
+        assessmentList.addEventListener('click', async (e) => {
+
+            const button = e.target.closest('button'); // Get the button element
+            if (!button) return; // Exit if the click was not on a button
+
+            // Check if the OPEN/CLOSE button was clicked
+            if (button.classList.contains('toggle-status-btn')) {
+                const id = button.dataset.id;
+                const status = button.dataset.status;
+                try {
+                    const response = await fetch('../ajax/toggle_assessment_status.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: id, status: status })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        refreshAssessmentList();
+                    }
+                } catch (error) {
+                    console.error('Error toggling status:', error);
+                }
+            }
+
+            // Check if the EDIT button was clicked
+            else if (button.classList.contains('edit-assessment-btn')) {
+                document.getElementById('editAssessmentId').value = button.dataset.id;
+                document.getElementById('editAssessmentTitle').value = button.dataset.title;
+                document.getElementById('editAssessmentDesc').value = button.dataset.description;
+                document.getElementById('editAssessmentDuration').value = button.dataset.duration;
+                document.getElementById('editAssessmentAttempts').value = button.dataset.maxAttempts;
+            }
+
+            // Check if the DELETE button was clicked
+            else if (button.classList.contains('delete-assessment')) {
+                const id = button.dataset.id;
+                if (confirm('Are you sure you want to delete this assessment? This cannot be undone.')) {
+                    try {
+                        const response = await fetch('../ajax/delete_assessment.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: id })
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            refreshAssessmentList();
+                        } else {
+                            alert('Error: ' + result.message);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting assessment:', error);
+                    }
+                }
+            }
+        });
+    }
+
+    // Listener for the "View Attempts"
+    assessmentList.addEventListener('click', async (e) => {
+        const button = e.target.closest('.view-attempts-btn');
+        if (button) {
+            const assessmentId = button.dataset.id;
+            const container = document.getElementById('attemptsListContainer');
+
+            try {
+                const response = await fetch(`../ajax/get_attempts.php?assessment_id=${assessmentId}`);
+                const html = await response.text();
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to fetch attempts:', error);
+                container.innerHTML = '<div class="alert alert-danger">Could not load scores.</div>';
             }
         }
     });

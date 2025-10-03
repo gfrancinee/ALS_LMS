@@ -49,6 +49,11 @@ $materials = $materials_stmt->get_result();
 </head>
 
 <body>
+    <script>
+        // This makes the current strand ID available to all JavaScript files
+        window.strandId = <?= json_encode($strand_id); ?>;
+    </script>
+
     <?php
     // Determine the correct "Back" link based on the user's role
     $back_link = '/ALS_LMS/index.php'; // Default link
@@ -129,7 +134,7 @@ $materials = $materials_stmt->get_result();
                                             <small class="text-muted">Uploaded: <?= date("F j, Y", strtotime($mat['uploaded_at'])) ?></small>
                                         </div>
 
-                                        <?php // The Edit/Delete menu is already correctly hidden from students 
+                                        <?php // The Edit/Delete menu is hidden from students 
                                         ?>
                                         <?php if ($_SESSION['role'] === 'teacher'): ?>
                                             <div class="dropdown">
@@ -406,7 +411,7 @@ $materials = $materials_stmt->get_result();
                             </div>
 
                             <div class="mb-3">
-                                <label for="assessmentDesc" class="form-label">Description / Instructions</label>
+                                <label for="assessmentDesc" class="form-label">Description</label>
                                 <textarea class="form-control" id="assessmentDesc" rows="3"></textarea>
                             </div>
 
@@ -506,6 +511,63 @@ $materials = $materials_stmt->get_result();
                 <div class="answer-area"></div>
             </div>
         </template>
+        <!-- Edit assessment modal ↓ -->
+        <div class="modal fade" id="editAssessmentModal" tabindex="-1" aria-labelledby="editAssessmentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="editAssessmentForm">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editAssessmentModalLabel">Edit Assessment</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="editAssessmentId" name="assessment_id">
+                            <div class="mb-3">
+                                <label for="editAssessmentTitle" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="editAssessmentTitle" name="title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editAssessmentDesc" class="form-label">Description / Instructions</label>
+                                <textarea class="form-control" id="editAssessmentDesc" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="editAssessmentDuration" class="form-label">Duration (minutes)</label>
+                                    <input type="number" class="form-control" id="editAssessmentDuration" name="duration" min="1" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="editAssessmentAttempts" class="form-label">Max Attempts</label>
+                                    <input type="number" class="form-control" id="editAssessmentAttempts" name="attempts" min="1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Attempts Modal ↓ -->
+        <div class="modal fade" id="viewAttemptsModal" tabindex="-1" aria-labelledby="viewAttemptsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewAttemptsModalLabel">Student Attempts</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="attemptsListContainer">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Participants Modal ↓ -->
         <div class="modal fade" id="participantModal" tabindex="-1" aria-labelledby="participantModalLabel" aria-hidden="true">
