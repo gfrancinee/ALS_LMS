@@ -93,13 +93,14 @@ if (!empty($user['avatar_url'])) {
     <title>My Profile | ALS LMS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="css/profile.css" />
 </head>
 
 <body>
     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm profile-card">
                     <div class="card-header">
                         <h4 class="mb-0">My Profile</h4>
                     </div>
@@ -114,7 +115,7 @@ if (!empty($user['avatar_url'])) {
                                     <?php if (!empty($avatar_path)): ?>
                                         <img src="<?= $avatar_path ?>" class="img-thumbnail rounded-circle mb-3" alt="User Avatar" style="width: 150px; height: 150px; object-fit: cover;">
                                     <?php else: ?>
-                                        <i class="bi bi-person-circle mb-3" style="font-size: 150px; color: #6c757d;"></i>
+                                        <i class="bi bi-person-circle mb-3" style="font-size: 150px; color: #000000ff;"></i>
                                     <?php endif; ?>
                                     <div class="mb-3">
                                         <label for="avatar_image" class="form-label">Change Picture</label>
@@ -147,7 +148,7 @@ if (!empty($user['avatar_url'])) {
                                     </div>
                                 </div>
                             </div>
-                            <hr>
+
                             <div class="d-flex justify-content-end">
                                 <!-- --- UPDATED: Use the dynamic dashboard link --- -->
                                 <a href="<?= $dashboard_link ?>" class="btn btn-secondary me-2">Back</a>

@@ -1,0 +1,17 @@
+.profile-card {
+    border: none;
+    box-shadow: 0 0.1rem 1rem rgba(0, 0, 0, 0.1) !important;
+    background-color: #ffffff;
+}
+
+.profile-card .card-header {
+    margin-top: 15px;
+    background-color: transparent;
+    border-bottom: none;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.profile-card form .d-flex {
+    padding-top: 1.25rem;
+}

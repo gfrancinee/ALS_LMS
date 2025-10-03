@@ -137,25 +137,18 @@ header h1 {
 /* New styles for the Learning Strand cards */
 .strand-card {
     border: 1px solid #e9ecef;
-    /* Lighter border */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    /* Softer shadow */
     transition: all 0.3s ease;
-    /* Smooth transition for hover */
     border-radius: 0.5rem;
-    /* Slightly more rounded corners */
 }
 
 .strand-card:hover {
     transform: translateY(-5px);
-    /* Lifts the card up on hover */
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
-    /* More pronounced shadow on hover */
 }
 
 .strand-card .card-title {
     font-weight: 600;
-    /* Bolder title */
     color: #212529;
 }
 
@@ -167,7 +160,6 @@ header h1 {
 /* Position the three-dots menu on the card */
 .strand-card {
     position: relative;
-    /* This is necessary for positioning the child element */
 }
 
 .card-options {
@@ -175,5 +167,20 @@ header h1 {
     top: 0.5rem;
     right: 0.5rem;
     z-index: 10;
-    /* Make sure it's on top of the stretched-link */
+}
+
+.sidebar .dropdown {
+    width: 100%;
+}
+
+.strand-card .card-text {
+    font-size: 0.7rem;
+    line-height: 1.5;
+}
+
+.dropend .dropdown-menu {
+    width: auto;
+    min-width: 220px;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }

@@ -106,7 +106,7 @@ if ($currentUser) {
             <?php if ($strands && $strands->num_rows > 0): ?>
                 <?php while ($strand = $strands->fetch_assoc()): ?>
                     <div class="col-md-4 mb-3">
-                        <a href="strand/student_strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none">
+                        <a href="../strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none">
                             <div class="card h-100 strand-card">
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title mb-2"><?= htmlspecialchars($strand['strand_title']) ?></h5>

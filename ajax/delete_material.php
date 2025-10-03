@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../../includes/db.php'; // Go up three levels to reach includes
+require_once '../includes/db.php';
 header('Content-Type: application/json');
 
 // Security checks

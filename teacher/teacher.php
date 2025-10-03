@@ -150,7 +150,7 @@ if ($currentUser) {
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title mb-2">
                                 <!-- The stretched-link makes the whole card clickable -->
-                                <a href="strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none text-dark stretched-link">
+                                <a href="../strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none text-dark stretched-link">
                                     <?= htmlspecialchars($strand['strand_title']) ?>
                                 </a>
                             </h5>

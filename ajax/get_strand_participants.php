@@ -22,7 +22,10 @@ $stmt = $conn->prepare("
     FROM users u
     JOIN strand_participants sp ON u.id = sp.student_id
     WHERE sp.strand_id = ?
-    ORDER BY sp.role DESC, u.lname ASC, u.fname ASC
+    ORDER BY 
+        sp.role ASC,      -- Keeps 'admin' at the top
+        u.fname ASC,      -- Sorts by first name
+        u.lname ASC       -- Sorts by last name
 ");
 
 $stmt->bind_param("i", $strand_id);

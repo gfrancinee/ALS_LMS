@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../includes/db.php';
+require_once '../includes/db.php';
 
 $strand_id = $_GET['id'] ?? null;
 
@@ -23,7 +23,7 @@ $materials_stmt = $conn->prepare("
     SELECT id, label, type, file_path, link_url, uploaded_at
     FROM learning_materials
     WHERE strand_id = ?
-    ORDER BY uploaded_at DESC
+    ORDER BY uploaded_at ASC
 ");
 $materials_stmt->bind_param("i", $strand_id);
 $materials_stmt->execute();
@@ -42,15 +42,36 @@ $materials = $materials_stmt->get_result();
     <link rel="stylesheet" href="css/strand.css">
     <script>
         window.strandId = <?= json_encode($strand_id) ?>;
+        window.userRole = '<?= htmlspecialchars($_SESSION['role'] ?? 'guest') ?>'; // ADD THIS LINE
     </script>
     <script src="js/strnd.js" defer></script>
 
 </head>
 
 <body>
+    <?php
+    // Determine the correct "Back" link based on the user's role
+    $back_link = '/ALS_LMS/index.php'; // Default link
+    $back_link_class = ''; // Default class
+    $tab_class = '';
+
+    if (isset($_SESSION['role'])) {
+        if ($_SESSION['role'] === 'teacher') {
+            $back_link = '/ALS_LMS/teacher/teacher.php';
+            $back_link_class = 'back-link-teacher';
+            $tab_class = 'tabs-teacher';
+        } elseif ($_SESSION['role'] === 'student') {
+            $back_link = '/ALS_LMS/student/student.php';
+            $back_link_class = 'back-link-student';
+            $tab_class = 'tabs-student';
+        } elseif ($_SESSION['role'] === 'admin') {
+            $back_link = '/ALS_LMS/admin/dashboard.php';
+        }
+    }
+    ?>
     <div class="back-container">
-        <a href="/ALS_LMS/teacher/teacher.php" class="back-link">
-            <i class="bi bi-arrow-left me-1"></i> Back
+        <a href="<?= htmlspecialchars($back_link) ?>" class="back-link <?= $back_link_class ?>">
+            <i class="bi bi-arrow-left me-1"></i>Back
         </a>
     </div>
     <div class="container mt-4">
@@ -59,7 +80,7 @@ $materials = $materials_stmt->get_result();
         <span class="badge bg-secondary"><?= htmlspecialchars($strand['grade_level']) ?></span>
 
         <!-- Tabs -->
-        <ul class="nav nav-tabs mt-4" id="strandTabs" role="tablist">
+        <ul class="nav nav-tabs mt-4 <?= $tab_class ?>" id="strandTabs" role="tablist">
             <li class="nav-item">
                 <a class="nav-link active" data-bs-toggle="tab" href="#modules">Modules</a>
             </li>
@@ -74,11 +95,17 @@ $materials = $materials_stmt->get_result();
         <div class="tab-content" id="myTabContent">
             <!-- Modules Tab -->
             <div class="tab-pane fade show active" id="modules" role="tabpanel" aria-labelledby="modules-tab">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                    <i class="bi bi-plus-circle me-1"></i>Upload Material
-                </button>
 
-                <!-- Show uploaded materials with Edit/Delete -->
+                <?php // This block checks if the user is a teacher 
+                ?>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                            <i class="bi bi-plus-circle me-1"></i>Upload Material
+                        </button>
+                    </div>
+                <?php endif; ?>
+
                 <div class="mt-3">
                     <?php if ($materials->num_rows > 0): ?>
                         <?php
@@ -102,65 +129,64 @@ $materials = $materials_stmt->get_result();
                                             <small class="text-muted">Uploaded: <?= date("F j, Y", strtotime($mat['uploaded_at'])) ?></small>
                                         </div>
 
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="bi bi-three-dots-vertical"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <?php
-                                                    // This is the corrected Edit button logic from our previous conversation
-                                                    $file_location = '';
-                                                    if ($mat['type'] === 'link') {
-                                                        $file_location = htmlspecialchars($mat['link_url'] ?? '');
-                                                    } else if (!empty($mat['file_path'])) {
-                                                        $file_location = $base_path . htmlspecialchars($mat['file_path']);
-                                                    }
-                                                    ?>
-                                                    <button class="dropdown-item edit-material-btn"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#editMaterialModal"
-                                                        data-id="<?= $mat['id'] ?>"
-                                                        data-label="<?= htmlspecialchars($mat['label']) ?>"
-                                                        data-type="<?= htmlspecialchars($mat['type']) ?>"
-                                                        data-file="<?= $file_location ?>"
-                                                        data-link="<?= htmlspecialchars($mat['link_url'] ?? '') ?>">
-                                                        <i class="bi bi-pencil-square me-2 text-success"></i> Edit
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-bs-id="<?= $mat['id'] ?>">
-                                                        <i class="bi bi-trash3 me-2"></i> Delete
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </div>
+                                        <?php // The Edit/Delete menu is already correctly hidden from students 
+                                        ?>
+                                        <?php if ($_SESSION['role'] === 'teacher'): ?>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <?php
+                                                        $file_location = '';
+                                                        if ($mat['type'] === 'link') {
+                                                            $file_location = htmlspecialchars($mat['link_url'] ?? '');
+                                                        } else if (!empty($mat['file_path'])) {
+                                                            $file_location = $base_path . htmlspecialchars($mat['file_path']);
+                                                        }
+                                                        ?>
+                                                        <button class="dropdown-item edit-material-btn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editMaterialModal"
+                                                            data-id="<?= $mat['id'] ?>"
+                                                            data-label="<?= htmlspecialchars($mat['label']) ?>"
+                                                            data-type="<?= htmlspecialchars($mat['type']) ?>"
+                                                            data-file="<?= $file_location ?>"
+                                                            data-link="<?= htmlspecialchars($mat['link_url'] ?? '') ?>">
+                                                            <i class="bi bi-pencil-square me-2 text-success"></i> Edit
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-bs-id="<?= $mat['id'] ?>">
+                                                            <i class="bi bi-trash3 me-2"></i> Delete
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
 
                                     <div class="material-preview mt-3 text-center">
                                         <?php
-                                        $icon_class = 'bi-file-earmark-arrow-down'; // Default icon
+                                        $icon_class = 'bi-file-earmark-arrow-down';
                                         $modal_title = htmlspecialchars($mat['label']);
 
-                                        // Determine the icon based on the material type
                                         if ($mat['type'] === 'image') $icon_class = 'bi-card-image';
                                         if ($mat['type'] === 'video') $icon_class = 'bi-play-btn';
                                         if ($mat['type'] === 'audio') $icon_class = 'bi-music-note-beamed';
                                         if ($mat['type'] === 'file')  $icon_class = 'bi-file-earmark-text';
                                         if ($mat['type'] === 'link')  $icon_class = 'bi-link-45deg';
 
-                                        // For links, the URL is different
                                         $media_url = ($mat['type'] === 'link') ? htmlspecialchars($mat['link_url'] ?? '') : $full_url;
                                         ?>
 
                                         <?php if ($mat['type'] === 'link'): ?>
-                                            <!-- External Link opens in a new tab -->
                                             <a href="<?= $media_url ?>" target="_blank" class="d-block">
                                                 <i class="bi <?= $icon_class ?>" style="font-size: 4rem;"></i>
                                                 <p class="mt-2">Open Link</p>
                                             </a>
                                         <?php else: ?>
-                                            <!-- All other types open in a modal -->
                                             <a href="#" class="d-block"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#mediaModal"
@@ -183,22 +209,34 @@ $materials = $materials_stmt->get_result();
 
             <!-- Assessments Tab -->
             <div class="tab-pane fade" id="assessments" role="tabpanel" aria-labelledby="assessments-tab">
-                <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#assessmentModal">
-                    <i class="bi bi-plus-circle me-1"></i>Create Assessment
-                </button>
 
-                <!-- Feedback + Assessment List -->
+                <?php // This block checks if the user is a teacher 
+                ?>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#assessmentModal">
+                            <i class="bi bi-plus-circle me-1"></i>Create Assessment
+                        </button>
+                    </div>
+                <?php endif; ?>
+
                 <div id="assessmentAlert" style="display:none;" class="mt-3"></div>
                 <div id="assessmentList" class="mt-2"></div>
             </div>
 
             <!-- Participants Tab -->
             <div class="tab-pane fade" id="participants" role="tabpanel" aria-labelledby="participants-tab">
-                <button class="btn btn-secondary mb-3" data-bs-toggle="modal" data-bs-target="#participantModal">
-                    <i class="bi bi-person-plus me-1"></i>Add Participant
-                </button>
 
-                <!-- Feedback + Participants List -->
+                <?php // This block checks if the user is a teacher 
+                ?>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#participantModal">
+                            <i class="bi bi-person-plus me-1"></i>Add Participant
+                        </button>
+                    </div>
+                <?php endif; ?>
+
                 <div id="participantAlert" style="display:none;" class="mt-3"></div>
                 <div id="participantList" class="mt-2"></div>
             </div>
@@ -243,6 +281,7 @@ $materials = $materials_stmt->get_result();
                         </div>
 
                         <input type="hidden" name="strand_id" value="<?= htmlspecialchars($strand_id) ?>">
+                        <input type="hidden" name="teacher_id" value="<?= htmlspecialchars($_SESSION['user_id']) ?>">
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-success">Upload</button>
@@ -351,18 +390,10 @@ $materials = $materials_stmt->get_result();
         </div>
 
         <!-- Assessment Modal -->
-        <div
-            class="modal fade"
-            id="assessmentModal"
-            tabindex="-1"
-            aria-labelledby="assessmentModalLabel"
-            aria-hidden="true">
+        <div class="modal fade" id="assessmentModal" tabindex="-1" aria-labelledby="assessmentModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form
-                        id="assessmentForm"
-                        method="post"
-                        action="../../ajax/save-assessment.php">
+                    <form id="createAssessmentForm">
                         <div class="modal-header">
                             <h5 class="modal-title" id="assessmentModalLabel">Create Assessment</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -371,46 +402,29 @@ $materials = $materials_stmt->get_result();
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="assessmentTitle" class="form-label">Title</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    id="assessmentTitle"
-                                    name="assessmentTitle"
-                                    required />
+                                <input type="text" class="form-control" id="assessmentTitle" required />
                             </div>
 
                             <div class="mb-3">
-                                <label for="assessmentType" class="form-label">Type</label>
-                                <select
-                                    class="form-select"
-                                    id="assessmentType"
-                                    name="assessmentType"
-                                    required>
-                                    <option value="">Select type</option>
-                                    <option value="quiz">Quiz</option>
-                                    <option value="exam">Exam</option>
-                                </select>
+                                <label for="assessmentDesc" class="form-label">Description / Instructions</label>
+                                <textarea class="form-control" id="assessmentDesc" rows="3"></textarea>
                             </div>
 
-                            <div class="mb-3">
-                                <label
-                                    for="assessmentDescription"
-                                    class="form-label">Description</label>
-                                <textarea
-                                    class="form-control"
-                                    id="assessmentDescription"
-                                    name="assessmentDescription"
-                                    rows="3"></textarea>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="assessmentDuration" class="form-label">Duration (minutes)</label>
+                                    <input type="number" class="form-control" id="assessmentDuration" value="60" min="1" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="assessmentAttempts" class="form-label">Max Attempts</label>
+                                    <input type="number" class="form-control" id="assessmentAttempts" value="1" min="1" required>
+                                </div>
                             </div>
-
-                            <!-- Hidden strand_id -->
-                            <input type="hidden" name="strand_id" id="assessmentStrandId" value="<?= htmlspecialchars($strand_id) ?>">
                         </div>
 
                         <div class="modal-footer">
-                            <button type="submit" class="btn btn-success">
-                                Save Assessment
-                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Create Assessment</button>
                         </div>
                     </form>
                 </div>

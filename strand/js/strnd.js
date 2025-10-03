@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.refreshAssessmentList = function () {
         if (!strandId || !assessmentListContainer) return;
-        fetch(`../../ajax/get-assessments.php?strand_id=${strandId}`)
+        fetch(`../ajax/get-assessments.php?strand_id=${strandId}`)
             .then(r => r.text()).then(html => {
                 assessmentListContainer.innerHTML = html;
             }).catch(err => console.error('Failed to refresh assessments:', err));
@@ -114,48 +114,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Participants Functions ---
     function displayParticipants(participants) {
-        participantListContainer.innerHTML = '';
+        const listContainer = document.getElementById('participantList');
+        listContainer.innerHTML = '';
 
         if (!participants || participants.length === 0) {
-            participantListContainer.innerHTML = '<div class="alert alert-info">No participants have been added to this strand yet.</div>';
+            listContainer.innerHTML = '<div class="alert alert-info">No participants have been added to this strand yet.</div>';
             return;
         }
 
+        // This loop now runs for BOTH teachers and students
         participants.forEach(participant => {
-            let avatarSrc = participant.avatar_url ? `../../${participant.avatar_url}` : 'icon';
+            let avatarSrc = participant.avatar_url ? `../${participant.avatar_url}` : 'icon';
             const adminLabel = participant.role === 'admin' ? '<span class="badge bg-success ms-2">Admin</span>' : '';
 
+            // The remove button is ONLY created if the user is a teacher
+            let removeButtonHtml = '';
+            if (window.userRole === 'teacher' && participant.role !== 'admin') {
+                removeButtonHtml = `<button class="btn btn-sm btn-outline-danger remove-participant-btn" data-participant-id="${participant.participant_id}"><i class="bi bi-trash"></i> Remove</button>`;
+            }
+
             const participantHtml = `
-                <div class="card mb-2 participant-card">
-                    <div class="card-body d-flex justify-content-between align-items-center py-2">
-                        <div class="d-flex align-items-center">
-                            ${avatarSrc !== 'icon'
+            <div class="card mb-2 participant-card">
+                <div class="card-body d-flex justify-content-between align-items-center py-2">
+                    <div class="d-flex align-items-center">
+                        ${avatarSrc !== 'icon'
                     ? `<img src="${avatarSrc}" class="rounded-circle me-3" alt="Avatar" width="40" height="40" style="object-fit: cover;">`
                     : `<i class="bi bi-person-circle me-3" style="font-size: 40px; color: #6c757d;"></i>`
                 }
-                            <div>
-                                <h6 class="mb-0">${participant.fname} ${participant.lname} ${adminLabel}</h6>
-                            </div>
-                        </div>
                         <div>
-                            ${participant.role !== 'admin'
-                    ? `<button class="btn btn-sm btn-outline-danger remove-participant-btn" data-participant-id="${participant.participant_id}"><i class="bi bi-trash"></i> Remove</button>`
-                    : ''
-                }
+                            <h6 class="mb-0">${participant.fname} ${participant.lname} ${adminLabel}</h6>
                         </div>
                     </div>
+                    <div>
+                        ${removeButtonHtml}
+                    </div>
                 </div>
-            `;
-            participantListContainer.insertAdjacentHTML('beforeend', participantHtml);
+            </div>
+        `;
+            listContainer.insertAdjacentHTML('beforeend', participantHtml);
         });
     }
-
     async function refreshParticipantList() {
         if (!participantListContainer) return;
         participantListContainer.innerHTML = '<p>Loading participants...</p>';
         try {
             // This path goes up TWO levels from teacher/strand/ to the root ajax folder
-            const response = await fetch(`../../ajax/get_strand_participants.php?strand_id=${strandId}`);
+            const response = await fetch(`../ajax/get_strand_participants.php?strand_id=${strandId}`);
             const participants = await response.json();
             if (participants.error) throw new Error(participants.error);
             displayParticipants(participants);
@@ -171,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         studentListContainer.innerHTML = '<p>Loading students...</p>';
         try {
             // This path goes up TWO levels from teacher/strand/ to the root ajax folder
-            const response = await fetch(`../../ajax/get_available_students.php?strand_id=${strandId}`);
+            const response = await fetch(`../ajax/get_available_students.php?strand_id=${strandId}`);
             const students = await response.json();
             if (students.error) throw new Error(students.error);
 
@@ -197,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentListContainer = document.getElementById('availableStudentsList');
         studentListContainer.innerHTML = '<p>Loading students...</p>';
         try {
-            const response = await fetch(`../../ajax/get_available_students.php?strand_id=${window.strandId}`);
+            const response = await fetch(`../ajax/get_available_students.php?strand_id=${window.strandId}`);
             const students = await response.json();
             if (students.error) throw new Error(students.error);
 
@@ -226,17 +230,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (uploadForm) {
         uploadForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const fd = new FormData(this);
-            fetch('../../ajax/upload_material.php', { method: 'POST', body: fd })
-                .then(res => res.json()).then(data => {
+            const formData = new FormData(this);
+
+            // This fetch call sends the form data, including the hidden teacher_id
+            fetch('../ajax/upload_material.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
                     if (data.status === 'success') {
+                        // Hide the modal and reload the page to show the new material
                         bootstrap.Modal.getInstance(uploadModal).hide();
-                        refreshMaterialList();
-                    } else { alert(data.message); }
-                }).catch(err => console.error(err));
+                        window.refreshMaterialList();
+                    } else {
+                        alert('Upload failed: ' + data.message);
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    alert('An error occurred during upload.');
+                });
         });
     }
 
+    if (materialType) {
+        materialType.addEventListener('change', injectMaterialInput);
+    }
+    if (uploadModal) {
+        uploadModal.addEventListener('shown.bs.modal', injectMaterialInput);
+    }
     if (editModal) {
         editModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
@@ -262,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const fd = new FormData(this);
-            fetch('../../ajax/update_material.php', { method: 'POST', body: fd })
+            fetch('../ajax/update_material.php', { method: 'POST', body: fd })
                 .then(res => res.json()).then(data => {
                     if (data.status === 'success') {
                         bootstrap.Modal.getInstance(editModal).hide();
@@ -273,18 +295,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Assessment Listener ---
-    if (assessmentForm) {
-        assessmentForm.addEventListener('submit', function (e) {
+    // Define the form variable using the correct ID from your new modal
+    const createAssessmentForm = document.getElementById('createAssessmentForm');
+
+    // This listener handles the submission of the new assessment form
+    if (createAssessmentForm) {
+        createAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            fetch('../../ajax/save-assessment.php', { method: 'POST', body: new FormData(assessmentForm) })
-                .then(r => r.json()).then(data => {
-                    if (data.status === 'success') {
-                        bootstrap.Modal.getInstance(assessmentModal).hide();
-                        refreshAssessmentList();
-                    } else { alert(data.message); }
-                }).catch(err => console.error(err));
+
+            // Get values from all the fields in the modal
+            const title = document.getElementById('assessmentTitle').value;
+            const description = document.getElementById('assessmentDesc').value;
+            const duration = document.getElementById('assessmentDuration').value;
+            const attempts = document.getElementById('assessmentAttempts').value;
+
+            try {
+                const response = await fetch('../ajax/create_assessment.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        strand_id: window.strandId,
+                        title: title,
+                        description: description,
+                        duration: duration,
+                        attempts: attempts
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Hide the modal and refresh the list of assessments
+                    bootstrap.Modal.getInstance(document.getElementById('assessmentModal')).hide();
+                    createAssessmentForm.reset();
+                    refreshAssessmentList();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Failed to create assessment:', error);
+                alert('An error occurred while creating the assessment.');
+            }
         });
     }
+
+    assessmentList.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('toggle-status-btn')) {
+            const id = e.target.dataset.id;
+            const status = e.target.dataset.status;
+
+            try {
+                const response = await fetch('../ajax/toggle_assessment_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, status: status })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    refreshAssessmentList();
+                }
+            } catch (error) {
+                console.error('Error toggling status:', error);
+            }
+        }
+    });
 
     // --- QUESTIONS modal — populate hidden inputs before open ---
     if (questionsModal) {
@@ -351,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch('../../ajax/save_questions.php', {
+                const response = await fetch('../ajax/save_questions.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dataToSend)
@@ -442,35 +516,36 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadLink.href = url;
         });
 
-        // Deleting a learning material modal
+        // --- Logic for Deleting a Learning Material ---
         const deleteMaterialModal = document.getElementById('deleteMaterialModal');
-        let materialIdToDelete = null; // Variable to hold the ID
-        let materialCardToDelete = null; // Variable to hold the card element
-
         if (deleteMaterialModal) {
-            // 1. When the modal is about to be shown, grab the material ID
+            let materialIdToDelete = null;
+            let materialCardToDelete = null;
+
+            // 1. When the modal is about to be shown, get the material ID
             deleteMaterialModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
                 materialIdToDelete = button.getAttribute('data-bs-id');
-                materialCardToDelete = button.closest('.card');
+                materialCardToDelete = button.closest('.card.mb-3');
             });
 
-            // 2. When the final "Yes, Delete" button is clicked
+            // 2. When the final "Yes, Delete" button inside the modal is clicked
             const confirmBtn = document.getElementById('confirmDeleteMaterialBtn');
             confirmBtn.addEventListener('click', function () {
                 if (materialIdToDelete) {
-                    // Send the request to the server
-                    fetch('ajax/delete_material.php', {
+
+                    const formData = new FormData();
+                    formData.append('material_id', materialIdToDelete);
+
+                    // This path goes up TWO levels to the root ajax folder
+                    fetch('../ajax/delete_material.php', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'material_id=' + materialIdToDelete
+                        body: formData
                     })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                // If successful, remove the card from the page
+                                // If successful, remove the card from the page instantly
                                 if (materialCardToDelete) {
                                     materialCardToDelete.remove();
                                 }
@@ -513,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 try {
                     // This path goes up TWO levels from teacher/strand/ to the root ajax folder
-                    const response = await fetch('../../ajax/add_participant.php', {
+                    const response = await fetch('../ajax/add_participant.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ strand_id: strandId, student_ids: selectedIds })
@@ -540,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (confirm('Are you sure you want to remove this participant?')) {
                         try {
                             // This path goes up TWO levels from teacher/strand/ to the root ajax folder
-                            const response = await fetch('../../ajax/remove_participant.php', {
+                            const response = await fetch('../ajax/remove_participant.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ strand_id: strandId, participant_id: participantId })
