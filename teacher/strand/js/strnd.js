@@ -113,13 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Participants Functions ---
-    // 1. The corrected displayParticipants function
     function displayParticipants(participants) {
-        const listContainer = document.getElementById('participantList');
-        listContainer.innerHTML = ''; // Clear existing list
+        participantListContainer.innerHTML = '';
 
-        if (participants.length === 0) {
-            listContainer.innerHTML = '<div class="alert alert-info">No participants have been added to this strand yet.</div>';
+        if (!participants || participants.length === 0) {
+            participantListContainer.innerHTML = '<div class="alert alert-info">No participants have been added to this strand yet.</div>';
             return;
         }
 
@@ -148,16 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            listContainer.insertAdjacentHTML('beforeend', participantHtml);
+            participantListContainer.insertAdjacentHTML('beforeend', participantHtml);
         });
     }
 
-    // 2. The refreshParticipantList function
     async function refreshParticipantList() {
         if (!participantListContainer) return;
         participantListContainer.innerHTML = '<p>Loading participants...</p>';
         try {
-            // --- CORRECTED PATH: Go up TWO levels to the root ---
+            // This path goes up TWO levels from teacher/strand/ to the root ajax folder
             const response = await fetch(`../../ajax/get_strand_participants.php?strand_id=${strandId}`);
             const participants = await response.json();
             if (participants.error) throw new Error(participants.error);
@@ -168,6 +165,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadAvailableStudents() {
+        const studentListContainer = document.getElementById('availableStudentsList');
+        if (!studentListContainer) return;
+        studentListContainer.innerHTML = '<p>Loading students...</p>';
+        try {
+            // This path goes up TWO levels from teacher/strand/ to the root ajax folder
+            const response = await fetch(`../../ajax/get_available_students.php?strand_id=${strandId}`);
+            const students = await response.json();
+            if (students.error) throw new Error(students.error);
+
+            if (students.length === 0) {
+                studentListContainer.innerHTML = '<p>No new students are available to add.</p>';
+                return;
+            }
+
+            let html = students.map(s => `
+            <div class="form-check student-item">
+                <input class="form-check-input" type="checkbox" value="${s.id}" id="student-${s.id}">
+                <label class="form-check-label" for="student-${s.id}">${s.fname} ${s.lname}</label>
+            </div>`).join('');
+            studentListContainer.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to load students:', error);
+            studentListContainer.innerHTML = '<p class="text-danger">Could not load student list.</p>';
+        }
+    }
 
     // 3. The loadAvailableStudents function (this one is likely okay, but included for completeness)
     async function loadAvailableStudents() {
@@ -489,14 +512,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 try {
+                    // This path goes up TWO levels from teacher/strand/ to the root ajax folder
                     const response = await fetch('../../ajax/add_participant.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ strand_id: window.strandId, student_ids: selectedIds })
+                        body: JSON.stringify({ strand_id: strandId, student_ids: selectedIds })
                     });
                     const result = await response.json();
                     if (result.status === 'success') {
-                        alert(result.message);
                         bootstrap.Modal.getInstance(participantModal).hide();
                         refreshParticipantList();
                     } else {
@@ -513,24 +536,24 @@ document.addEventListener('DOMContentLoaded', () => {
             participantListContainer.addEventListener('click', async (event) => {
                 const button = event.target.closest('.remove-participant-btn');
                 if (button) {
-                    const participantId = button.dataset.participantId; // Correctly get the participantId
+                    const participantId = button.dataset.participantId;
                     if (confirm('Are you sure you want to remove this participant?')) {
                         try {
+                            // This path goes up TWO levels from teacher/strand/ to the root ajax folder
                             const response = await fetch('../../ajax/remove_participant.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ strand_id: window.strandId, participant_id: participantId }) // Correctly send participant_id
+                                body: JSON.stringify({ strand_id: strandId, participant_id: participantId })
                             });
-
                             const result = await response.json();
-                            if (result.status === 'success') {
+                            if (result.success) {
                                 refreshParticipantList();
                             } else {
                                 throw new Error(result.message);
                             }
                         } catch (error) {
                             console.error('Failed to remove participant:', error);
-                            alert('An error occurred while removing the participant.');
+                            alert('An error occurred while removing the participant: ' + error.message);
                         }
                     }
                 }
@@ -557,7 +580,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const participantsTabBtn = document.querySelector('a[href="#participants"]');
     if (participantsTabBtn) {
         participantsTabBtn.addEventListener('shown.bs.tab', refreshParticipantList);
-        // If the tab is already active on page load, refresh the list
         if (document.querySelector('#participants').classList.contains('active')) {
             refreshParticipantList();
         }

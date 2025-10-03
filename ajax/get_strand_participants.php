@@ -1,6 +1,5 @@
 <?php
 session_start();
-// --- CORRECTED PATH: Go up only ONE level to the root ---
 require_once '../includes/db.php';
 header('Content-Type: application/json');
 
