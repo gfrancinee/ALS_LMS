@@ -19,11 +19,11 @@ $stmt = $conn->prepare("
         u.lname, 
         qa.score, 
         qa.total_items, 
-        qa.date_taken
+        qa.submitted_at
     FROM quiz_attempts qa
     JOIN users u ON qa.student_id = u.id
     WHERE qa.assessment_id = ?
-    ORDER BY qa.date_taken DESC
+    ORDER BY qa.submitted_at DESC
 ");
 $stmt->bind_param("i", $assessment_id);
 $stmt->execute();
@@ -39,7 +39,7 @@ while ($row = $result->fetch_assoc()) {
     $name = htmlspecialchars($row['fname'] . ' ' . $row['lname']);
     $score = (int)$row['score'];
     $total = (int)$row['total_items'];
-    $date = date("F j, Y, g:i a", strtotime($row['date_taken']));
+    $date = date("F j, Y, g:i a", strtotime($row['submitted_at']));
 
     echo "
         <li class='list-group-item d-flex justify-content-between align-items-center'>

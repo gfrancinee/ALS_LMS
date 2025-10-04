@@ -108,7 +108,7 @@ while ($row = $result->fetch_assoc()) {
     } else if ($attempts_left <= 0) {
       echo "<button class='btn btn-sm btn-warning disabled'>No Attempts Left</button>";
     } else {
-      echo "<a href='../quiz/take_quiz.php?assessment_id=$id' class='btn btn-sm btn-primary'>Take Quiz</a>";
+      echo "<button class='btn btn-sm btn-primary start-quiz-btn' data-assessment-id='$id'>Take Quiz</button>";
     }
 
     echo "<span class='badge bg-info'>Attempts Left: $attempts_left</span>";

@@ -92,7 +92,7 @@ $stmt->close();
             <?php $q_num++;
             endwhile; ?>
 
-            <button type="submit" class="btn btn-success btn-lg">Submit Answers</button>
+            <button type="submit" class="btn btn-success">Submit Answers</button>
         </form>
 
     </div>

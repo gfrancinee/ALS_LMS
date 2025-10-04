@@ -309,10 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Assessment Listener ---
-    // Define the form variable using the correct ID from your new modal
     const createAssessmentForm = document.getElementById('createAssessmentForm');
-
-    // This listener handles the submission of the new assessment form
     if (createAssessmentForm) {
         createAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -392,18 +389,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // This single listener handles all clicks inside the assessment list
-    // This is the final, complete code for all assessment interactions.
     const assessmentList = document.getElementById('assessmentList');
     if (assessmentList) {
-        let assessmentIdToDelete = null; // Variable to hold the ID for deletion
+        let assessmentIdToDelete = null;
 
         // MAIN LISTENER: Handles all button clicks on the assessment cards
         assessmentList.addEventListener('click', async (e) => {
             const button = e.target.closest('button');
             if (!button) return;
 
+            // --- NEW: Handle START QUIZ button for students ---
+            if (button.classList.contains('start-quiz-btn')) {
+                const assessmentId = button.dataset.assessmentId;
+
+                button.disabled = true;
+                button.textContent = 'Starting...';
+
+                try {
+                    const response = await fetch('../ajax/start_attempt.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ assessment_id: assessmentId })
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // If successful, redirect to the quiz page
+                        window.location.href = `../quiz/take_quiz.php?assessment_id=${assessmentId}`;
+                    } else {
+                        // If there's an error (e.g., no attempts left), show it
+                        alert('Error: ' + result.message);
+                        button.disabled = false;
+                        button.textContent = 'Take Quiz';
+                    }
+                } catch (error) {
+                    console.error('Failed to start quiz:', error);
+                    alert('An error occurred. Please try again.');
+                    button.disabled = false;
+                    button.textContent = 'Take Quiz';
+                }
+            }
+
             // 1. Handle VIEW ATTEMPTS button
-            if (button.classList.contains('view-attempts-btn')) {
+            else if (button.classList.contains('view-attempts-btn')) {
                 const assessmentId = button.dataset.id;
                 const container = document.getElementById('attemptsListContainer');
                 container.innerHTML = '<p>Loading student scores...</p>';
@@ -437,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // 3. Handle EDIT button (populates the edit modal)
+            // 3. Handle EDIT button
             else if (button.classList.contains('edit-assessment-btn')) {
                 document.getElementById('editAssessmentId').value = button.dataset.id;
                 document.getElementById('editAssessmentTitle').value = button.dataset.title;
@@ -452,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // SEPARATE LISTENER: Handles the final "Yes, Delete" click inside the modal
+        // SEPARATE LISTENER: Handles the final "Delete" click inside the modal
         const confirmDeleteBtn = document.getElementById('confirmDeleteAssessmentBtn');
         if (confirmDeleteBtn) {
             confirmDeleteBtn.addEventListener('click', async () => {
@@ -584,6 +612,75 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- MANAGE QUESTIONS MODAL LOGIC ---
+    if (!questionsModal) return;
+
+    // This event fires right when the "Manage Questions" modal is opened
+    questionsModal.addEventListener('show.bs.modal', async (event) => {
+        const button = event.relatedTarget; // The "Manage Questions" button
+        const assessmentId = button.dataset.assessmentId;
+
+        // Set the hidden assessment_id input in the form
+        document.getElementById('assessmentIdInput').value = assessmentId;
+
+        const formBuilder = document.getElementById('formBuilder');
+        formBuilder.innerHTML = '<p class="text-center">Loading questions...</p>'; // Show a loading message
+
+        try {
+            // Use the new PHP file to fetch existing questions
+            const response = await fetch(`../ajax/get_questions.php?assessment_id=${assessmentId}`);
+            const questions = await response.json();
+
+            formBuilder.innerHTML = ''; // Clear the loading message
+
+            if (questions.length > 0) {
+                // If questions exist, add them to the form
+                questions.forEach(q => {
+                    addQuestionBlock(formBuilder, q); // A helper function we will use
+                });
+            } else {
+                // If no questions exist, show a message
+                formBuilder.innerHTML = '<p class="text-center text-muted">No questions have been added yet.</p>';
+            }
+        } catch (error) {
+            console.error('Failed to load questions:', error);
+            formBuilder.innerHTML = '<p class="text-center text-danger">Could not load questions.</p>';
+        }
+    });
+
+    // Helper function to add a question block to the form
+    function addQuestionBlock(container, data = null) {
+        const template = document.getElementById('questionTemplate');
+        const clone = template.content.cloneNode(true);
+        const questionBlock = clone.querySelector('.question-block');
+
+        if (data) {
+            // If we have existing data, pre-fill the fields
+            questionBlock.querySelector('.question-text').value = data.question_text || '';
+            questionBlock.querySelector('.question-type').value = data.question_type || '';
+
+            // This part would be expanded to handle options and correct answers
+            // For now, it just displays the main question text and type
+        }
+
+        // Clear the "No questions" message if it exists
+        const noQuestionsMessage = container.querySelector('p.text-center');
+        if (noQuestionsMessage) {
+            noQuestionsMessage.remove();
+        }
+
+        container.appendChild(clone);
+        updateQuestionNumbers(); // A function to keep question numbers correct
+    }
+
+    // You might already have this function, it ensures question numbers are always correct
+    function updateQuestionNumbers() {
+        const allQuestions = document.querySelectorAll('#formBuilder .question-block');
+        allQuestions.forEach((q, index) => {
+            q.querySelector('.q-index').textContent = index + 1;
+        });
+    }
+
     // --- Universal Media Modal Listener ---
     if (mediaModal) {
         // This event fires just before the modal is shown
@@ -647,7 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 materialCardToDelete = button.closest('.card.mb-3');
             });
 
-            // 2. When the final "Yes, Delete" button inside the modal is clicked
+            // 2. When the final "Delete" button inside the modal is clicked
             const confirmBtn = document.getElementById('confirmDeleteMaterialBtn');
             confirmBtn.addEventListener('click', function () {
                 if (materialIdToDelete) {

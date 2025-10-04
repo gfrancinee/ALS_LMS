@@ -1,121 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+session_start();
+require_once '../includes/db.php';
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Results</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f0f2f5;
-            /* Lighter background */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+// Security: User must be a student and have an attempt "in_progress"
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['current_attempt_id'])) {
+    // Redirect if the session is invalid
+    header("Location: ../login.php");
+    exit;
+}
 
-        .result-container {
-            max-width: 550px;
-            /* Slightly smaller */
-            width: 100%;
-            padding: 50px;
-            /* More padding */
-            background-color: white;
-            border-radius: 12px;
-            /* Softer corners */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            /* More refined shadow */
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
-            /* Add a subtle fade-in animation */
-        }
+// Get the attempt ID from the session, which was set when the quiz started
+$attempt_id = $_SESSION['current_attempt_id'];
+$student_id = $_SESSION['user_id'];
+$assessment_id = $_POST['assessment_id'] ?? 0;
+$answers = $_POST['answers'] ?? [];
 
-        h1 {
-            color: #343a40;
-            /* Darker heading */
-            font-weight: 600;
-            margin-bottom: 30px;
-        }
+$total_score = 0;
+$total_items = 0;
 
-        .score-display {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 30px 0;
-            padding: 15px 30px;
-            background-color: #e6f0ff;
-            /* Light blue background for score */
-            border-radius: 8px;
-            border: 1px solid #cce0ff;
-        }
+if (!empty($answers)) {
+    // Prepare a statement to get the correct answer for each question
+    $stmt = $conn->prepare("SELECT correct_answer FROM questions WHERE id = ?");
 
-        .score {
-            font-size: 3.5rem;
-            /* Slightly smaller for elegance */
-            font-weight: 700;
-            color: #0056b3;
-            /* Deeper blue */
-            line-height: 1;
-        }
-
-        .total-score {
-            font-size: 1.8rem;
-            color: #6c757d;
-            font-weight: 500;
-            margin-left: 10px;
-            line-height: 1;
-        }
-
-        .message {
-            font-size: 1.1rem;
-            color: #495057;
-            margin-top: 25px;
-            margin-bottom: 30px;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-            padding: 10px 25px;
-            font-size: 1rem;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
+    foreach ($answers as $question_id => $student_answer) {
+        $total_items++;
+        $stmt->bind_param("i", $question_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $correct_answer = $row['correct_answer'];
+            // Compare answers (case-insensitive and trimmed)
+            if (strtolower(trim($student_answer)) === strtolower(trim($correct_answer))) {
+                $total_score++;
             }
         }
-    </style>
-</head>
+    }
+    $stmt->close();
+}
 
-<body>
-    <div class="result-container">
-        <h1><i class="bi bi-check-circle-fill text-success me-2"></i> Completed</h1>
+// UPDATE the existing attempt that was created when the student started the quiz
+$update_stmt = $conn->prepare(
+    "UPDATE quiz_attempts 
+     SET score = ?, total_items = ?, status = 'completed', submitted_at = NOW() 
+     WHERE id = ? AND student_id = ?"
+);
+$update_stmt->bind_param("iiii", $total_score, $total_items, $attempt_id, $student_id);
+$update_stmt->execute();
+$update_stmt->close();
 
-        <div class="score-display">
-            <span class="score"><?= $score ?></span>
-            <span class="total-score">/ <?= $total_items ?></span>
-        </div>
+// Important: Unset the session variable so it can't be reused
+unset($_SESSION['current_attempt_id']);
+$conn->close();
 
-        <a href="../student/student.php" class="btn btn-primary mt-3"><i class="bi bi-house-door-fill me-2"></i>Back to Dashboard</a>
-    </div>
-</body>
-
-</html>
+// Redirect to the results page, passing the attempt ID
+header("Location: results.php?attempt_id=" . $attempt_id);
+exit;
