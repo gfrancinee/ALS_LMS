@@ -13,8 +13,10 @@ if (!$assessment_id) {
     die("Assessment ID is required.");
 }
 
+// 1. ADD 'qa.id' to the SELECT statement
 $stmt = $conn->prepare("
     SELECT 
+        qa.id, 
         u.fname, 
         u.lname, 
         qa.score, 
@@ -34,24 +36,30 @@ if ($result->num_rows === 0) {
     exit;
 }
 
-echo '<ul class="list-group">';
+// 2. Wrap each list item in a clickable link with the data-attempt-id
+echo '<div class="list-group">';
 while ($row = $result->fetch_assoc()) {
     $name = htmlspecialchars($row['fname'] . ' ' . $row['lname']);
     $score = (int)$row['score'];
     $total = (int)$row['total_items'];
     $date = date("F j, Y, g:i a", strtotime($row['submitted_at']));
+    $attempt_id = $row['id']; // Get the attempt ID
 
     echo "
-        <li class='list-group-item d-flex justify-content-between align-items-center'>
-            <div>
-                <strong>$name</strong>
-                <small class='d-block text-muted'>Taken on: $date</small>
+        <a href='#' 
+       class='list-group-item list-group-item-action review-attempt-btn' 
+       data-attempt-id='$attempt_id'>
+            <div class='d-flex justify-content-between align-items-center'>
+                <div>
+                    <strong>$name</strong>
+                    <small class='d-block text-muted'>Taken on: $date</small>
+                </div>
+                <span class='badge bg-primary rounded-pill fs-6'>$score / $total</span>
             </div>
-            <span class='badge bg-primary rounded-pill fs-6'>$score / $total</span>
-        </li>
+        </a>
     ";
 }
-echo '</ul>';
+echo '</div>';
 
 $stmt->close();
 $conn->close();

@@ -531,6 +531,23 @@ $materials = $materials_stmt->get_result();
             </div>
         </div>
 
+        <!-- Review Attempts Modal ↓ -->
+        <div class="modal fade" id="reviewAttemptModal" tabindex="-1" aria-labelledby="reviewAttemptModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reviewAttemptModalLabel">Review Student Attempt</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="reviewAttemptBody">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="closeReviewModalBtn">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Edit assessment modal ↓ -->
         <div class="modal fade" id="editAssessmentModal" tabindex="-1" aria-labelledby="editAssessmentModalLabel" aria-hidden="true">
             <div class="modal-dialog">

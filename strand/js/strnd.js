@@ -434,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (button.classList.contains('view-attempts-btn')) {
                 const assessmentId = button.dataset.id;
                 const container = document.getElementById('attemptsListContainer');
-                container.innerHTML = '<p>Loading student scores...</p>';
 
                 try {
                     const response = await fetch(`../ajax/get_attempts.php?assessment_id=${assessmentId}`);
@@ -506,6 +505,60 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // --- REVIEW ATTEMPT MODAL LOGIC ---
+    // --- NEW AND IMPROVED REVIEW ATTEMPT MODAL LOGIC ---
+    // This listens for clicks inside the container that holds the student list
+    const attemptsModalBody = document.getElementById('attemptsListContainer');
+    if (attemptsModalBody) {
+
+        attemptsModalBody.addEventListener('click', async (event) => {
+            const reviewButton = event.target.closest('.review-attempt-btn');
+
+            // If the click was not on a review button, do nothing
+            if (!reviewButton) return;
+
+            event.preventDefault(); // Stop the link from doing anything else
+
+            const attemptId = reviewButton.dataset.attemptId;
+            const modalElement = document.getElementById('reviewAttemptModal');
+            const modalBody = document.getElementById('reviewAttemptBody');
+            const reviewModal = new bootstrap.Modal(modalElement);
+
+            // 1. Show a loading message and MANUALLY open the review modal
+            modalBody.innerHTML = '<p class="text-center">Loading review...</p>';
+            reviewModal.show();
+
+            // 2. Fetch the review details
+            try {
+                const response = await fetch(`../ajax/get_attempt_details.php?attempt_id=${attemptId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch attempt details.');
+                }
+                const html = await response.text();
+                modalBody.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading attempt review:', error);
+                modalBody.innerHTML = '<div class="alert alert-danger">Could not load the attempt review.</div>';
+            }
+        });
+    }
+
+    // Add this inside your DOMContentLoaded listener
+
+    // --- LOGIC FOR CUSTOM CLOSE BUTTON ON REVIEW MODAL ---
+    const reviewModalElement = document.getElementById('reviewAttemptModal');
+    if (reviewModalElement) {
+        const closeReviewBtn = document.getElementById('closeReviewModalBtn');
+
+        closeReviewBtn.addEventListener('click', () => {
+            const reviewModalInstance = bootstrap.Modal.getInstance(reviewModalElement);
+            if (reviewModalInstance) {
+                reviewModalInstance.hide();
+            }
+        });
+    }
+
     // --- QUESTIONS modal — populate hidden inputs before open ---
     if (questionsModal) {
         questionsModal.addEventListener('show.bs.modal', function (event) {
