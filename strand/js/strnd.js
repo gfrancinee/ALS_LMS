@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const attempts = document.getElementById('assessmentAttempts').value;
 
             try {
-                const response = await fetch('../ajax/create_assessment.php', {
+                const response = await fetch('../ajax/save-assessment.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -391,16 +391,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // This single listener now handles all clicks (Edit, Open/Close, Delete) inside the assessment list
+    // This single listener handles all clicks inside the assessment list
+    // This is the final, complete code for all assessment interactions.
     const assessmentList = document.getElementById('assessmentList');
     if (assessmentList) {
+        let assessmentIdToDelete = null; // Variable to hold the ID for deletion
+
+        // MAIN LISTENER: Handles all button clicks on the assessment cards
         assessmentList.addEventListener('click', async (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
 
-            const button = e.target.closest('button'); // Get the button element
-            if (!button) return; // Exit if the click was not on a button
+            // 1. Handle VIEW ATTEMPTS button
+            if (button.classList.contains('view-attempts-btn')) {
+                const assessmentId = button.dataset.id;
+                const container = document.getElementById('attemptsListContainer');
+                container.innerHTML = '<p>Loading student scores...</p>';
 
-            // Check if the OPEN/CLOSE button was clicked
-            if (button.classList.contains('toggle-status-btn')) {
+                try {
+                    const response = await fetch(`../ajax/get_attempts.php?assessment_id=${assessmentId}`);
+                    const html = await response.text();
+                    container.innerHTML = html;
+                } catch (error) {
+                    console.error('Failed to fetch attempts:', error);
+                    container.innerHTML = '<div class="alert alert-danger">Could not load scores.</div>';
+                }
+            }
+
+            // 2. Handle OPEN/CLOSE button
+            else if (button.classList.contains('toggle-status-btn')) {
                 const id = button.dataset.id;
                 const status = button.dataset.status;
                 try {
@@ -418,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Check if the EDIT button was clicked
+            // 3. Handle EDIT button (populates the edit modal)
             else if (button.classList.contains('edit-assessment-btn')) {
                 document.getElementById('editAssessmentId').value = button.dataset.id;
                 document.getElementById('editAssessmentTitle').value = button.dataset.title;
@@ -427,48 +446,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('editAssessmentAttempts').value = button.dataset.maxAttempts;
             }
 
-            // Check if the DELETE button was clicked
-            else if (button.classList.contains('delete-assessment')) {
-                const id = button.dataset.id;
-                if (confirm('Are you sure you want to delete this assessment? This cannot be undone.')) {
-                    try {
-                        const response = await fetch('../ajax/delete_assessment.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: id })
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            refreshAssessmentList();
-                        } else {
-                            alert('Error: ' + result.message);
-                        }
-                    } catch (error) {
-                        console.error('Error deleting assessment:', error);
-                    }
-                }
+            // 4. Handle OPEN DELETE MODAL button
+            else if (button.dataset.bsTarget === '#deleteAssessmentModal') {
+                assessmentIdToDelete = button.dataset.id;
             }
         });
-    }
 
-    // Listener for the "View Attempts"
-    assessmentList.addEventListener('click', async (e) => {
-        const button = e.target.closest('.view-attempts-btn');
-        if (button) {
-            const assessmentId = button.dataset.id;
-            const container = document.getElementById('attemptsListContainer');
+        // SEPARATE LISTENER: Handles the final "Yes, Delete" click inside the modal
+        const confirmDeleteBtn = document.getElementById('confirmDeleteAssessmentBtn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', async () => {
+                if (!assessmentIdToDelete) return;
 
-            try {
-                const response = await fetch(`../ajax/get_attempts.php?assessment_id=${assessmentId}`);
-                const html = await response.text();
-                container.innerHTML = html;
-            } catch (error) {
-                console.error('Failed to fetch attempts:', error);
-                container.innerHTML = '<div class="alert alert-danger">Could not load scores.</div>';
-            }
+                try {
+                    const response = await fetch('../ajax/delete_assessment.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: assessmentIdToDelete })
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('deleteAssessmentModal')).hide();
+                        refreshAssessmentList();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting assessment:', error);
+                }
+            });
         }
-    });
-
+    }
     // --- QUESTIONS modal — populate hidden inputs before open ---
     if (questionsModal) {
         questionsModal.addEventListener('show.bs.modal', function (event) {

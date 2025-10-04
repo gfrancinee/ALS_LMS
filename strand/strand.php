@@ -511,6 +511,26 @@ $materials = $materials_stmt->get_result();
                 <div class="answer-area"></div>
             </div>
         </template>
+
+        <!-- View Attempts Modal ↓ -->
+        <div class="modal fade" id="viewAttemptsModal" tabindex="-1" aria-labelledby="viewAttemptsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewAttemptsModalLabel">Student Attempts</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="attemptsListContainer">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Edit assessment modal ↓ -->
         <div class="modal fade" id="editAssessmentModal" tabindex="-1" aria-labelledby="editAssessmentModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -550,20 +570,20 @@ $materials = $materials_stmt->get_result();
             </div>
         </div>
 
-        <!-- View Attempts Modal ↓ -->
-        <div class="modal fade" id="viewAttemptsModal" tabindex="-1" aria-labelledby="viewAttemptsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+        <!-- Delete Assessment Confirmation Modal -->
+        <div class="modal fade" id="deleteAssessmentModal" tabindex="-1" aria-labelledby="deleteAssessmentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="viewAttemptsModalLabel">Student Attempts</h5>
+                        <h5 class="modal-title" id="deleteAssessmentModalLabel">Confirm Deletion</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div id="attemptsListContainer">
-                        </div>
+                        Are you sure you want to permanently delete this assessment? All associated questions and student attempts will also be lost.
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteAssessmentBtn">Delete</button>
                     </div>
                 </div>
             </div>

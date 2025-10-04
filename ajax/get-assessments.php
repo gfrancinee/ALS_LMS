@@ -33,7 +33,7 @@ while ($row = $result->fetch_assoc()) {
   $title = htmlspecialchars($row['title']);
   $desc = htmlspecialchars($row['description']);
   $duration = (int)$row['duration_minutes'];
-  $max_attempts = (int)$row['max_attempts']; // Fetch max_attempts here for student view
+  $max_attempts = (int)$row['max_attempts'];
 
   echo "
     <div class='card mb-2'>
@@ -50,7 +50,6 @@ while ($row = $result->fetch_assoc()) {
             <hr>
             <div class='d-flex justify-content-between align-items-center mt-2'>";
 
-  // --- BUTTON LOGIC ---
   if ($user_role === 'teacher') {
     $status_color = $row['status'] === 'open' ? 'success' : 'secondary';
     $toggle_action = $row['status'] === 'open' ? 'closed' : 'open';
@@ -58,44 +57,42 @@ while ($row = $result->fetch_assoc()) {
     $status_text = ucfirst($row['status']);
 
     echo "
-        <div class='d-flex gap-2 align-items-center'>
-            <button class='btn btn-sm btn-outline-info view-attempts-btn' data-bs-toggle='modal' data-bs-target='#viewAttemptsModal' data-id='$id'>View Attempts</button>
-
-            <button class='btn btn-sm btn-outline-primary manage-questions' data-assessment-id='$id' data-bs-toggle='modal' data-bs-target='#questionsModal'>Manage Questions</button>
-            <button class='btn btn-sm btn-outline-$status_color toggle-status-btn' data-id='$id' data-status='$toggle_action'>$toggle_text</button>
-            
-            <div class='dropdown'>
-                <button class='btn btn-sm btn-light' type='button' data-bs-toggle='dropdown' aria-expanded='false'>
-                    <i class='bi bi-three-dots-vertical'></i>
-                </button>
-                <ul class='dropdown-menu dropdown-menu-end'>
-                    <li>
-                        <button class='dropdown-item edit-assessment-btn'
-                            data-bs-toggle='modal'
-                            data-bs-target='#editAssessmentModal'
-                            data-id='$id'
-                            data-title='$title'
-                            data-description='$desc'
-                            data-duration='$duration'
-                            data-max-attempts='$max_attempts'>
-                            <i class='bi bi-pencil-square me-2 text-success'></i> Edit
-                        </button>
-                    </li>
-                    <li>
-                        <button type='button' class='dropdown-item text-danger delete-assessment' data-id='$id'>
-                            <i class='bi bi-trash3 me-2'></i> Delete
-                        </button>
-                    </li>
-                </ul>
+            <div class='d-flex gap-2 align-items-center'>
+                <button class='btn btn-sm btn-outline-info view-attempts-btn' data-bs-toggle='modal' data-bs-target='#viewAttemptsModal' data-id='$id'>View Attempts</button>
+                <button class='btn btn-sm btn-outline-primary manage-questions' data-assessment-id='$id' data-bs-toggle='modal' data-bs-target='#questionsModal'>Manage Questions</button>
+                <button class='btn btn-sm btn-outline-$status_color toggle-status-btn' data-id='$id' data-status='$toggle_action'>$toggle_text</button>
+                
+                <div class='dropdown'>
+                    <button class='btn btn-sm btn-light' type='button' data-bs-toggle='dropdown' aria-expanded='false'>
+                        <i class='bi bi-three-dots-vertical'></i>
+                    </button>
+                    <ul class='dropdown-menu dropdown-menu-end'>
+                        <li>
+                            <button class='dropdown-item edit-assessment-btn'
+                                data-bs-toggle='modal'
+                                data-bs-target='#editAssessmentModal'
+                                data-id='$id'
+                                data-title='$title'
+                                data-description='$desc'
+                                data-duration='$duration'
+                                data-max-attempts='$max_attempts'>
+                                <i class='bi bi-pencil-square me-2 text-success'></i> Edit
+                            </button>
+                        </li>
+                        <li>
+                            <button type='button' class='dropdown-item text-danger' data-bs-toggle='modal' data-bs-target='#deleteAssessmentModal' data-id='$id'>
+                                <i class='bi bi-trash3 me-2'></i> Delete
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-        <span class='badge bg-$status_color'>$status_text</span>
-    ";
+            <span class='badge bg-$status_color'>$status_text</span>
+        ";
   } else { // Student View
     $attempt_count = (int)$row['attempt_count'];
     $attempts_left = $max_attempts - $attempt_count;
 
-    // Fetch the student's highest score if they've taken it
     $score_stmt = $conn->prepare("SELECT MAX(score) as max_score, total_items FROM quiz_attempts WHERE assessment_id = ? AND student_id = ?");
     $score_stmt->bind_param("ii", $id, $user_id);
     $score_stmt->execute();

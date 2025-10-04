@@ -13,6 +13,11 @@ if (isset($_SESSION['success'])) {
     unset($_SESSION['success']);
 }
 
+if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger"><?= $_SESSION['error'] ?></div>
+    <?php unset($_SESSION['error']); ?>
+<?php endif;
+
 // Securely fetch strands created by this teacher
 $stmt = $conn->prepare("SELECT * FROM learning_strands WHERE creator_id = ? ORDER BY date_created DESC");
 $stmt->bind_param("i", $teacher_id);
@@ -130,11 +135,11 @@ if ($currentUser) {
                                     <button type="button" class="dropdown-item edit-btn"
                                         data-bs-toggle="modal"
                                         data-bs-target="#editStrandModal"
-                                        data-bs-id="<?= $strand['id'] ?>"
-                                        data-bs-title="<?= htmlspecialchars($strand['strand_title']) ?>"
-                                        data-bs-code="<?= htmlspecialchars($strand['strand_code']) ?>"
-                                        data-bs-grade="<?= htmlspecialchars($strand['grade_level']) ?>"
-                                        data-bs-description="<?= htmlspecialchars($strand['description']) ?>">
+                                        data-strand-id="<?= htmlspecialchars($strand['id']) ?>"
+                                        data-title="<?= htmlspecialchars($strand['strand_title']) ?>"
+                                        data-code="<?= htmlspecialchars($strand['strand_code']) ?>"
+                                        data-grade="<?= htmlspecialchars($strand['grade_level']) ?>"
+                                        data-desc="<?= htmlspecialchars($strand['description']) ?>">
                                         <i class="bi bi-pencil-square me-2 text-success"></i>Edit
                                     </button>
                                 </li>
@@ -169,7 +174,7 @@ if ($currentUser) {
     <!-- Modal -->
     <div class="modal fade" id="createStrandModal" tabindex="-1" aria-labelledby="createStrandLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form action="create/create-strand.php" method="POST" class="modal-content">
+            <form action="../ajax/create-strand.php" method="POST" class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="createStrandLabel">Create Learning Strand</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -211,7 +216,7 @@ if ($currentUser) {
     <!-- Edit Strand Modal -->
     <div class="modal fade" id="editStrandModal" tabindex="-1" aria-labelledby="editStrandLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form action="edit/edit-strand.php" method="POST" class="modal-content">
+            <form action="../ajax/edit-strand.php" method="POST" class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editStrandLabel">Edit Learning Strand</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -238,6 +243,7 @@ if ($currentUser) {
                         <label for="edit-description" class="form-label">Description</label>
                         <textarea class="form-control" id="edit-description" name="description" rows="3" required></textarea>
                     </div>
+                    <input type="hidden" name="strand_id" id="editStrandIdInput" value="">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -259,7 +265,7 @@ if ($currentUser) {
                     Are you sure you want to delete this learning strand?
                 </div>
                 <div class="modal-footer">
-                    <form action="delete/delete-strand.php" method="POST">
+                    <form action="../ajax/delete-strand.php" method="POST">
                         <input type="hidden" name="strand_id" id="deleteStrandId">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-danger">Delete</button>

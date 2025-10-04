@@ -1,10 +1,10 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../includes/auth.php';
+require_once '../includes/db.php';
 
 // Only allow teachers to create strands
 if ($_SESSION['role'] !== 'teacher') {
-    header("Location: ../../login.php");
+    header("Location: ../login.php");
     exit;
 }
 

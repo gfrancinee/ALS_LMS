@@ -1,78 +1,89 @@
 document.addEventListener('DOMContentLoaded', () => {
-
-    // Get all the links in the sidebar
+    // This top part for the sidebar is fine.
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
-
-    // Specifically get the 'courses' tab to use as the default
     const coursesTab = document.querySelector('[data-tab="courses"]');
-
-    // --- Part 1: Handle clicks ON the sidebar icons ---
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function (event) {
-            // Remove 'active-tab' from all links first
             sidebarLinks.forEach(s_link => s_link.classList.remove('active-tab'));
-
-            // Add 'active-tab' to the one that was just clicked
             this.classList.add('active-tab');
         });
     });
-
-    // --- Part 2: Handle clicks ANYWHERE ELSE on the page ---
     document.addEventListener('click', function (event) {
-        // Find the main sidebar element
         const sidebar = document.querySelector('.sidebar');
-
-        // Check if the click happened OUTSIDE the sidebar
-        // The .closest() method is perfect for this
         if (!sidebar.contains(event.target)) {
-            // If the click was outside, remove 'active-tab' from all links
             sidebarLinks.forEach(link => link.classList.remove('active-tab'));
-
-            // And add it back to the default 'courses' tab
             if (coursesTab) {
                 coursesTab.classList.add('active-tab');
             }
         }
     });
-
-    // Special handling for the profile dropdown trigger
     const profileDropdownTrigger = document.querySelector('.dropdown .sidebar-link');
     if (profileDropdownTrigger) {
         profileDropdownTrigger.addEventListener('click', function () {
-            // When the profile dropdown is clicked, make it active
             sidebarLinks.forEach(s_link => s_link.classList.remove('active-tab'));
             this.classList.add('active-tab');
         });
     }
 
+    // --- THIS IS THE CORRECTED CODE FOR THE MODALS ---
+
     // Edit Strand Modal
     const editStrandModal = document.getElementById('editStrandModal');
     if (editStrandModal) {
         editStrandModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
             const button = event.relatedTarget;
 
-            // Extract info from data-bs-* attributes
-            const strandId = button.getAttribute('data-bs-id');
-            const title = button.getAttribute('data-bs-title');
-            const code = button.getAttribute('data-bs-code');
-            const grade = button.getAttribute('data-bs-grade');
-            const description = button.getAttribute('data-bs-description');
+            // Extract strand data from button
+            const strandId = button.getAttribute('data-strand-id');
+            const title = button.getAttribute('data-title');
+            const code = button.getAttribute('data-code');
+            const grade = button.getAttribute('data-grade');
+            const description = button.getAttribute('data-desc');
 
-            // Get the modal's form elements
-            const modal = this;
-            const modalTitleInput = modal.querySelector('#edit-strand-title');
-            const modalCodeInput = modal.querySelector('#edit-strand-code');
-            const modalGradeSelect = modal.querySelector('#edit-grade-level');
-            const modalDescriptionTextarea = modal.querySelector('#edit-description');
-            const modalIdInput = modal.querySelector('#edit-strand-id');
+            // Get form fields
+            const modalIdInput = document.getElementById('edit-strand-id');
+            const modalTitleInput = document.getElementById('edit-strand-title');
+            const modalCodeInput = document.getElementById('edit-strand-code');
+            const modalGradeSelect = document.getElementById('edit-grade-level');
+            const modalDescriptionTextarea = document.getElementById('edit-description');
 
-            // Update the form fields with the strand's data
+            // ✅ Set values for visible fields
             modalIdInput.value = strandId;
             modalTitleInput.value = title;
             modalCodeInput.value = code;
             modalGradeSelect.value = grade;
             modalDescriptionTextarea.value = description;
+
+            // ✅ Set value for hidden input used in form submission
+            const modalStrandIdInput = document.getElementById('editStrandIdInput');
+            if (modalStrandIdInput) {
+                modalStrandIdInput.value = strandId;
+            }
+        });
+    }
+
+    const editStrandForm = document.getElementById('editStrandForm');
+    if (editStrandForm) {
+        editStrandForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            fetch('../ajax/edit-strand.php', {
+                method: 'POST',
+                body: new FormData(editStrandForm)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Or use a toast
+                        location.reload();   // Refresh to show updated strand
+                    } else {
+                        alert(data.message); // Show error
+                    }
+                })
+                .catch(err => {
+                    console.error('Edit strand failed:', err);
+                    alert('Something went wrong while updating the strand.');
+                });
         });
     }
 
@@ -80,13 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteStrandModal = document.getElementById('deleteStrandModal');
     if (deleteStrandModal) {
         deleteStrandModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
             const button = event.relatedTarget;
-            // Extract info from data-bs-id attribute
-            const strandId = button.getAttribute('data-bs-id');
+
+            // CORRECTED: Extract info from data-id attribute (NO "-bs-")
+            const strandId = button.getAttribute('data-strand-id');
 
             // Update the modal's hidden input
-            const modalInput = deleteStrandModal.querySelector('#deleteStrandId');
+            const modalInput = document.getElementById('deleteStrandId');
             modalInput.value = strandId;
         });
     }
