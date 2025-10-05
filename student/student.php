@@ -69,14 +69,41 @@ if ($currentUser) {
     </header>
 
     <aside class="sidebar position-fixed top-0 start-0 d-flex flex-column align-items-center pt-5 gap-2 shadow" style="width: 65px; height: 100vh;">
-        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center <?php echo ($current_tab === 'courses') ? 'active-tab' : ''; ?>" data-tab="courses"><i class="bi bi-book-fill fs-4" aria-label="Courses"></i></a>
-        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center <?php echo ($current_tab === 'messages') ? 'active-tab' : ''; ?>" data-tab="messages"><i class="bi bi-envelope fs-4" aria-label="Messages"></i></a>
-        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center <?php echo ($current_tab === 'notifications') ? 'active-tab' : ''; ?>" data-tab="notifications"><i class="bi bi-bell fs-4" aria-label="Notifications"></i></a>
+
+        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center active-tab" data-tab="courses"><i class="bi bi-book-fill fs-4" aria-label="Courses"></i></a>
+
         <div class="dropdown dropend">
-            <a href="#" class="sidebar-link d-flex justify-content-center align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="#" class="sidebar-link d-flex justify-content-center align-items-center position-relative" id="messages-icon-wrapper" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <i class="bi bi-chat-dots-fill fs-4" aria-label="Messages"></i>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" id="message-notification-dot"></span>
+            </a>
+            <div class="dropdown-menu shadow" id="messages-dropdown" aria-labelledby="messages-icon-wrapper">
+                <div class="px-3 pt-2" style="width: 350px;">
+                    <h5 class="mb-0">Messages</h5>
+                    <hr class="my-2">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search for people...">
+                    </div>
+                    <hr class="my-2">
+                </div>
+                <div class="list-group list-group-flush" id="conversation-list" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center text-muted p-5" id="no-messages-placeholder">
+                        No messages yet.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center position-relative" data-tab="notifications">
+            <i class="bi bi-bell-fill fs-4" aria-label="Notifications"></i>
+            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" id="general-notification-dot"></span>
+        </a>
+
+        <div class="dropdown dropend">
+            <a href="#" class="sidebar-link d-flex justify-content-center align-items-center" data-bs-toggle="dropdown">
                 <i class="bi bi-person-fill fs-4" aria-label="Profile"></i>
             </a>
-
             <ul class="dropdown-menu">
                 <li>
                     <div class="dropdown-header text-center">
@@ -85,7 +112,6 @@ if ($currentUser) {
                         <?php else: ?>
                             <i class="bi bi-person-circle mb-2" style="font-size: 50px; color: #6c757d;"></i>
                         <?php endif; ?>
-
                         <h6 class="mb-0"><?= $userName ?></h6>
                     </div>
                 </li>
@@ -128,8 +154,35 @@ if ($currentUser) {
         </div>
     </main>
 
+    <!-- Chat Modal -->
+    <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div id="chat-modal-header" class="d-flex align-items-center"></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="chat-modal-body">
+                </div>
+                <div class="modal-footer">
+                    <form id="message-form" class="w-100 d-flex gap-2">
+                        <input type="hidden" id="chat-conversation-id" name="conversation_id">
+                        <input type="text" id="chat-message-input" name="message_text" class="form-control" placeholder="Type a message..." autocomplete="off" required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const currentUserId = <?php echo $_SESSION['user_id']; ?>;
+    </script>
 </body>
 
 </html>

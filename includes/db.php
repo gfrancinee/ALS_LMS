@@ -19,7 +19,7 @@ if ($conn->connect_error) {
 }
 
 // Optional: Auto-create admin user if not found
-$adminEmail = 'admin@gmail.com';
+$adminEmail = 'als.learning.management.system@gmail.com';
 $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
 $check->bind_param("s", $adminEmail);
 $check->execute();

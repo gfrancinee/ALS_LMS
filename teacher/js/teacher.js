@@ -1,104 +1,174 @@
+// FINAL COMPLETE CODE for js/teacher.js and js/student.js
 document.addEventListener('DOMContentLoaded', () => {
-    // This top part for the sidebar is fine.
-    const sidebarLinks = document.querySelectorAll('.sidebar-link');
-    const coursesTab = document.querySelector('[data-tab="courses"]');
+
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarLinks = document.querySelectorAll('.sidebar .sidebar-link, .sidebar .dropdown > a');
+    const coursesTab = document.querySelector('.sidebar [data-tab="courses"]');
+
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function (event) {
+            const isDropdown = this.hasAttribute('data-bs-toggle');
+            if (!isDropdown) {
+                event.preventDefault();
+            }
             sidebarLinks.forEach(s_link => s_link.classList.remove('active-tab'));
             this.classList.add('active-tab');
         });
     });
+
     document.addEventListener('click', function (event) {
-        const sidebar = document.querySelector('.sidebar');
-        if (!sidebar.contains(event.target)) {
+        if (sidebar && !sidebar.contains(event.target) && !event.target.closest('.dropdown-menu')) {
             sidebarLinks.forEach(link => link.classList.remove('active-tab'));
             if (coursesTab) {
                 coursesTab.classList.add('active-tab');
             }
         }
     });
-    const profileDropdownTrigger = document.querySelector('.dropdown .sidebar-link');
-    if (profileDropdownTrigger) {
-        profileDropdownTrigger.addEventListener('click', function () {
-            sidebarLinks.forEach(s_link => s_link.classList.remove('active-tab'));
-            this.classList.add('active-tab');
+
+    const messagesIconWrapper = document.getElementById('messages-icon-wrapper');
+    if (messagesIconWrapper) {
+        const conversationList = document.getElementById('conversation-list');
+        const searchInput = document.querySelector('#messages-dropdown input[type="text"]');
+        const chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+        const chatModalHeader = document.getElementById('chat-modal-header');
+        const chatModalBody = document.getElementById('chat-modal-body');
+        const messageForm = document.getElementById('message-form');
+        const chatConversationIdInput = document.getElementById('chat-conversation-id');
+        const chatMessageInput = document.getElementById('chat-message-input');
+        let debounceTimer;
+        let currentChatPartner = {}; // **FIX:** Store the current chat partner's info
+
+        const fetchConversations = async () => {
+            try {
+                const response = await fetch('../ajax/get_conversations.php');
+                const conversations = await response.json();
+                conversationList.innerHTML = '';
+                if (conversations && conversations.length > 0) {
+                    conversations.forEach(convo => {
+                        const avatarSrc = convo.avatar_url ? `../${convo.avatar_url}` : '../assets/default_avatar.png';
+                        const lastMessage = convo.last_message ? convo.last_message : 'No messages yet.';
+                        const convoItemHTML = `<a href="#" class="list-group-item list-group-item-action" data-conversation-id="${convo.conversation_id}" data-user-name="${convo.fname} ${convo.lname}" data-user-avatar="${convo.avatar_url || ''}"><div class="d-flex align-items-center"><img src="${avatarSrc}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;"><div><h6 class="mb-0">${convo.fname} ${convo.lname}</h6><p class="mb-0 text-muted text-truncate" style="max-width: 250px;">${lastMessage}</p></div></div></a>`;
+                        conversationList.insertAdjacentHTML('beforeend', convoItemHTML);
+                    });
+                } else {
+                    conversationList.innerHTML = '<div class="text-center text-muted p-5">No messages yet.</div>';
+                }
+            } catch (error) { console.error('Fetch conversations failed:', error); }
+        };
+
+        const displaySearchResults = (users) => {
+            conversationList.innerHTML = '';
+            if (users.length > 0) {
+                users.forEach(user => {
+                    const avatarSrc = user.avatar_url ? `../${user.avatar_url}` : '../assets/default_avatar.png';
+                    const userItemHTML = `<a href="#" class="list-group-item list-group-item-action new-conversation-link" data-user-id="${user.id}" data-user-name="${user.fname} ${user.lname}" data-user-avatar="${user.avatar_url || ''}"><div class="d-flex align-items-center"><img src="${avatarSrc}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;"><div><h6 class="mb-0">${user.fname} ${user.lname}</h6><p class="mb-0 text-muted">Click to start a conversation</p></div></div></a>`;
+                    conversationList.insertAdjacentHTML('beforeend', userItemHTML);
+                });
+            } else {
+                conversationList.innerHTML = '<div class="text-center text-muted p-3">No users found.</div>';
+            }
+        };
+
+        searchInput.addEventListener('keyup', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                const term = searchInput.value.trim();
+                if (term === '') { fetchConversations(); return; }
+                try {
+                    const response = await fetch(`../ajax/search_users.php?term=${encodeURIComponent(term)}`);
+                    const users = await response.json();
+                    displaySearchResults(users);
+                } catch (error) { console.error('Search failed:', error); }
+            }, 300);
+        });
+
+        const openChatWindow = async (conversationId, otherUser = {}) => {
+            chatConversationIdInput.value = conversationId;
+            currentChatPartner = otherUser; // **FIX:** Save the user's info
+            const messagesResponse = await fetch(`../ajax/get_messages.php?conversation_id=${conversationId}`);
+            const messages = await messagesResponse.json();
+
+            if (!currentChatPartner.fname && messages.length > 0) {
+                const otherUserInfo = messages.find(msg => msg.sender_id != currentUserId);
+                if (otherUserInfo) currentChatPartner = { fname: otherUserInfo.fname, lname: otherUserInfo.lname, avatar_url: otherUserInfo.avatar_url };
+            }
+
+            const avatarSrc = currentChatPartner.avatar_url ? `../${currentChatPartner.avatar_url}` : '../assets/default_avatar.png';
+            chatModalHeader.innerHTML = `<img src="${avatarSrc}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;"><h5 class="modal-title fs-6 mb-0">${currentChatPartner.fname || 'Chat'} ${currentChatPartner.lname || ''}</h5>`;
+
+            chatModalBody.innerHTML = '';
+            messages.forEach(msg => {
+                const isMe = msg.sender_id == currentUserId;
+                const msgHtml = `<div class="d-flex ${isMe ? 'justify-content-end' : ''}"><div class="p-2 rounded-3 mb-2" style="max-width: 75%; background-color: ${isMe ? '#0d6efd' : '#e9ecef'}; color: ${isMe ? 'white' : 'black'};">${msg.message_text}</div></div>`;
+                chatModalBody.insertAdjacentHTML('beforeend', msgHtml);
+            });
+            chatModalBody.scrollTop = chatModalBody.scrollHeight;
+            const dropdownInstance = bootstrap.Dropdown.getInstance(messagesIconWrapper);
+            if (dropdownInstance) dropdownInstance.hide();
+            chatModal.show();
+        };
+
+        conversationList.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const link = event.target.closest('.list-group-item-action');
+            if (!link) return;
+            const otherUser = { fname: link.dataset.userName.split(' ')[0], lname: link.dataset.userName.split(' ').slice(1).join(' '), avatar_url: link.dataset.userAvatar };
+            if (link.classList.contains('new-conversation-link')) {
+                const formData = new FormData();
+                formData.append('other_user_id', link.dataset.userId);
+                const response = await fetch('../ajax/get_or_create_conversation.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                openChatWindow(data.conversation_id, otherUser);
+            } else {
+                openChatWindow(link.dataset.conversationId, otherUser);
+            }
+        });
+
+        messageForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const sentMessageText = chatMessageInput.value;
+            if (sentMessageText.trim() === '') return;
+            const formData = new FormData(messageForm);
+            try {
+                const response = await fetch('../ajax/send_message.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    chatMessageInput.value = '';
+                    // **FIX:** Pass the stored user info when refreshing the chat
+                    openChatWindow(chatConversationIdInput.value, currentChatPartner);
+                    fetchConversations();
+                } else { alert(result.message); }
+            } catch (error) { console.error('Failed to send message:', error); }
+        });
+
+        messagesIconWrapper.parentElement.addEventListener('show.bs.dropdown', () => {
+            fetchConversations();
         });
     }
 
-    // --- THIS IS THE CORRECTED CODE FOR THE MODALS ---
-
-    // Edit Strand Modal
+    //==================================================//
+    // START: TEACHER-ONLY LEARNING STRAND MODAL LOGIC
+    //==================================================//
     const editStrandModal = document.getElementById('editStrandModal');
     if (editStrandModal) {
         editStrandModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
-
-            // Extract strand data from button
-            const strandId = button.getAttribute('data-strand-id');
-            const title = button.getAttribute('data-title');
-            const code = button.getAttribute('data-code');
-            const grade = button.getAttribute('data-grade');
-            const description = button.getAttribute('data-desc');
-
-            // Get form fields
-            const modalIdInput = document.getElementById('edit-strand-id');
-            const modalTitleInput = document.getElementById('edit-strand-title');
-            const modalCodeInput = document.getElementById('edit-strand-code');
-            const modalGradeSelect = document.getElementById('edit-grade-level');
-            const modalDescriptionTextarea = document.getElementById('edit-description');
-
-            // ✅ Set values for visible fields
-            modalIdInput.value = strandId;
-            modalTitleInput.value = title;
-            modalCodeInput.value = code;
-            modalGradeSelect.value = grade;
-            modalDescriptionTextarea.value = description;
-
-            // ✅ Set value for hidden input used in form submission
-            const modalStrandIdInput = document.getElementById('editStrandIdInput');
-            if (modalStrandIdInput) {
-                modalStrandIdInput.value = strandId;
-            }
+            editStrandModal.querySelector('#edit-strand-id').value = button.getAttribute('data-strand-id');
+            editStrandModal.querySelector('#edit-strand-title').value = button.getAttribute('data-title');
+            editStrandModal.querySelector('#edit-strand-code').value = button.getAttribute('data-code');
+            editStrandModal.querySelector('#edit-grade-level').value = button.getAttribute('data-grade');
+            editStrandModal.querySelector('#edit-description').value = button.getAttribute('data-desc');
         });
     }
 
-    const editStrandForm = document.getElementById('editStrandForm');
-    if (editStrandForm) {
-        editStrandForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            fetch('../ajax/edit-strand.php', {
-                method: 'POST',
-                body: new FormData(editStrandForm)
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(data.message); // Or use a toast
-                        location.reload();   // Refresh to show updated strand
-                    } else {
-                        alert(data.message); // Show error
-                    }
-                })
-                .catch(err => {
-                    console.error('Edit strand failed:', err);
-                    alert('Something went wrong while updating the strand.');
-                });
-        });
-    }
-
-    // Delete Strand Modal
     const deleteStrandModal = document.getElementById('deleteStrandModal');
     if (deleteStrandModal) {
         deleteStrandModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
-
-            // CORRECTED: Extract info from data-id attribute (NO "-bs-")
-            const strandId = button.getAttribute('data-strand-id');
-
-            // Update the modal's hidden input
-            const modalInput = document.getElementById('deleteStrandId');
-            modalInput.value = strandId;
+            deleteStrandModal.querySelector('#deleteStrandId').value = button.getAttribute('data-bs-id');
         });
     }
+    //==================================================//
+    // END: TEACHER-ONLY LEARNING STRAND MODAL LOGIC
+    //==================================================//
 });
