@@ -10,6 +10,7 @@ require_once '../includes/auth.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin homepage | ALS LMS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/admin.css">
     <script src="js/admin.js" defer></script>
 </head>
@@ -40,8 +41,10 @@ require_once '../includes/auth.php';
             </main>
         </div>
     </div>
+    <button id="logoutBtn" class="btn btn-danger mb-2" onclick="window.location.href='../logout.php'">
+        <i class="bi bi-box-arrow-left"></i> Logout
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

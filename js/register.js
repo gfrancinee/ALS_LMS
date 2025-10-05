@@ -122,14 +122,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     goHomeBtn.addEventListener("click", () => {
-        if (lastRegisteredRole === "student") {
-            // This is the correct path you specified
-            window.location.href = "student/student.php";
-        } else if (lastRegisteredRole === "teacher") {
-            window.location.href = "teacher/teacher.php";
-        } else {
-            window.location.href = "login.php";
-        }
+        // After registration, always send the user to the login page.
+        window.location.href = "login.php";
     });
 
     function showMessage(msg) {

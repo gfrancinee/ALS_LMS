@@ -88,6 +88,13 @@ main.text-center {
     text-decoration: none;
 }
 
+#logoutBtn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
 
 /* Responsive tweaks */
 @media (max-width: 768px) {

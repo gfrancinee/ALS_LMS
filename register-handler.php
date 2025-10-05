@@ -1,19 +1,17 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+// FILE: register-handler.php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// --- SETUP AND INCLUDES ---
+session_start();
+header('Content-Type: application/json'); // Tell the browser we are sending JSON
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// If using Composer:
-require 'vendor/autoload.php';
-// If not using Composer, adjust the path to your PHPMailer files:
-// require 'includes/PHPMailer/Exception.php';
-// require 'includes/PHPMailer/PHPMailer.php';
-// require 'includes/PHPMailer/SMTP.php';
-
-require_once 'includes/db.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/ALS_LMS/vendor/autoload.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/ALS_LMS/includes/db.php';
 
 $response = [
     "status" => "error",
@@ -21,7 +19,6 @@ $response = [
 ];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // --- 1. VALIDATION (Your original logic is great) ---
     $fname = trim($_POST['fname'] ?? '');
     $lname = trim($_POST['lname'] ?? '');
     $address = trim($_POST['address'] ?? '');
@@ -31,69 +28,62 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $confirmPassword = $_POST['confirmPassword'] ?? '';
     $role = $_POST['role'] ?? '';
 
-    if (!$fname || !$lname || !$address || !$email || !$phone || !$password || !$confirmPassword || !$role) {
+    if (empty($fname) || empty($lname) || empty($address) || empty($email) || empty($phone) || empty($password) || empty($role)) {
         $response["message"] = "All fields are required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $response["message"] = "Invalid email format.";
     } elseif ($password !== $confirmPassword) {
         $response["message"] = "Passwords do not match.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $response["message"] = "Invalid email format.";
     } else {
-        // --- 2. CHECK FOR EXISTING EMAIL ---
-        $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $check->bind_param("s", $email);
-        $check->execute();
-        $check->store_result();
+        $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+        $check_stmt->bind_param("s", $email);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
 
-        if ($check->num_rows > 0) {
+        if ($check_result->num_rows > 0) {
             $response["message"] = "Email is already registered.";
         } else {
-            // --- 3. PREPARE USER DATA FOR DATABASE ---
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $token = bin2hex(random_bytes(32)); // Generate secure verification token
+            $token = bin2hex(random_bytes(32));
 
-            // **MODIFIED SQL QUERY** to include the verification_token
-            $stmt = $conn->prepare("INSERT INTO users (fname, lname, address, email, phone, password, role, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssssss", $fname, $lname, $address, $email, $phone, $hashedPassword, $role, $token);
+            $insert_stmt = $conn->prepare("INSERT INTO users (fname, lname, address, email, phone, password, role, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $insert_stmt->bind_param("ssssssss", $fname, $lname, $address, $email, $phone, $hashedPassword, $role, $token);
 
-            if ($stmt->execute()) {
-                // --- 4. SEND VERIFICATION EMAIL ---
+            if ($insert_stmt->execute()) {
                 $mail = new PHPMailer(true);
                 try {
-                    //Server settings - Replace with your details
                     $mail->isSMTP();
                     $mail->Host       = 'smtp.gmail.com';
                     $mail->SMTPAuth   = true;
-                    $mail->Username   = 'your_email@gmail.com'; // Your Gmail address
-                    $mail->Password   = 'zubb muaw haur hmib'; // Your Google App Password
+                    $mail->Username   = 'als.learning.management.system@gmail.com';
+                    $mail->Password   = 'cojk uoaw yjmm imcd'; // IMPORTANT: USE YOUR REAL APP PASSWORD
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                     $mail->Port       = 465;
 
-                    //Recipients
-                    $mail->setFrom('your_email@gmail.com', 'ALS LMS');
+                    $mail->setFrom('als.learning.management.system@gmail.com', 'ALS LMS');
                     $mail->addAddress($email, $fname . ' ' . $lname);
 
-                    //Content
                     $mail->isHTML(true);
                     $mail->Subject = 'Verify Your Account - ALS LMS';
-                    // Make sure this URL is correct for your project
                     $verification_link = "http://localhost/ALS_LMS/verify.php?token=" . $token;
                     $mail->Body    = "Hi $fname,<br><br>Thank you for registering! Please click the link below to activate your account:<br><br><a href='$verification_link'>Verify Account</a>";
-                    $mail->AltBody = 'Please copy and paste this link into your browser to verify your account: ' . $verification_link;
 
                     $mail->send();
 
-                    // **MODIFIED SUCCESS RESPONSE**
                     $response["status"] = "success";
                     $response["message"] = "Registration successful! Please check your email to verify your account.";
+                    $response["role"] = $role;
                 } catch (Exception $e) {
-                    // Email failed to send, but user is in DB. This is a critical error.
-                    $response["message"] = "Registration succeeded, but the verification email could not be sent. Please contact support.";
+                    $response["message"] = "Registration succeeded, but email failed: " . $mail->ErrorInfo;
                 }
             } else {
-                $response["message"] = "Database insertion failed: " . $stmt->error;
+                $response["message"] = "Database error: " . $insert_stmt->error;
             }
+            $insert_stmt->close();
         }
+        $check_stmt->close();
     }
 }
 
-echo json_encode($response);
+$conn->close();
+echo json_encode($response); // Send the JSON response back to the JavaScript

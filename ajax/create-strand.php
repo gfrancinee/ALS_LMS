@@ -40,6 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // --- THIS IS THE FIX ---
     // Redirect back UP ONE LEVEL to the main teacher.php page
-    header("Location: ../teacher.php");
+    header("Location: ../teacher/teacher.php");
     exit;
 }

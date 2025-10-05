@@ -115,7 +115,7 @@ if (!empty($user['avatar_url'])) {
                                     <?php if (!empty($avatar_path)): ?>
                                         <img src="<?= $avatar_path ?>" class="img-thumbnail rounded-circle mb-3" alt="User Avatar" style="width: 150px; height: 150px; object-fit: cover;">
                                     <?php else: ?>
-                                        <i class="bi bi-person-circle mb-3" style="font-size: 150px; color: #000000ff;"></i>
+                                        <i class="bi bi-person-circle mb-3" style="font-size: 150px; color: #6c757d;"></i>
                                     <?php endif; ?>
                                     <div class="mb-3">
                                         <label for="avatar_image" class="form-label">Change Picture</label>
