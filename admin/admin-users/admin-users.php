@@ -35,7 +35,7 @@ require_once '../../includes/db.php';
             <h2 class="mb-0">User Management</h2>
             <div class="mb-3">
                 <a href="../admin.php" class="back-link">
-                    <i class="bi bi-arrow-left me-1"></i> Back
+                    <i class="bi bi-arrow-left me-1"></i>Back
                 </a>
             </div>
         </div>

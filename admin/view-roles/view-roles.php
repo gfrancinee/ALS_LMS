@@ -33,7 +33,7 @@ require_once '../../includes/auth.php';
             <h2 class="mb-0">View Roles</h2>
             <div class="mb-3">
                 <a href="../admin.php" class="back-link">
-                    <i class="bi bi-arrow-left me-1"></i> Back
+                    <i class="bi bi-arrow-left me-1"></i>Back
                 </a>
             </div>
         </div>
