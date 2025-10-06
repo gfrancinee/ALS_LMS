@@ -253,21 +253,16 @@ $materials = $materials_stmt->get_result();
         <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form id="materialUploadForm" enctype="multipart/form-data" method="POST">
+                    <form id="uploadForm" enctype="multipart/form-data">
                         <div class="modal-header">
                             <h5 class="modal-title" id="uploadModalLabel">Upload Learning Material</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-
                         <div class="modal-body">
-                            <!-- Label Textfield -->
                             <div class="mb-3">
                                 <label for="materialLabel" class="form-label">Material Label</label>
-                                <input type="text" class="form-control" name="materialLabel" id="materialLabel"
-                                    placeholder="e.g. Week 1: Introduction to HTML" required>
+                                <input type="text" class="form-control" name="materialLabel" id="materialLabel" placeholder="e.g. Week 1: Introduction" required>
                             </div>
-
-                            <!-- Material Type Dropdown -->
                             <div class="mb-3">
                                 <label for="materialType" class="form-label">Material Type</label>
                                 <select class="form-select" name="materialType" id="materialType" required>
@@ -279,16 +274,12 @@ $materials = $materials_stmt->get_result();
                                     <option value="link">Link</option>
                                 </select>
                             </div>
-
-                            <!-- Dynamic Input Container (JS will inject file or link input here) -->
-                            <div class="mb-3" id="materialInputContainer"></div>
+                            <div class="mb-3" id="dynamicInputArea"></div>
                             <div id="uploadAlertModal" style="display:none;"></div>
                         </div>
-
-                        <input type="hidden" name="strand_id" value="<?= htmlspecialchars($strand_id) ?>">
-                        <input type="hidden" name="teacher_id" value="<?= htmlspecialchars($_SESSION['user_id']) ?>">
-
                         <div class="modal-footer">
+                            <input type="hidden" name="strand_id" value="<?= htmlspecialchars($strand_id) ?>">
+                            <input type="hidden" name="teacher_id" value="<?= htmlspecialchars($_SESSION['user_id']) ?>">
                             <button type="submit" class="btn btn-success">Upload</button>
                         </div>
                     </form>

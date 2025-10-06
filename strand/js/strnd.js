@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const strandId = window.strandId;
 
     // Modals
-    const uploadModal = document.getElementById('uploadModal');
     const editModal = document.getElementById('editMaterialModal');
     const assessmentModal = document.getElementById('assessmentModal');
     const questionsModal = document.getElementById('questionsModal');
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mediaModal = document.getElementById('mediaModal');
 
     // Forms, Containers & Alerts
-    const uploadForm = document.getElementById('materialUploadForm');
     const editForm = document.querySelector('#editMaterialModal form');
     const assessmentForm = document.getElementById('assessmentForm');
     const assessmentListContainer = document.getElementById('assessmentList');
@@ -30,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentSearchInput = document.getElementById('studentSearchInput');
 
     // Material Upload Elements
-    const materialType = document.getElementById('materialType');
     const inputContainer = document.getElementById('materialInputContainer');
 
     // Question Builder Elements
@@ -39,16 +36,67 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionTemplate = document.getElementById("questionTemplate");
 
     // SECTION 2: FUNCTIONS
-    // --- Materials ---
+    // --- Material Upload Logic ---
+    const uploadForm = document.getElementById('uploadForm');
+    const materialType = document.getElementById('materialType');
+    const dynamicInputArea = document.getElementById('dynamicInputArea');
+    const uploadModal = document.getElementById('uploadModal');
+
     function injectMaterialInput() {
-        if (!materialType || !inputContainer) return;
+        if (!materialType || !dynamicInputArea) return;
         const type = materialType.value;
-        inputContainer.innerHTML = '';
+        dynamicInputArea.innerHTML = ''; // Clear previous input
         if (type === 'link') {
-            inputContainer.innerHTML = `<label for="materialLink" class="form-label">URL</label><input type="url" id="materialLink" name="materialLink" class="form-control" placeholder="https://example.com" required>`;
-        } else if (type) {
-            inputContainer.innerHTML = `<label for="materialFile" class="form-label">Upload ${type.charAt(0).toUpperCase() + type.slice(1)}</label><input type="file" id="materialFile" name="materialFile" class="form-control" accept="${getAcceptType(type)}" required>`;
+            dynamicInputArea.innerHTML = `<label for="materialLink" class="form-label">Link URL</label><input type="url" class="form-control" id="materialLink" name="materialLink" required>`;
+        } else if (type !== '') {
+            dynamicInputArea.innerHTML = `<label for="materialFile" class="form-label">Upload File</label><input type="file" class="form-control" id="materialFile" name="materialFile" required>`;
         }
+    }
+
+    if (materialType) materialType.addEventListener('change', injectMaterialInput);
+    if (uploadModal) uploadModal.addEventListener('shown.bs.modal', injectMaterialInput);
+
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // This is the most important line to prevent page refresh
+
+            const uploadAlertModal = document.getElementById('uploadAlertModal');
+            const submitButton = this.querySelector('button[type="submit"]');
+            const formData = new FormData(this);
+
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...`;
+            uploadAlertModal.style.display = 'none';
+
+            fetch('ajax/upload_material.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => {
+                    if (!res.ok) { throw new Error('Network response was not ok'); }
+                    return res.json();
+                })
+                .then(data => {
+                    let alertClass = data.status === 'success' ? 'alert-success' : 'alert-danger';
+                    uploadAlertModal.innerHTML = `<div class="alert ${alertClass} mb-0">${data.message}</div>`;
+                    uploadAlertModal.style.display = 'block';
+
+                    if (data.status === 'success') {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Upload';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    uploadAlertModal.style.display = 'block';
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Upload';
+                });
+        });
     }
 
     function getAcceptType(type) {
