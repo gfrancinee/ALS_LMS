@@ -1,6 +1,9 @@
-// FINAL COMPLETE CODE for js/teacher.js and js/student.js
+// FINAL COMPLETE CODE for js/teacher.js
 document.addEventListener('DOMContentLoaded', () => {
 
+    //==================================================//
+    // START: SIDEBAR LOGIC
+    //==================================================//
     const sidebar = document.querySelector('.sidebar');
     const sidebarLinks = document.querySelectorAll('.sidebar .sidebar-link, .sidebar .dropdown > a');
     const coursesTab = document.querySelector('.sidebar [data-tab="courses"]');
@@ -8,9 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function (event) {
             const isDropdown = this.hasAttribute('data-bs-toggle');
-            if (!isDropdown) {
-                event.preventDefault();
-            }
+            if (!isDropdown) { event.preventDefault(); }
             sidebarLinks.forEach(s_link => s_link.classList.remove('active-tab'));
             this.classList.add('active-tab');
         });
@@ -19,12 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', function (event) {
         if (sidebar && !sidebar.contains(event.target) && !event.target.closest('.dropdown-menu')) {
             sidebarLinks.forEach(link => link.classList.remove('active-tab'));
-            if (coursesTab) {
-                coursesTab.classList.add('active-tab');
-            }
+            if (coursesTab) { coursesTab.classList.add('active-tab'); }
         }
     });
 
+    //==================================================//
+    // START: MESSAGING LOGIC
+    //==================================================//
     const messagesIconWrapper = document.getElementById('messages-icon-wrapper');
     if (messagesIconWrapper) {
         const conversationList = document.getElementById('conversation-list');
@@ -36,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatConversationIdInput = document.getElementById('chat-conversation-id');
         const chatMessageInput = document.getElementById('chat-message-input');
         let debounceTimer;
-        let currentChatPartner = {}; // **FIX:** Store the current chat partner's info
+        let currentChatPartner = {};
 
         const fetchConversations = async () => {
             try {
@@ -84,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const openChatWindow = async (conversationId, otherUser = {}) => {
             chatConversationIdInput.value = conversationId;
-            currentChatPartner = otherUser; // **FIX:** Save the user's info
+            currentChatPartner = otherUser;
             const messagesResponse = await fetch(`../ajax/get_messages.php?conversation_id=${conversationId}`);
             const messages = await messagesResponse.json();
 
@@ -134,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 if (result.status === 'success') {
                     chatMessageInput.value = '';
-                    // **FIX:** Pass the stored user info when refreshing the chat
                     openChatWindow(chatConversationIdInput.value, currentChatPartner);
                     fetchConversations();
                 } else { alert(result.message); }
@@ -149,6 +150,40 @@ document.addEventListener('DOMContentLoaded', () => {
     //==================================================//
     // START: TEACHER-ONLY LEARNING STRAND MODAL LOGIC
     //==================================================//
+
+    // AJAX logic for Creating a Learning Strand
+    const createStrandForm = document.getElementById('createStrandForm');
+    const createStrandModal = document.getElementById('createStrandModal');
+    if (createStrandForm && createStrandModal) {
+        createStrandForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            fetch('../ajax/create-strand.php', {
+                method: 'POST',
+                body: new FormData(createStrandForm)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide the modal instance
+                    const modalInstance = bootstrap.Modal.getInstance(createStrandModal);
+                    if (modalInstance) modalInstance.hide();
+
+                    if (data.status === 'success') {
+                        // Success: Reload the page to display the session success message and update the list
+                        location.reload();
+                    } else {
+                        // Error: Show the alert message returned from PHP
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating the learning strand.');
+                });
+        });
+    }
+    // END NEW: AJAX logic for Creating a Learning Strand
+
     const editStrandModal = document.getElementById('editStrandModal');
     if (editStrandModal) {
         editStrandModal.addEventListener('show.bs.modal', function (event) {
@@ -161,14 +196,82 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const editStrandForm = document.getElementById('editStrandForm');
+    if (editStrandForm) {
+        editStrandForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fetch('../ajax/edit-strand.php', {
+                method: 'POST',
+                body: new FormData(editStrandForm)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // FIXED: Check for success status
+                    if (data.status === 'success') {
+                        // REMOVED alert(data.message) here
+                        // Reload the page immediately so PHP can display the session message
+                        location.reload();
+                    } else {
+                        // Keep alert for error messages
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while saving changes.');
+                });
+        });
+    }
+
     const deleteStrandModal = document.getElementById('deleteStrandModal');
     if (deleteStrandModal) {
         deleteStrandModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
-            deleteStrandModal.querySelector('#deleteStrandId').value = button.getAttribute('data-bs-id');
+            // NOTE: The button's attribute for strand ID might be 'data-strand-id' 
+            // or 'data-bs-id'. Using 'data-bs-id' as per your existing code.
+            const strandId = button.getAttribute('data-bs-id');
+            // Set the hidden input in the modal
+            deleteStrandModal.querySelector('#deleteStrandId').value = strandId;
         });
+
+        // FIXED: Add event listener to the actual delete button inside the modal
+        const confirmDeleteBtn = deleteStrandModal.querySelector('#confirmDeleteStrandBtn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function () {
+                const strandId = deleteStrandModal.querySelector('#deleteStrandId').value;
+
+                // Using fetch API for consistency with the edit logic
+                fetch('../ajax/delete-strand.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `strand_id=${encodeURIComponent(strandId)}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Hide the modal regardless of success/fail
+                        const modalInstance = bootstrap.Modal.getInstance(deleteStrandModal);
+                        if (modalInstance) modalInstance.hide();
+
+                        if (data.status === 'success') {
+                            // Reload the page to show the updated list and the session success message
+                            location.reload();
+                        } else {
+                            // Show alert for error messages
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the learning strand.');
+                        const modalInstance = bootstrap.Modal.getInstance(deleteStrandModal);
+                        if (modalInstance) modalInstance.hide();
+                    });
+            });
+        }
     }
     //==================================================//
-    // END: TEACHER-ONLY LEARNING STRAND MODAL LOGIC
+    // END: LEARNING STRAND MODAL LOGIC
     //==================================================//
 });

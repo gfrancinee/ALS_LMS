@@ -134,12 +134,17 @@ if ($currentUser) {
     <main class="content ms-5 pt-4 px-4">
         <div class="section-title h4 fw-semibold ms-3 mb-4">My Learning Strand</div>
 
-        <!-- Success Alert -->
-        <?php if (!empty($success_message)): ?>
-            <div class="alert alert-success mx-3 mt-3" role="alert">
-                <?= htmlspecialchars($success_message) ?>
-            </div>
-        <?php endif; ?>
+        <?php
+        // ADD THIS BLOCK to display the success message
+        if (isset($_SESSION['success_message'])) {
+            // This is a custom style to match your screenshot's green alert box
+            echo '<div class="alert" style="background-color: #d4edda; color: #155724; border-color: #c3e6cb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 0.25rem;">';
+            echo htmlspecialchars($_SESSION['success_message']);
+            echo '</div>';
+            // IMPORTANT: Clear the message so it doesn't reappear on refresh
+            unset($_SESSION['success_message']);
+        }
+        ?>
 
         <!-- Create Button -->
         <button class="strand-button btn d-inline-flex align-items-center gap-2 px-3 py-2 ms-3" data-bs-toggle="modal" data-bs-target="#createStrandModal">
@@ -206,44 +211,44 @@ if ($currentUser) {
                     <h5 class="modal-title" id="createStrandLabel">Create Learning Strand</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <!-- Removed hidden creator_id field -->
+                <form id="createStrandForm" method="POST" action="../ajax/create-strand.php">
+                    <div class="modal-body">
+                        <!-- Removed hidden creator_id field -->
 
-                    <div class="mb-3">
-                        <label for="strandTitle" class="form-label">Strand Title</label>
-                        <input type="text" class="form-control" name="strand_title" required>
-                    </div>
+                        <div class="mb-3">
+                            <label for="strandTitle" class="form-label">Strand Title</label>
+                            <input type="text" class="form-control" name="strand_title" required>
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="strandCode" class="form-label">Strand Code</label>
-                        <input type="text" class="form-control" name="strand_code" required>
-                    </div>
+                        <div class="mb-3">
+                            <label for="strandCode" class="form-label">Strand Code</label>
+                            <input type="text" class="form-control" name="strand_code" required>
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="gradeLevel" class="form-label">Grade Level</label>
-                        <select class="form-select" name="grade_level" required>
-                            <option value="">Select Grade</option>
-                            <option value="Grade 11">Grade 11</option>
-                            <option value="Grade 12">Grade 12</option>
-                        </select>
-                    </div>
+                        <div class="mb-3">
+                            <label for="gradeLevel" class="form-label">Grade Level</label>
+                            <select class="form-select" name="grade_level" required>
+                                <option value="">Select Grade</option>
+                                <option value="Grade 11">Grade 11</option>
+                                <option value="Grade 12">Grade 12</option>
+                            </select>
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3" required></textarea>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Create Strand</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Create Strand</button>
+                    </div>
+                </form>
         </div>
     </div>
 
-    <!-- Edit Strand Modal -->
     <div class="modal fade" id="editStrandModal" tabindex="-1" aria-labelledby="editStrandLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form action="../ajax/edit-strand.php" method="POST" class="modal-content">
+            <form id="editStrandForm" class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editStrandLabel">Edit Learning Strand</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -280,7 +285,6 @@ if ($currentUser) {
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteStrandModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -292,11 +296,9 @@ if ($currentUser) {
                     Are you sure you want to delete this learning strand?
                 </div>
                 <div class="modal-footer">
-                    <form action="../ajax/delete-strand.php" method="POST">
-                        <input type="hidden" name="strand_id" id="deleteStrandId">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </form>
+                    <input type="hidden" name="strand_id" id="deleteStrandId">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteStrandBtn">Delete</button>
                 </div>
             </div>
         </div>
