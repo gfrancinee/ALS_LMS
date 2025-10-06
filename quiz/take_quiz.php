@@ -15,11 +15,14 @@ if (!$assessment_id) {
 }
 
 // Fetch assessment details
-$stmt = $conn->prepare("SELECT title, description, duration_minutes FROM assessments WHERE id = ?");
+// Fetch assessment details
+$stmt = $conn->prepare("SELECT strand_id, title, description, duration_minutes FROM assessments WHERE id = ?");
 $stmt->bind_param("i", $assessment_id);
 $stmt->execute();
 $assessment = $stmt->get_result()->fetch_assoc();
 $stmt->close();
+// Store the strand_id in a variable
+$strand_id = $assessment['strand_id'];
 
 // Fetch questions and their options
 $stmt = $conn->prepare("SELECT * FROM questions WHERE assessment_id = ? ORDER BY id ASC");
@@ -34,7 +37,7 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Take Quiz: <?= htmlspecialchars($assessment['title']) ?></title>
+    <title>Take Quiz<?= htmlspecialchars($assessment['title']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -46,6 +49,7 @@ $stmt->close();
 
         <form action="submit_quiz.php" method="POST">
             <input type="hidden" name="assessment_id" value="<?= (int)$assessment_id ?>">
+            <input type="hidden" name="strand_id" value="<?= (int)$strand_id ?>">
 
             <?php $q_num = 1;
             while ($question = $questions_result->fetch_assoc()): ?>

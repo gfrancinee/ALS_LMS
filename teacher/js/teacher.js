@@ -153,9 +153,95 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //==================================================//
-    // START: TEACHER-ONLY LEARNING STRAND MODAL LOGIC
-    //==================================================//
+    // NOTIFICATION LOGIC
+    const notificationsIconWrapper = document.getElementById('notifications-icon-wrapper');
+    if (notificationsIconWrapper) {
+        const notificationList = document.getElementById('notification-list');
+        const noNotificationsPlaceholder = document.getElementById('no-notifications-placeholder');
+        const notificationDot = document.getElementById('general-notification-dot');
+
+        const fetchNotifications = async () => {
+            try {
+                const response = await fetch('../ajax/get_notifications.php');
+                const notifications = await response.json();
+
+                notificationList.innerHTML = '';
+                let unreadCount = 0;
+
+                if (notifications && notifications.length > 0) {
+                    if (noNotificationsPlaceholder) noNotificationsPlaceholder.style.display = 'none';
+
+                    notifications.forEach(notif => {
+                        if (notif.is_read == 0) {
+                            unreadCount++;
+                        }
+                        const itemClass = notif.is_read == 0 ? 'bg-light' : '';
+                        const notifHTML = `
+                        <a href="${notif.link || '#'}" class="list-group-item list-group-item-action ${itemClass}" data-notif-id="${notif.id}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <p class="mb-1">${notif.message}</p>
+                            </div>
+                            <small class="text-muted">${new Date(notif.created_at).toLocaleString()}</small>
+                        </a>
+                    `;
+                        notificationList.insertAdjacentHTML('beforeend', notifHTML);
+                    });
+
+                } else {
+                    if (noNotificationsPlaceholder) noNotificationsPlaceholder.style.display = 'block';
+                }
+
+                if (unreadCount > 0) {
+                    notificationDot.classList.remove('d-none');
+                } else {
+                    notificationDot.classList.add('d-none');
+                }
+
+            } catch (error) {
+                console.error("Failed to fetch notifications:", error);
+            }
+        };
+
+        notificationsIconWrapper.parentElement.addEventListener('show.bs.dropdown', () => {
+            fetchNotifications();
+        });
+
+        notificationList.addEventListener('click', (event) => {
+            const link = event.target.closest('.list-group-item-action');
+            if (!link) return;
+
+            const notifId = link.dataset.notifId;
+            if (notifId && link.classList.contains('bg-light')) {
+                link.classList.remove('bg-light');
+                const formData = new FormData();
+                formData.append('id', notifId);
+                fetch('../ajax/mark_notification_read.php', { method: 'POST', body: formData });
+            }
+        });
+    }
+
+    // --- Real-time Polling for Notifications ---
+    const checkForNotifications = async () => {
+        const notificationDot = document.getElementById('general-notification-dot');
+        if (!notificationDot) return;
+
+        try {
+            const response = await fetch('../ajax/check_new_notifications.php');
+            const data = await response.json();
+
+            if (data.unread_count > 0) {
+                notificationDot.classList.remove('d-none');
+            } else {
+                notificationDot.classList.add('d-none');
+            }
+        } catch (error) {
+            // Silently fail is okay for a background check
+        }
+    };
+
+    // Check immediately on page load, and then every 20 seconds
+    checkForNotifications();
+    setInterval(checkForNotifications, 20000);
 
     // AJAX logic for Creating a Learning Strand
     const createStrandForm = document.getElementById('createStrandForm');
@@ -188,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         });
     }
-    // END NEW: AJAX logic for Creating a Learning Strand
 
     const editStrandModal = document.getElementById('editStrandModal');
     if (editStrandModal) {

@@ -1,5 +1,5 @@
 <?php
-// Enable MySQLi error reporting
+require_once 'functions.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Database credentials

@@ -63,6 +63,26 @@ $stmt = $conn->prepare(
 $stmt->bind_param("iissss", $strand_id, $teacher_id, $label, $type, $file_path, $link_url);
 
 if ($stmt->execute()) {
+    // Get all student participants for this strand
+    $strand_id = $_POST['strand_id']; // Or however you get the strand ID
+    $student_ids = [];
+    $stmt = $conn->prepare("SELECT user_id FROM strand_participants WHERE strand_id = ? AND role = 'student'");
+    $stmt->bind_param("i", $strand_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $student_ids[] = $row['user_id'];
+    }
+    $stmt->close();
+
+    // Create a notification for each student
+    $strand_title = "Your Strand"; // You'll need to fetch the actual strand title
+    $message = "New material has been uploaded in " . $strand_title;
+    $link = "../strand/strand.php?id=" . $strand_id; // Link to the strand page
+
+    foreach ($student_ids as $student_id) {
+        create_notification($conn, $student_id, $message, $link);
+    }
     echo json_encode(['status' => 'success', 'message' => 'Material uploaded successfully.']);
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Database insert failed.']);

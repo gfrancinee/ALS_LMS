@@ -102,10 +102,23 @@ if ($currentUser) {
             </div>
         </div>
 
-        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center position-relative" data-tab="notifications">
-            <i class="bi bi-bell-fill fs-4" aria-label="Notifications"></i>
-            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" id="general-notification-dot"></span>
-        </a>
+        <div class="dropdown dropend">
+            <a href="#" class="sidebar-link d-flex justify-content-center align-items-center position-relative" id="notifications-icon-wrapper" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <i class="bi bi-bell-fill fs-4" aria-label="Notifications"></i>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" id="general-notification-dot"></span>
+            </a>
+            <div class="dropdown-menu shadow" id="notifications-dropdown" aria-labelledby="notifications-icon-wrapper">
+                <div class="px-3 pt-2" style="width: 350px;">
+                    <h5 class="mb-0">Notifications</h5>
+                    <hr class="my-2">
+                </div>
+                <div class="list-group list-group-flush" id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center text-muted p-5" id="no-notifications-placeholder">
+                        No new notifications.
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="dropdown dropend">
             <a href="#" class="sidebar-link d-flex justify-content-center align-items-center" data-bs-toggle="dropdown">
