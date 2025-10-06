@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modals
     const editModal = document.getElementById('editMaterialModal');
     const assessmentModal = document.getElementById('assessmentModal');
-    const questionsModal = document.getElementById('questionsModal');
     const participantModal = document.getElementById('participantModal');
     const mediaModal = document.getElementById('mediaModal');
 
@@ -114,42 +113,91 @@ document.addEventListener('DOMContentLoaded', () => {
         location.reload();
     };
 
-    // --- Question Builder ---
-    if (formBuilder && addQuestionBtn && questionTemplate) {
-        function refreshIndices() {
-            Array.from(formBuilder.children).forEach((blk, i) => {
-                blk.querySelector(".q-index").textContent = i + 1;
-            });
-        }
-        function buildAnswerArea(block, type) {
-            const area = block.querySelector(".answer-area");
-            area.innerHTML = "";
-            if (type === "mcq") {
-                for (let i = 0; i < 4; i++) {
-                    const opt = document.createElement("div");
-                    opt.className = "input-group mb-2";
-                    opt.innerHTML = `<span class="input-group-text">${String.fromCharCode(65 + i)}</span><input type="text" class="form-control" name="options[]" placeholder="Option ${i + 1}">`;
-                    area.appendChild(opt);
-                }
-                area.innerHTML += `<label class="form-label mt-2">Correct Answer</label><select class="form-select" name="correct_answer" required><option value="">Select</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>`;
-            } else if (type === "true_false") {
-                area.innerHTML = `<label class="form-label">Correct Answer</label><select class="form-select" name="correct_answer" required><option value="">Select</option><option value="True">True</option><option value="False">False</option></select>`;
-            } else if (type === "short_answer" || type === "essay") {
-                area.innerHTML = `<label class="form-label">Expected Answer</label><input type="text" class="form-control" name="correct_answer" placeholder="Enter correct answer (optional)">`;
+    // --- Question Builder (Final Corrected Version) ---
+    const questionsModal = document.getElementById('questionsModal');
+    if (questionsModal) {
+        // Finds the elements INSIDE that specific modal
+        const formBuilder = questionsModal.querySelector('#formBuilder');
+        const addQuestionBtn = questionsModal.querySelector('#addQuestionBtn');
+        const questionTemplate = document.getElementById('questionTemplate'); // Corrected case
+
+        // Check if all parts exist
+        if (formBuilder && addQuestionBtn && questionTemplate) {
+
+            function refreshIndices() {
+                const allQuestionBlocks = formBuilder.querySelectorAll('.question-block');
+                allQuestionBlocks.forEach((questionBlock, index) => {
+                    const qIndexElement = questionBlock.querySelector('.q-index');
+                    if (qIndexElement) {
+                        qIndexElement.textContent = index + 1;
+                    }
+                });
             }
+
+            function addQuestion() {
+                const clone = questionTemplate.content.cloneNode(true);
+                const newBlock = clone.querySelector('.question-block');
+
+                // --- START: Full functionality for each new question ---
+                // Add remove button listener
+                newBlock.querySelector('.remove-question').addEventListener('click', () => {
+                    newBlock.remove();
+                    refreshIndices();
+                });
+
+                // Add move up/down listeners
+                newBlock.querySelector('.move-up').addEventListener('click', () => {
+                    if (newBlock.previousElementSibling) {
+                        formBuilder.insertBefore(newBlock, newBlock.previousElementSibling);
+                        refreshIndices();
+                    }
+                });
+
+                newBlock.querySelector('.move-down').addEventListener('click', () => {
+                    if (newBlock.nextElementSibling) {
+                        formBuilder.insertBefore(newBlock.nextElementSibling, newBlock);
+                        refreshIndices();
+                    }
+                });
+
+                // Add listener for question type change
+                const typeSelect = newBlock.querySelector('.question-type');
+                typeSelect.addEventListener('change', () => {
+                    buildAnswerArea(newBlock, typeSelect.value);
+                });
+                // --- END: Full functionality ---
+
+                formBuilder.appendChild(newBlock);
+                refreshIndices(); // Re-number after adding
+            }
+
+            // Function to build the answer area (MCQ, True/False, etc.)
+            function buildAnswerArea(block, type) {
+                const area = block.querySelector(".answer-area");
+                area.innerHTML = ""; // Clear previous options
+                if (type === "mcq") {
+                    for (let i = 0; i < 4; i++) {
+                        const opt = document.createElement("div");
+                        opt.className = "input-group mb-2";
+                        opt.innerHTML = `<span class="input-group-text">${String.fromCharCode(65 + i)}</span><input type="text" class="form-control" name="options[]" placeholder="Option ${i + 1}">`;
+                        area.appendChild(opt);
+                    }
+                    area.innerHTML += `<label class="form-label mt-2">Correct Answer</label><select class="form-select" name="correct_answer" required><option value="">Select</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>`;
+                } else if (type === "true_false") {
+                    area.innerHTML = `<label class="form-label">Correct Answer</label><select class="form-select" name="correct_answer" required><option value="">Select</option><option value="True">True</option><option value="False">False</option></select>`;
+                } else if (type === "short_answer" || type === "essay") {
+                    area.innerHTML = `<label class="form-label">Expected Answer</label><input type="text" class="form-control" name="correct_answer" placeholder="Enter correct answer (optional)">`;
+                }
+            }
+
+            // --- Event Listeners ---
+            addQuestionBtn.addEventListener('click', addQuestion);
+
+            questionsModal.addEventListener('shown.bs.modal', function () {
+                refreshIndices();
+            });
+
         }
-        function addQuestion() {
-            const clone = questionTemplate.content.cloneNode(true);
-            const block = clone.querySelector(".question-block");
-            block.querySelector(".remove-question").addEventListener("click", () => { block.remove(); refreshIndices(); });
-            block.querySelector(".move-up").addEventListener("click", () => { if (block.previousElementSibling) { formBuilder.insertBefore(block, block.previousElementSibling); refreshIndices(); } });
-            block.querySelector(".move-down").addEventListener("click", () => { if (block.nextElementSibling) { formBuilder.insertBefore(block.nextElementSibling, block); refreshIndices(); } });
-            const typeSelect = block.querySelector(".question-type");
-            typeSelect.addEventListener("change", () => buildAnswerArea(block, typeSelect.value));
-            formBuilder.appendChild(clone);
-            refreshIndices();
-        }
-        addQuestionBtn.addEventListener("click", addQuestion);
     }
 
     // --- Refresh Assessment List ---

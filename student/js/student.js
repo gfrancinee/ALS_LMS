@@ -23,12 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const messagesIconWrapper = document.getElementById('messages-icon-wrapper');
     if (messagesIconWrapper) {
+        let currentChatPartner = {};
         const conversationList = document.getElementById('conversation-list');
         const searchInput = document.querySelector('#messages-dropdown input[type="text"]');
         const chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
         const chatModalHeader = document.getElementById('chat-modal-header');
         const chatModalBody = document.getElementById('chat-modal-body');
         const messageForm = document.getElementById('message-form');
+        const messageDot = document.getElementById('message-notification-dot');
         const chatConversationIdInput = document.getElementById('chat-conversation-id');
         const chatMessageInput = document.getElementById('chat-message-input');
         let debounceTimer;
@@ -85,16 +87,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const openChatWindow = async (conversationId, otherUser = {}) => {
             chatConversationIdInput.value = conversationId;
+
+            // Mark messages as read
+            const formData = new FormData();
+            formData.append('conversation_id', conversationId);
+            await fetch('../ajax/mark_messages_read.php', { method: 'POST', body: formData });
+
+            // "Remember" the user if their details are provided
+            if (otherUser.fname) {
+                currentChatPartner = otherUser;
+            }
+            // If details are NOT provided (like after sending a message), use the remembered details
+            if (!otherUser.fname) {
+                otherUser = currentChatPartner;
+            }
+
             const messagesResponse = await fetch(`../ajax/get_messages.php?conversation_id=${conversationId}`);
             const messages = await messagesResponse.json();
 
-            if (!otherUser.fname && messages.length > 0) {
-                const otherUserInfo = messages.find(msg => msg.sender_id != currentUserId);
-                if (otherUserInfo) otherUser = { fname: otherUserInfo.fname, lname: otherUserInfo.lname, avatar_url: otherUserInfo.avatar_url };
-            }
-
-            const avatarSrc = otherUser.avatar_url ? `../${otherUser.avatar_url}` : '../assets/default_avatar.png';
-            chatModalHeader.innerHTML = `<img src="${avatarSrc}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;"><h5 class="modal-title fs-6 mb-0">${otherUser.fname || ''} ${otherUser.lname || ''}</h5>`;
+            const avatarElementForHeader = otherUser.avatar_url
+                ? `<img src="../${otherUser.avatar_url}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">`
+                : `<i class="bi bi-person-circle me-2" style="font-size: 40px; color: #6c757d;"></i>`;
+            chatModalHeader.innerHTML = `${avatarElementForHeader}<h5 class="modal-title fs-6 mb-0">${otherUser.fname || ''} ${otherUser.lname || ''}</h5>`;
 
             chatModalBody.innerHTML = '';
             messages.forEach(msg => {
@@ -103,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatModalBody.insertAdjacentHTML('beforeend', msgHtml);
             });
             chatModalBody.scrollTop = chatModalBody.scrollHeight;
+
             const dropdownInstance = bootstrap.Dropdown.getInstance(messagesIconWrapper);
             if (dropdownInstance) dropdownInstance.hide();
             chatModal.show();
@@ -154,6 +169,119 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesIconWrapper.parentElement.addEventListener('show.bs.dropdown', () => {
             fetchConversations();
         });
+
+        // --- SECTION: MESSAGES REAL-TIME CHECK ---
+        const checkForMessages = async () => {
+            const messageDot = document.getElementById('message-notification-dot');
+            if (!messageDot) return;
+
+            try {
+                const response = await fetch('../ajax/check_new_messages.php');
+                const data = await response.json();
+
+                if (data.unread_count > 0) {
+                    messageDot.classList.remove('d-none');
+                } else {
+                    messageDot.classList.add('d-none');
+                }
+            } catch (error) {
+                // Silently fail is okay for a background check
+            }
+        };
+
+        // Check immediately on page load, and then every 20 seconds
+        checkForMessages();
+        setInterval(checkForMessages, 20000);
+    }
+
+    // --- SECTION: NOTIFICATION LOGIC ---
+    const notificationsIconWrapper = document.getElementById('notifications-icon-wrapper');
+    if (notificationsIconWrapper) {
+        const notificationList = document.getElementById('notification-list');
+        const noNotificationsPlaceholder = document.getElementById('no-notifications-placeholder');
+        const notificationDot = document.getElementById('general-notification-dot');
+
+        const fetchNotifications = async () => {
+            try {
+                const response = await fetch('../ajax/get_notifications.php');
+                const notifications = await response.json();
+
+                notificationList.innerHTML = ''; // Clear current list
+                let unreadCount = 0;
+
+                if (notifications && notifications.length > 0) {
+                    notifications.forEach(notif => {
+                        const itemClass = notif.is_read == 0 ? 'bg-light' : '';
+                        const link = notif.link ? `../${notif.link}` : '#';
+                        const notifHTML = `
+            <a href="${link}" class="list-group-item list-group-item-action ${itemClass}" data-notif-id="${notif.id}">
+                <div class="d-flex w-100 justify-content-between">
+                    <p class="mb-1 small">${notif.message}</p>
+                </div>
+                <small class="text-muted">${new Date(notif.created_at).toLocaleString()}</small>
+            </a>
+        `;
+                        notificationList.insertAdjacentHTML('beforeend', notifHTML);
+                    });
+                } else {
+                    // This is the logic from your messages code
+                    notificationList.innerHTML = '<div class="text-center text-muted p-5" id="no-notifications-placeholder">No new notifications.</div>';
+                }
+            } catch (error) {
+                console.error("Failed to fetch notifications:", error);
+                notificationList.innerHTML = '<div class="p-3 text-danger">Could not load notifications.</div>';
+            }
+        };
+
+        // Fetch notifications when the dropdown is opened
+        notificationsIconWrapper.parentElement.addEventListener('show.bs.dropdown', () => {
+            fetchNotifications();
+        });
+
+        // Mark notification as read when clicked
+        notificationList.addEventListener('click', (event) => {
+            const link = event.target.closest('.list-group-item-action');
+            if (!link) return;
+
+            const notifId = link.dataset.notifId;
+            if (notifId && link.classList.contains('bg-light')) {
+                // Mark as read visually right away
+                link.classList.remove('bg-light');
+
+                // This checks if there are any other unread (bg-light) items left.
+                if (notificationList.querySelectorAll('.bg-light').length === 0) {
+                    notificationDot.classList.add('d-none');
+                }
+
+                // Tell the server to mark it as read
+                const formData = new FormData();
+                formData.append('id', notifId);
+                fetch('../ajax/mark_notification_read.php', { method: 'POST', body: formData });
+            }
+        });
+
+        // --- Real-time Polling for the Notification Dot ---
+        const checkForNotifications = async () => {
+            const notificationDot = document.getElementById('general-notification-dot');
+            if (!notificationDot) return;
+
+            try {
+                const response = await fetch('../ajax/check_new_notifications.php');
+                const data = await response.json();
+
+                if (data.unread_count > 0) {
+                    notificationDot.classList.remove('d-none');
+                } else {
+                    notificationDot.classList.add('d-none');
+                }
+            } catch (error) {
+                // Silently fail is okay for a background check
+            }
+        };
+
+        // Check immediately on page load, and then every 20 seconds
+        checkForNotifications();
+        setInterval(checkForNotifications, 20000);
     }
 
 });

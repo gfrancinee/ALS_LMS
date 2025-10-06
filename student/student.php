@@ -54,6 +54,10 @@ if ($currentUser) {
 </head>
 
 <body>
+    <script>
+        const currentUserId = <?= $_SESSION['user_id'] ?? 'null'; ?>;
+    </script>
+
     <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
         <div class="d-flex align-items-left">
             <h1 class="title m-0">
@@ -70,8 +74,10 @@ if ($currentUser) {
 
     <aside class="sidebar position-fixed top-0 start-0 d-flex flex-column align-items-center pt-5 gap-2 shadow" style="width: 65px; height: 100vh;">
 
+
         <a href="#" class="sidebar-link d-flex justify-content-center align-items-center active-tab" data-tab="courses"><i class="bi bi-book-fill fs-4" aria-label="Courses"></i></a>
 
+        <!-- Messages -->
         <div class="dropdown dropend">
             <a href="#" class="sidebar-link d-flex justify-content-center align-items-center position-relative" id="messages-icon-wrapper" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                 <i class="bi bi-chat-dots-fill fs-4" aria-label="Messages"></i>
@@ -95,6 +101,7 @@ if ($currentUser) {
             </div>
         </div>
 
+        <!-- Notifications -->
         <div class="dropdown dropend">
             <a href="#" class="sidebar-link d-flex justify-content-center align-items-center position-relative" id="notifications-icon-wrapper" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                 <i class="bi bi-bell-fill fs-4" aria-label="Notifications"></i>
@@ -113,6 +120,7 @@ if ($currentUser) {
             </div>
         </div>
 
+        <!-- Profile -->
         <div class="dropdown dropend">
             <a href="#" class="sidebar-link d-flex justify-content-center align-items-center" data-bs-toggle="dropdown">
                 <i class="bi bi-person-fill fs-4" aria-label="Profile"></i>
@@ -180,7 +188,7 @@ if ($currentUser) {
                 <div class="modal-footer">
                     <form id="message-form" class="w-100 d-flex gap-2">
                         <input type="hidden" id="chat-conversation-id" name="conversation_id">
-                        <input type="text" id="chat-message-input" name="message_text" class="form-control" placeholder="Type a message..." autocomplete="off" required>
+                        <input type="text" id="chat-message-input" name="message_text" class="form-control" placeholder="Type a message..." required>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-send-fill"></i>
                         </button>
