@@ -36,7 +36,7 @@ require_once '../includes/auth.php';
                 <div class="d-grid gap-3 col-8 mx-auto">
                     <a href="view-roles/view-roles.php" class="btn solid-btn btn-lg">View Roles</a>
                     <a href="admin-users/admin-users.php" class="btn solid-btn btn-lg">User Management</a>
-                    <a href="courses.php" class="btn solid-btn btn-lg">Course Oversight</a>
+                    <a href="LS oversight/ls.php" class="btn solid-btn btn-lg">LS Oversight</a>
                 </div>
             </main>
         </div>

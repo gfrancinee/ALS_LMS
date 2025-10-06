@@ -1,0 +1,199 @@
+/* Custom CSS for Course Management Actions list in ls.php */
+
+/* Targeting the list group used for the actions using the custom class */
+.course-actions-list {
+    /* Optional: Ensure list boundaries are clean, though usually handled by the card */
+    border: none !important;
+}
+
+/* Targeting the individual list items inside the actions list */
+.course-actions-list .list-group-item {
+    /* This removes the horizontal lines (the borders) between the action items */
+    border: none;
+}
+
+.card {
+    border: none;
+}
+
+/* General Layout */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    color: #212529;
+}
+
+.topbar {
+    position: sticky;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: bold;
+}
+
+header h1 {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    ;
+    margin-bottom: 0.5rem;
+    color: rgb(0, 0, 0);
+
+    #font span:nth-child(1) {
+        color: red;
+    }
+
+    #font span:nth-child(2) {
+        color: green;
+    }
+
+    #font span:nth-child(3) {
+        color: blue;
+    }
+
+}
+
+/* Logos */
+.top-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+}
+
+/* Page Title */
+h2 {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease-in-out;
+}
+
+.back-link:hover {
+    color: #dc3545;
+}
+
+/* Tabs */
+.nav-tabs .nav-link {
+    font-weight: 500;
+    color: #495057;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: #e9ecef;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: red;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Tables */
+.table {
+    background-color: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+.table-dark th {
+    background-color: #343a40;
+    color: #fff;
+}
+
+/* Buttons in Table */
+.btn-sm {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.6rem;
+}
+
+.edit-btn {
+    transition: background-color 0.2s ease-in-out;
+}
+
+.edit-btn:hover {
+    background-color: #0b5ed7;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Form Fields */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-control,
+.form-select {
+    border-radius: 6px;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: none;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 576px) {
+
+    .table th,
+    .table td {
+        font-size: 0.85rem;
+    }
+
+    .btn-sm {
+        font-size: 0.75rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+}
