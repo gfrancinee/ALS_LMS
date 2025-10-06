@@ -40,11 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 conversationList.innerHTML = '';
                 if (conversations && conversations.length > 0) {
                     conversations.forEach(convo => {
-                        const avatarSrc = convo.avatar_url ? `../${convo.avatar_url}` : '../assets/default_avatar.png';
-                        const lastMessage = convo.last_message ? convo.last_message : 'Click to start conversation.';
+                        const avatarElement = convo.avatar_url
+                            ? `<img src="../${convo.avatar_url}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">`
+                            : `<i class="bi bi-person-circle me-3" style="font-size: 50px; color: #6c757d;"></i>`;
 
-                        // BUG #1 FIX IS HERE: Added data-user-name and data-user-avatar to existing conversations
-                        const convoItemHTML = `<a href="#" class="list-group-item list-group-item-action" data-conversation-id="${convo.conversation_id}" data-user-name="${convo.fname} ${convo.lname}" data-user-avatar="${convo.avatar_url || ''}"><div class="d-flex align-items-center"><img src="${avatarSrc}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;"><div><h6 class="mb-0">${convo.fname} ${convo.lname}</h6><p class="mb-0 text-muted text-truncate" style="max-width: 250px;">${lastMessage}</p></div></div></a>`;
+                        const lastMessage = convo.last_message ? convo.last_message : 'No messages yet.';
+                        const convoItemHTML = `<a href="#" class="list-group-item list-group-item-action" data-conversation-id="${convo.conversation_id}" data-user-name="${convo.fname} ${convo.lname}" data-user-avatar="${convo.avatar_url || ''}"><div class="d-flex align-items-center">${avatarElement}<div><h6 class="mb-0">${convo.fname} ${convo.lname}</h6><p class="mb-0 text-muted text-truncate" style="max-width: 250px;">${lastMessage}</p></div></div></a>`;
                         conversationList.insertAdjacentHTML('beforeend', convoItemHTML);
                     });
                 } else {
@@ -57,8 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
             conversationList.innerHTML = '';
             if (users.length > 0) {
                 users.forEach(user => {
-                    const avatarSrc = user.avatar_url ? `../${user.avatar_url}` : '../assets/default_avatar.png';
-                    const userItemHTML = `<a href="#" class="list-group-item list-group-item-action new-conversation-link" data-user-id="${user.id}" data-user-name="${user.fname} ${user.lname}" data-user-avatar="${user.avatar_url || ''}"><div class="d-flex align-items-center"><img src="${avatarSrc}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;"><div><h6 class="mb-0">${user.fname} ${user.lname}</h6><p class="mb-0 text-muted">Click to start a conversation</p></div></div></a>`;
+                    const avatarElement = user.avatar_url
+                        ? `<img src="../${user.avatar_url}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">`
+                        : `<i class="bi bi-person-circle me-3" style="font-size: 50px; color: #6c757d;"></i>`;
+
+                    const userItemHTML = `<a href="#" class="list-group-item list-group-item-action new-conversation-link" data-user-id="${user.id}" data-user-name="${user.fname} ${user.lname}" data-user-avatar="${user.avatar_url || ''}"><div class="d-flex align-items-center">${avatarElement}<div><h6 class="mb-0">${user.fname} ${user.lname}</h6><p class="mb-0 text-muted">Click to start a conversation</p></div></div></a>`;
                     conversationList.insertAdjacentHTML('beforeend', userItemHTML);
                 });
             } else {
