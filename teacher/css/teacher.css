@@ -184,3 +184,7 @@ header h1 {
     border: none;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
+
+.btn-close:focus {
+    box-shadow: none;
+}

@@ -147,3 +147,7 @@ header h1 {
     font-size: 0.7rem;
     line-height: 1.5;
 }
+
+.btn-close:focus {
+    box-shadow: none;
+}

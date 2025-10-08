@@ -405,84 +405,325 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Assessment Listener ---
+    const createAssessmentContainer = document.getElementById('createAssessmentContainer');
+    if (createAssessmentContainer) {
+        const collapseInstance = new bootstrap.Collapse(createAssessmentContainer, {
+            toggle: false // We will control it manually
+        });
+
+        // Listen for clicks on ANY "Create Assessment" button
+        document.querySelectorAll('.create-assessment-btn').forEach(button => {
+            button.addEventListener('click', function (event) {
+                // Get the category ID from the button that was clicked
+                const categoryId = this.getAttribute('data-category-id');
+                const categoryInput = createAssessmentContainer.querySelector('#assessmentCategoryId');
+                if (categoryId) {
+                    categoryInput.value = categoryId;
+                }
+
+                // Show the form
+                createAssessmentContainer.classList.remove('d-none');
+                collapseInstance.show();
+            });
+        });
+
+        // Add a listener to scroll down AFTER the form has opened
+        createAssessmentContainer.addEventListener('shown.bs.collapse', function () {
+            this.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        // Find the Cancel button inside the form
+        const cancelBtn = createAssessmentContainer.querySelector('[data-bs-target="#createAssessmentContainer"]');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function () {
+                // When the hide animation is done, make it fully disappear
+                createAssessmentContainer.addEventListener('hidden.bs.collapse', function () {
+                    createAssessmentContainer.classList.add('d-none');
+                }, { once: true }); // This listener only runs once
+            });
+        }
+    }
+
+    // --- Handle the form submission ---
+    // In strand.js, replace the entire 'createAssessmentForm' listener
+
     const createAssessmentForm = document.getElementById('createAssessmentForm');
     if (createAssessmentForm) {
+        const createAssessmentContainer = document.getElementById('createAssessmentContainer');
+        const collapseInstance = bootstrap.Collapse.getOrCreateInstance(createAssessmentContainer);
+
         createAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            // Get values from all the fields in the modal
-            const title = document.getElementById('assessmentTitle').value;
-            const description = document.getElementById('assessmentDesc').value;
-            const duration = document.getElementById('assessmentDuration').value;
-            const attempts = document.getElementById('assessmentAttempts').value;
+            const strandId = new URLSearchParams(window.location.search).get('id');
+            const formData = new FormData(createAssessmentForm);
+            formData.append('strand_id', strandId);
 
             try {
-                const response = await fetch('../ajax/save-assessment.php', {
+                const response = await fetch('../ajax/create_assessment.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        strand_id: window.strandId,
-                        title: title,
-                        description: description,
-                        duration: duration,
-                        attempts: attempts
-                    })
+                    body: formData
                 });
-
                 const result = await response.json();
 
                 if (result.success) {
-                    // Hide the modal and refresh the list of assessments
-                    bootstrap.Modal.getInstance(document.getElementById('assessmentModal')).hide();
+                    const newAssessment = result.newAssessment;
+                    const categoryId = formData.get('category_id');
+
+                    // Find the correct category's list in the accordion
+                    const list = document.querySelector(`#collapse-cat-${categoryId} .list-unstyled`);
+
+                    if (list) {
+                        // Create the new list item HTML
+                        const newItem = document.createElement('li');
+                        newItem.innerHTML = `
+                        <a href="take_assessment.php?id=${newAssessment.id}">
+                            ${newAssessment.title}
+                            <span class="badge bg-light text-dark fw-normal ms-2">${newAssessment.type.charAt(0).toUpperCase() + newAssessment.type.slice(1)}</span>
+                        </a>
+                    `;
+
+                        // Check if the "No assessments" message is there and remove it
+                        const noAssessmentsMsg = list.querySelector('.text-muted');
+                        if (noAssessmentsMsg) {
+                            noAssessmentsMsg.remove();
+                        }
+
+                        // Add the new assessment to the list
+                        list.appendChild(newItem);
+                    }
+
+                    // Hide and reset the form
+                    collapseInstance.hide();
                     createAssessmentForm.reset();
-                    refreshAssessmentList();
+
                 } else {
-                    alert('Error: ' + result.message);
+                    alert('Error: ' + result.error);
                 }
             } catch (error) {
-                console.error('Failed to create assessment:', error);
-                alert('An error occurred while creating the assessment.');
+                console.error('Submission failed:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+    // --- START: Assessment Category Logic ---
+    const categoriesModal = document.getElementById('manageCategoriesModal');
+
+    // This 'if' statement makes sure the code only runs if the modal is on the page
+    if (categoriesModal) {
+
+        const addCategoryForm = document.getElementById('add-category-form');
+        const categoryList = document.getElementById('category-list');
+        const urlParams = new URLSearchParams(window.location.search);
+        const strandId = urlParams.get('id');
+
+        // Function to load categories from the server
+        const loadCategories = async () => {
+            if (!strandId) return;
+            try {
+                const response = await fetch(`../ajax/manage_categories.php?action=fetch&strand_id=${strandId}`);
+                const categories = await response.json();
+
+                categoryList.innerHTML = ''; // Clear the current list
+                if (categories && categories.length > 0) {
+                    categories.forEach(cat => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = cat.name;
+                        categoryList.appendChild(li);
+                    });
+                } else {
+                    categoryList.innerHTML = '<li class="list-group-item text-muted">No categories created yet.</li>';
+                }
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        };
+
+        // When the modal is about to be shown, load the categories
+        categoriesModal.addEventListener('show.bs.modal', () => {
+            loadCategories();
+        });
+
+        // Handle adding a new category
+        addCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(addCategoryForm);
+            formData.append('action', 'add');
+            formData.append('strand_id', strandId);
+
+            try {
+                const response = await fetch('../ajax/manage_categories.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    addCategoryForm.reset();
+                    loadCategories();
+                } else {
+                    alert('Error: ' + (result.error || 'Could not add category.'));
+                }
+            } catch (error) {
+                console.error('Failed to add category:', error);
+            }
+        });
+    }
+    // --- Listeners for Edit and Delete Assessment Modals ---
+
+    const editAssessmentModalEl = document.getElementById('editAssessmentModal');
+    if (editAssessmentModalEl) {
+        const editModal = new bootstrap.Modal(editAssessmentModalEl);
+
+        // This runs when the Edit modal is about to open
+        editAssessmentModalEl.addEventListener('show.bs.modal', async function (event) {
+            const button = event.relatedTarget;
+            const assessmentId = button.dataset.id;
+
+            // Fetch the latest data for the assessment
+            const response = await fetch(`../ajax/get_assessment_details.php?id=${assessmentId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                const data = result.data;
+                // Populate the form
+                document.getElementById('editAssessmentId').value = data.id;
+                document.getElementById('editAssessmentTitle').value = data.title;
+                document.getElementById('editAssessmentDesc').value = data.description;
+                document.getElementById('editAssessmentDuration').value = data.duration_minutes;
+                document.getElementById('editAssessmentAttempts').value = data.max_attempts;
+                document.getElementById('editAssessmentCategory').value = data.category_id;
+                document.querySelector(`#editAssessmentModal input[name="type"][value="${data.type}"]`).checked = true;
+            } else {
+                alert('Error fetching details: ' + result.error);
+                event.preventDefault(); // Stop the modal from opening
+            }
+        });
+    }
+
+    const deleteAssessmentModalEl = document.getElementById('deleteAssessmentModal');
+    if (deleteAssessmentModalEl) {
+        const deleteModal = new bootstrap.Modal(deleteAssessmentModalEl);
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        let assessmentIdToDelete = null;
+        let assessmentElementToDelete = null;
+
+        // This runs when the Delete modal is about to open
+        deleteAssessmentModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            assessmentIdToDelete = button.dataset.id;
+            const assessmentTitle = button.dataset.title;
+            assessmentElementToDelete = button.closest('.assessment-item').parentElement; // Get the whole <li>
+
+            // Set the name in the confirmation message
+            document.getElementById('assessmentNameToDelete').textContent = assessmentTitle;
+        });
+
+        // This runs when the final "Delete" button is clicked
+        confirmDeleteBtn.addEventListener('click', async function () {
+            const formData = new FormData();
+            formData.append('assessment_id', assessmentIdToDelete);
+
+            const response = await fetch('../ajax/delete_assessment.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                deleteModal.hide();
+                // Smoothly remove the assessment from the page
+                assessmentElementToDelete.style.opacity = '0';
+                setTimeout(() => assessmentElementToDelete.remove(), 300);
+            } else {
+                alert('Error deleting assessment: ' + result.error);
+            }
+        });
+    }
+
+    const categoryActionModal = document.getElementById('categoryActionModal');
+    if (categoryActionModal) {
+        categoryActionModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // The button that was clicked
+            const action = button.dataset.action;
+            const catId = button.dataset.id;
+            const catName = button.dataset.name;
+
+            const modalTitle = categoryActionModal.querySelector('.modal-title');
+            const modalBody = categoryActionModal.querySelector('.modal-body');
+            const modalFooter = categoryActionModal.querySelector('.modal-footer');
+
+            // Clear previous content
+            modalBody.innerHTML = '';
+            modalFooter.innerHTML = '';
+
+            if (action === 'edit') {
+                modalTitle.textContent = 'Edit Category Name';
+                modalBody.innerHTML = `
+                <label for="editCategoryName" class="form-label">Category Name</label>
+                <input type="text" id="editCategoryName" class="form-control" value="${catName}">
+            `;
+                modalFooter.innerHTML = `
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>
+            `;
+
+                // Add event listener for the save button
+                document.getElementById('saveCategoryBtn').addEventListener('click', async () => {
+                    const newName = document.getElementById('editCategoryName').value;
+                    if (newName && newName.trim() !== '' && newName !== catName) {
+                        const formData = new FormData();
+                        formData.append('action', 'update');
+                        formData.append('category_id', catId);
+                        formData.append('category_name', newName);
+                        await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                        location.reload();
+                    }
+                });
+
+            } else if (action === 'delete') {
+                modalTitle.textContent = 'Confirm Deletion';
+                modalBody.innerHTML = `
+                <p>Are you sure you want to delete the category "<strong>${catName}</strong>"?</p>
+                <p class="text-muted small">Any assessments inside will become uncategorized.</p>
+            `;
+                modalFooter.innerHTML = `
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>
+            `;
+
+                // Add event listener for the delete button
+                document.getElementById('deleteCategoryBtn').addEventListener('click', async () => {
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('category_id', catId);
+                    await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                    location.reload();
+                });
+            }
+        });
+    }
+
+    // Add this to strand.js
+    const categoryActionModalEl = document.getElementById('categoryActionModal');
+    if (categoryActionModalEl) {
+        // This code runs AFTER the modal is fully visible
+        categoryActionModalEl.addEventListener('shown.bs.modal', function () {
+            // Find the edit input field
+            const editInput = document.getElementById('editCategoryName');
+
+            // If the input field exists, focus on it
+            if (editInput) {
+                editInput.focus();
+                editInput.select(); // This highlights the existing text, ready to be replaced
             }
         });
     }
 
     // Listener for submitting the EDIT Assessment Form
-    const editAssessmentForm = document.getElementById('editAssessmentForm');
-    if (editAssessmentForm) {
-        editAssessmentForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); // This is the line that prevents the page from reloading
+    // --- Updated Edit Assessment Form Listener ---
 
-            const id = document.getElementById('editAssessmentId').value;
-            const title = document.getElementById('editAssessmentTitle').value;
-            const description = document.getElementById('editAssessmentDesc').value;
-            const duration = document.getElementById('editAssessmentDuration').value;
-            const attempts = document.getElementById('editAssessmentAttempts').value;
-
-            try {
-                const response = await fetch('../ajax/update_assessment.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: id,
-                        title: title,
-                        description: description,
-                        duration: duration,
-                        attempts: attempts
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('editAssessmentModal')).hide();
-                    refreshAssessmentList();
-                } else {
-                    alert('Error updating assessment: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error updating assessment:', error);
-                alert('An error occurred while updating the assessment.');
-            }
-        });
-    }
 
     // This single listener handles all clicks inside the assessment list
     const assessmentList = document.getElementById('assessmentList');
@@ -566,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('editAssessmentTitle').value = button.dataset.title;
                 document.getElementById('editAssessmentDesc').value = button.dataset.description;
                 document.getElementById('editAssessmentDuration').value = button.dataset.duration;
-                document.getElementById('editAssessmentAttempts').value = button.dataset.maxAttempts;
+                document.getElementById('Attempts').value = button.dataset.maxAttempts;
             }
 
             // 4. Handle OPEN DELETE MODAL button

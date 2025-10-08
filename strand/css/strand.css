@@ -71,7 +71,7 @@ h2 {
 
 .tab-pane {
     background-color: #fff;
-    border: 1px solid #dee2e6;
+    border: none;
     padding: 20px;
     border-top: none;
     border-radius: 0 0 5px 5px;
@@ -98,4 +98,223 @@ h2 {
     display: block;
     margin: 0 auto;
     /* Centers the content */
+}
+
+/* Custom class for buttons with a subtle hover effect */
+.btn-subtle-hover {
+    padding: 0.5rem 1rem;
+    /* Adds some space around the text */
+    border-radius: 0.375rem;
+    /* Adds rounded corners */
+    transition: background-color 0.2s ease-in-out;
+    /* Creates a smooth fade effect */
+}
+
+/* This is the background color that appears on hover */
+.btn-subtle-hover:hover {
+    background-color: rgb(12, 42, 12) (212, 212, 212);
+    /* A very light grey */
+    text-decoration: none;
+    /* Ensures no underline appears */
+}
+
+/* --- Custom Accordion Button Focus Style --- */
+
+.assessment-accordion .accordion-button:focus {
+    background-color: #fff;
+    /* Keeps the background white on click */
+    border-color: transparent;
+    /* Removes any default border */
+    box-shadow: inset 0 0 0 2px #198754;
+    /* Adds a 2px solid green 'border' on the inside */
+}
+
+/* --- Modern Custom Tab Styles --- */
+
+/* Style for all tab links */
+.nav-tabs .nav-link {
+    border: none;
+    /* Remove all default borders */
+    border-bottom: 3px solid transparent;
+    /* Add space for the underline */
+}
+
+/* Style for the ACTIVE tab link */
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+    background-color: transparent;
+    color: #198754;
+    border-color: #198754;
+    font-weight: 600;
+}
+
+/* Optional: Add a subtle hover effect for inactive tabs */
+.nav-tabs .nav-link:not(.active):hover {
+    border-color: #e9ecef;
+    /* A very light grey underline on hover */
+}
+
+/* This styles the button when it's open or clicked.
+   We REMOVE the broken border effect from here. */
+.assessment-accordion .accordion-button:not(.collapsed),
+.assessment-accordion .accordion-button:focus {
+    color: #000000;
+    background-color: #fff;
+    box-shadow: none;
+}
+
+/* This is the NEW part. It adds the border to the main
+   rounded container, so it follows the corners perfectly. */
+.assessment-accordion .accordion-item:has(.accordion-button:not(.collapsed)),
+.assessment-accordion .accordion-item:has(.accordion-button:focus) {
+    box-shadow: 0 0 0 1px #198754, 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Styles for each assessment item in the list --- */
+
+.assessment-accordion .list-unstyled li {
+    margin-bottom: 0.5rem;
+}
+
+/* This is the new main container for each assessment */
+.assessment-item {
+    display: flex;
+    /* This is the key to the side-by-side layout */
+    align-items: center;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.assessment-item:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+}
+
+/* This is the clickable link part */
+.assessment-item-link {
+    border: none;
+    flex-grow: 1;
+    /* Allows the link to take up all available space */
+    padding: 0.1rem 1rem;
+    text-decoration: none;
+    color: #212529;
+}
+
+.assessment-item:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+}
+
+/* This is where the border is added */
+.assessment-accordion .list-unstyled li a {
+    display: block;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dee2e6;
+    /* Light grey border */
+    border-radius: 0.375rem;
+    /* Rounded corners */
+    text-decoration: none;
+    color: #212529;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+/* Hover effect */
+.assessment-accordion .list-unstyled li a:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+}
+
+/* --- Custom Dropdown Menu Style (to match picture) --- */
+
+/* The main menu container */
+.assessment-accordion .dropdown-menu {
+    border-radius: 0.4rem;
+    /* Softer rounded corners */
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 0;
+    /* Add vertical padding */
+}
+
+/* The items inside the menu (Edit, Delete) */
+.assessment-accordion .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    /* Adjust padding for more space */
+    font-weight: 500;
+    color: #343a40;
+}
+
+/* Makes the icons look sharp */
+.assessment-accordion .dropdown-item i {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* Hover/Focus style for the regular 'Edit' item */
+.assessment-accordion .dropdown-item.text-success:focus,
+.assessment-accordion .dropdown-item.text.success:hover {
+    background-color: #f8f9fa;
+    /* Light grey background */
+    color: #198754;
+}
+
+/* Hover/Focus style specifically for the 'Delete' item */
+.assessment-accordion .dropdown-item.text-danger:focus,
+.assessment-accordion .dropdown-item.text-danger:hover {
+    background-color: #fff5f5;
+    /* A very light red */
+    color: #dc3545;
+    /* Keep the text red */
+}
+
+/* --- Custom Style for the Three-Dot Options Button --- */
+.btn-options {
+    background-color: transparent;
+    border: none;
+    color: #303030;
+    /* A subtle grey color for the dots */
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    /* Rounded corners */
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Remove the default blue focus ring */
+.btn-options:focus {
+    box-shadow: none;
+}
+
+/* --- Custom Green Focus for Form Inputs (Thicker Border) --- */
+
+.form-control:focus {
+    border-color: #198754;
+    /* Keeps the 1px border green */
+    box-shadow: 0 0 0 1px #198754;
+    /* Adds another 1px border effect, making it look 2px thick */
+}
+
+/* --- Remove Focus Glow from Modal Close Button --- */
+
+.btn-close:focus {
+    box-shadow: none;
+}
+
+/* --- Style for Accordion's Dropdown Menu --- */
+.assessment-accordion .dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    /* This adds a soft shadow */
+}
+
+/* --- Add space between accordion folder items --- */
+.assessment-accordion .accordion-item {
+    margin-bottom: 1rem;
+    /* This adds the space */
+    border: 1px solid #dee2e6 !important;
+    /* This ensures each item has its own border */
+    border-radius: 0.4rem;
+    /* This makes all corners rounded */
 }
