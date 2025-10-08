@@ -3,48 +3,49 @@ session_start();
 require_once '../includes/db.php';
 header('Content-Type: application/json');
 
-// Basic security check: ensure user is a logged-in teacher
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'teacher') {
-    http_response_code(403); // Forbidden
-    echo json_encode(['error' => 'Unauthorized']);
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
 
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
+$action = $_POST['action'] ?? '';
 $teacher_id = $_SESSION['user_id'];
-// You need to pass the strand_id from your page to this script
-$strand_id = $_POST['strand_id'] ?? $_GET['strand_id'] ?? 0;
-
-if (empty($strand_id)) {
-    http_response_code(400); // Bad Request
-    echo json_encode(['error' => 'Strand ID is required.']);
-    exit;
-}
+$response = ['success' => false];
 
 switch ($action) {
-    case 'add':
+    case 'update':
         $name = trim($_POST['category_name'] ?? '');
-        if (!empty($name)) {
-            $stmt = $conn->prepare("INSERT INTO assessment_categories (name, teacher_id, strand_id) VALUES (?, ?, ?)");
-            $stmt->bind_param("sii", $name, $teacher_id, $strand_id);
+        $id = $_POST['category_id'] ?? 0;
+        if (!empty($name) && !empty($id)) {
+            $stmt = $conn->prepare("UPDATE assessment_categories SET name = ? WHERE id = ? AND teacher_id = ?");
+            $stmt->bind_param("sii", $name, $id, $teacher_id);
             if ($stmt->execute()) {
-                echo json_encode(['success' => true, 'id' => $conn->insert_id]);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Database error']);
+                // Send back a success message AND the new name
+                $response['success'] = true;
+                $response['updatedName'] = $name;
             }
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Category name cannot be empty']);
+            $stmt->close();
         }
         break;
 
-    case 'fetch':
-        $stmt = $conn->prepare("SELECT id, name FROM assessment_categories WHERE teacher_id = ? AND strand_id = ? ORDER BY name");
-        $stmt->bind_param("ii", $teacher_id, $strand_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $categories = $result->fetch_all(MYSQLI_ASSOC);
-        echo json_encode($categories);
-        break;
+    case 'delete':
+        $id = $_POST['category_id'] ?? 0;
+        if (!empty($id)) {
+            // First, un-categorize assessments
+            $stmt1 = $conn->prepare("UPDATE assessments SET category_id = NULL WHERE category_id = ? AND teacher_id = ?");
+            $stmt1->bind_param("ii", $id, $teacher_id);
+            $stmt1->execute();
+            $stmt1->close();
 
-        // You can add 'delete' and 'update' cases here in the future
+            // Then, delete the category
+            $stmt2 = $conn->prepare("DELETE FROM assessment_categories WHERE id = ? AND teacher_id = ?");
+            $stmt2->bind_param("ii", $id, $teacher_id);
+            if ($stmt2->execute()) $response['success'] = true;
+            $stmt2->close();
+        }
+        break;
 }
+
+echo json_encode($response);
+$conn->close();

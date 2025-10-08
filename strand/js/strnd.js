@@ -706,20 +706,109 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Add this to strand.js
-    const categoryActionModalEl = document.getElementById('categoryActionModal');
-    if (categoryActionModalEl) {
-        // This code runs AFTER the modal is fully visible
-        categoryActionModalEl.addEventListener('shown.bs.modal', function () {
-            // Find the edit input field
-            const editInput = document.getElementById('editCategoryName');
+    // --- FINAL SCRIPT for Edit/Delete Category Modal ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const categoryActionModalEl = document.getElementById('categoryActionModal');
+        if (categoryActionModalEl) {
+            const categoryActionModal = new bootstrap.Modal(categoryActionModalEl);
 
-            // If the input field exists, focus on it
-            if (editInput) {
-                editInput.focus();
-                editInput.select(); // This highlights the existing text, ready to be replaced
-            }
-        });
-    }
+            // This listener PREPARES the modal when it's about to open
+            categoryActionModalEl.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const action = button.dataset.action;
+                const catId = button.dataset.id;
+                const catName = button.dataset.name;
+
+                // Store the ID and Name on the modal itself to access later
+                this.dataset.categoryId = catId;
+                this.dataset.categoryName = catName;
+
+                const modalTitle = this.querySelector('.modal-title');
+                const modalBody = this.querySelector('.modal-body');
+                const modalFooter = this.querySelector('.modal-footer');
+
+                if (action === 'edit') {
+                    modalTitle.textContent = 'Edit Category Name';
+                    modalBody.innerHTML = `
+                    <label for="editCategoryName" class="form-label">Category Name</label>
+                    <input type="text" id="editCategoryName" class="form-control" value="${catName}">`;
+                    modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>`;
+                } else if (action === 'delete') {
+                    modalTitle.textContent = 'Confirm Deletion';
+                    modalBody.innerHTML = `<p>Are you sure you want to delete "<strong>${catName}</strong>"?</p>`;
+                    modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>`;
+                }
+            });
+
+            // This listener makes the text field editable
+            categoryActionModalEl.addEventListener('shown.bs.modal', function () {
+                const editInput = document.getElementById('editCategoryName');
+                if (editInput) {
+                    editInput.focus();
+                    editInput.select();
+                }
+            });
+
+            // This listener handles the CLICKS on the buttons inside the modal
+            categoryActionModalEl.addEventListener('click', async function (event) {
+                const target = event.target;
+
+                // Logic for the SAVE button
+                if (target.id === 'saveCategoryBtn') {
+                    const catId = this.dataset.categoryId;
+                    const oldName = this.dataset.categoryName;
+                    const newName = document.getElementById('editCategoryName').value;
+
+                    if (newName && newName.trim() !== '' && newName !== oldName) {
+                        const formData = new FormData();
+                        formData.append('action', 'update');
+                        formData.append('category_id', catId);
+                        formData.append('category_name', newName);
+
+                        const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // --- NEW CODE: UPDATE THE PAGE WITHOUT RELOADING ---
+
+                            // 1. Find the accordion button and update its text
+                            const accordionButton = document.querySelector(`button[data-bs-target="#collapse-cat-${catId}"]`);
+                            if (accordionButton) {
+                                // Keep the folder icon, just change the text
+                                accordionButton.innerHTML = `<i class="bi bi-folder me-2"></i> ${result.updatedName}`;
+                            }
+
+                            // 2. Find the edit button in the dropdown and update its data-name attribute
+                            const editButton = document.querySelector(`.dropdown-item[data-action="edit"][data-id="${catId}"]`);
+                            if (editButton) {
+                                editButton.dataset.name = result.updatedName;
+                            }
+
+                            // 3. Hide the modal
+                            bootstrap.Modal.getInstance(this).hide();
+
+                        } else {
+                            alert("Could not save changes.");
+                        }
+                    }
+                }
+
+                // Logic for the DELETE button
+                if (target.id === 'deleteCategoryBtn') {
+                    const catId = this.dataset.categoryId;
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('category_id', catId);
+                    await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                    location.reload();
+                }
+            });
+        }
+    });
 
     // Listener for submitting the EDIT Assessment Form
     // --- Updated Edit Assessment Form Listener ---
