@@ -222,12 +222,12 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                     </button>
 
                                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                                        <div class="dropdown me-2">
+                                        <div class="dropdown mb-2">
                                             <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="<?= $category['id'] ?>" data-name="<?= htmlspecialchars($category['name']) ?>"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="<?= $category['id'] ?>" data-name="<?= htmlspecialchars($category['name']) ?>"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                                                 <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="<?= $category['id'] ?>" data-name="<?= htmlspecialchars($category['name']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                             </ul>
                                         </div>
@@ -258,7 +258,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                                             <div class="dropdown">
                                                                 <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
                                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                                    <li><button class="dropdown-item edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-gear me-2"></i> Edit Settings</button></li>
+                                                                    <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-pencil-square me-2"></i> Edit </button></li>
                                                                     <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="<?= $assessment['id'] ?>" data-title="<?= htmlspecialchars($assessment['title']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                                                 </ul>
                                                             </div>
@@ -307,7 +307,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                             <div class="dropdown">
                                                 <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li><button class="dropdown-item edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-gear me-2"></i> Edit Settings</button></li>
+                                                    <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-pencil-square me-2"></i> Edit </button></li>
                                                     <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="<?= $assessment['id'] ?>" data-title="<?= htmlspecialchars($assessment['title']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                                 </ul>
                                             </div>
