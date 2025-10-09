@@ -318,11 +318,10 @@ h2 {
 
 /* --- Custom Green Focus for Form Inputs (Thicker Border) --- */
 
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: #198754;
-    /* Keeps the 1px border green */
     box-shadow: 0 0 0 1px #198754;
-    /* Adds another 1px border effect, making it look 2px thick */
 }
 
 /* --- Remove Focus Glow from Modal Close Button --- */
@@ -350,4 +349,18 @@ h2 {
 
 .accordion-header h2 {
     border-radius: 5rem;
+}
+
+/* --- Custom Green for Radio Buttons --- */
+
+/* 1. Makes the button green when it's CHECKED */
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+/* 2. Adds the green glow when you CLICK or TAB to it */
+.form-check-input:focus {
+    border-color: #146c43;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.5);
 }

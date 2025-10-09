@@ -609,74 +609,74 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
     // --- Listeners for Edit and Delete Assessment Modals ---
-
     const editAssessmentModalEl = document.getElementById('editAssessmentModal');
-    if (editAssessmentModalEl) {
-        const editModal = new bootstrap.Modal(editAssessmentModalEl);
+    if (editAssessmentModalEl && editAssessmentForm) {
+        const editModal = bootstrap.Modal.getOrCreateInstance(editAssessmentModalEl);
 
-        // This runs when the Edit modal is about to open
+        // This runs WHEN THE EDIT MODAL IS ABOUT TO OPEN to fill the form
         editAssessmentModalEl.addEventListener('show.bs.modal', async function (event) {
+            this._elementToUpdate = event.relatedTarget.closest('.assessment-item');
+
             const button = event.relatedTarget;
             const assessmentId = button.dataset.id;
 
-            // Fetch the latest data for the assessment
-            const response = await fetch(`../ajax/get_assessment_details.php?id=${assessmentId}`);
-            const result = await response.json();
-
-            if (result.success) {
-                const data = result.data;
-                // Populate the form
-                document.getElementById('editAssessmentId').value = data.id;
-                document.getElementById('editAssessmentTitle').value = data.title;
-                document.getElementById('editAssessmentDesc').value = data.description;
-                document.getElementById('editAssessmentDuration').value = data.duration_minutes;
-                document.getElementById('editAssessmentAttempts').value = data.max_attempts;
-                document.getElementById('editAssessmentCategory').value = data.category_id;
-                document.querySelector(`#editAssessmentModal input[name="type"][value="${data.type}"]`).checked = true;
-            } else {
-                alert('Error fetching details: ' + result.error);
-                event.preventDefault(); // Stop the modal from opening
+            try {
+                const response = await fetch(`../ajax/get_assessment_details.php?id=${assessmentId}`);
+                const result = await response.json();
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('editAssessmentId').value = data.id;
+                    document.getElementById('editAssessmentTitle').value = data.title;
+                    document.getElementById('editAssessmentDesc').value = data.description;
+                    document.getElementById('editAssessmentDuration').value = data.duration_minutes;
+                    document.getElementById('editAssessmentAttempts').value = data.max_attempts;
+                    document.getElementById('editAssessmentCategory').value = data.category_id;
+                    document.querySelector(`#editAssessmentModal input[name="type"][value="${data.type}"]`).checked = true;
+                } else {
+                    alert('Error fetching details: ' + result.error);
+                    event.preventDefault();
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('Could not load assessment details.');
+                event.preventDefault();
             }
         });
-    }
 
-    const deleteAssessmentModalEl = document.getElementById('deleteAssessmentModal');
-    if (deleteAssessmentModalEl) {
-        const deleteModal = new bootstrap.Modal(deleteAssessmentModalEl);
-        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-        let assessmentIdToDelete = null;
-        let assessmentElementToDelete = null;
-
-        // This runs when the Delete modal is about to open
-        deleteAssessmentModalEl.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            assessmentIdToDelete = button.dataset.id;
-            const assessmentTitle = button.dataset.title;
-            assessmentElementToDelete = button.closest('.assessment-item').parentElement; // Get the whole <li>
-
-            // Set the name in the confirmation message
-            document.getElementById('assessmentNameToDelete').textContent = assessmentTitle;
-        });
-
-        // This runs when the final "Delete" button is clicked
-        confirmDeleteBtn.addEventListener('click', async function () {
-            const formData = new FormData();
-            formData.append('assessment_id', assessmentIdToDelete);
-
-            const response = await fetch('../ajax/delete_assessment.php', {
-                method: 'POST',
-                body: formData
-            });
+        // This is the updated part that runs WHEN YOU CLICK "SAVE CHANGES"
+        editAssessmentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(editAssessmentForm);
+            const response = await fetch('../ajax/update_assessment.php', { method: 'POST', body: formData });
             const result = await response.json();
 
             if (result.success) {
-                deleteModal.hide();
-                // Smoothly remove the assessment from the page
-                assessmentElementToDelete.style.opacity = '0';
-                setTimeout(() => assessmentElementToDelete.remove(), 300);
+                // 1. Hide the modal
+                editModal.hide();
+
+                // 2. THIS IS THE NEW "NO RELOAD" LOGIC
+                const elementToUpdate = editAssessmentModalEl._elementToUpdate;
+                if (elementToUpdate) {
+                    const newTitle = formData.get('title');
+                    const newType = formData.get('type');
+                    const newDuration = formData.get('duration_minutes');
+                    const newAttempts = formData.get('max_attempts');
+                    const newTypeCapitalized = newType.charAt(0).toUpperCase() + newType.slice(1);
+
+                    // Update the text on the page instantly
+                    elementToUpdate.querySelector('.fw-bold').textContent = newTitle;
+                    elementToUpdate.querySelector('.badge').textContent = newTypeCapitalized;
+
+                    const durationSpan = elementToUpdate.querySelector('.bi-clock').parentElement;
+                    if (durationSpan) durationSpan.innerHTML = `<i class="bi bi-clock"></i> ${newDuration} mins`;
+
+                    const attemptsSpan = elementToUpdate.querySelector('.bi-arrow-repeat').parentElement;
+                    if (attemptsSpan) attemptsSpan.innerHTML = `<i class="bi bi-arrow-repeat"></i> ${newAttempts} attempt(s)`;
+                }
             } else {
-                alert('Error deleting assessment: ' + result.error);
+                alert('Error: ' + (result.error || 'Could not save changes.'));
             }
         });
     }
@@ -778,10 +778,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // Listener for submitting the EDIT Assessment Form
-    // --- Updated Edit Assessment Form Listener ---
-
 
     // This single listener handles all clicks inside the assessment list
     const assessmentList = document.getElementById('assessmentList');

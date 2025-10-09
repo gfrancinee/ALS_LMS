@@ -29,7 +29,7 @@ if ($assessment = $result->fetch_assoc()) {
     echo json_encode(['success' => true, 'data' => $assessment]);
 } else {
     http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'Assessment not found or you do not have permission to edit it.']);
+    echo json_encode(['success' => false, 'error' => 'Assessment not found or you do not have permission.']);
 }
 
 $stmt->close();

@@ -14,11 +14,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
 $assessment_id = $_POST['assessment_id'] ?? 0;
 $title = $_POST['title'] ?? '';
 $type = $_POST['type'] ?? 'quiz';
-$category_id = $_POST['category_id'] ?: null;
 $description = $_POST['description'] ?? '';
 $duration_minutes = $_POST['duration_minutes'] ?? 60;
 $max_attempts = $_POST['max_attempts'] ?? 1;
 $teacher_id = $_SESSION['user_id'];
+
+// --- THIS IS THE UPDATED LINE ---
+// This safely handles the '(No Category)' option by converting an empty string to NULL for the database.
+$category_id = ($_POST['category_id'] === '') ? null : ($_POST['category_id'] ?? null);
+
 
 if (empty($title) || empty($assessment_id)) {
     http_response_code(400);

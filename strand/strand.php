@@ -408,7 +408,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                 <div class="modal-content">
                     <form id="editAssessmentForm">
                         <div class="modal-header">
-                            <h5 class="modal-title">Edit Assessment Settings</h5>
+                            <h5 class="modal-title">Edit Assessment</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
