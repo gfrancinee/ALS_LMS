@@ -508,65 +508,104 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- START: Assessment Category Logic ---
     const categoriesModal = document.getElementById('manageCategoriesModal');
 
-    // This 'if' statement makes sure the code only runs if the modal is on the page
     if (categoriesModal) {
-
         const addCategoryForm = document.getElementById('add-category-form');
         const categoryList = document.getElementById('category-list');
-        const urlParams = new URLSearchParams(window.location.search);
-        const strandId = urlParams.get('id');
+        const strandId = new URLSearchParams(window.location.search).get('id');
 
         // Function to load categories from the server
         const loadCategories = async () => {
             if (!strandId) return;
-            try {
-                const response = await fetch(`../ajax/manage_categories.php?action=fetch&strand_id=${strandId}`);
-                const categories = await response.json();
+            const response = await fetch(`../ajax/manage_categories.php?action=fetch&strand_id=${strandId}`);
+            const categories = await response.json();
 
-                categoryList.innerHTML = ''; // Clear the current list
-                if (categories && categories.length > 0) {
-                    categories.forEach(cat => {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        li.textContent = cat.name;
-                        categoryList.appendChild(li);
-                    });
-                } else {
-                    categoryList.innerHTML = '<li class="list-group-item text-muted">No categories created yet.</li>';
-                }
-            } catch (error) {
-                console.error('Failed to load categories:', error);
+            categoryList.innerHTML = ''; // Clear the current list
+            if (categories.success && categories.data.length > 0) {
+                categories.data.forEach(cat => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = cat.name;
+                    categoryList.appendChild(li);
+                });
+            } else {
+                categoryList.innerHTML = '<li class="list-group-item text-muted">No categories created yet.</li>';
             }
         };
 
         // When the modal is about to be shown, load the categories
-        categoriesModal.addEventListener('show.bs.modal', () => {
-            loadCategories();
-        });
+        categoriesModal.addEventListener('show.bs.modal', loadCategories);
 
         // Handle adding a new category
+        // In strand.js, replace your addCategoryForm listener with this
+
+        // Handles adding a new category "smoothly"
         addCategoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const formData = new FormData(addCategoryForm);
-            formData.append('action', 'add');
+            formData.append('action', 'create');
             formData.append('strand_id', strandId);
 
-            try {
-                const response = await fetch('../ajax/manage_categories.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
+            const response = await fetch('../ajax/manage_categories.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
 
-                if (result.success) {
-                    addCategoryForm.reset();
-                    loadCategories();
-                } else {
-                    alert('Error: ' + (result.error || 'Could not add category.'));
+            if (result.success) {
+                addCategoryForm.reset();
+                await loadCategories(); // Updates list inside the modal
+
+                const newCategory = result.newCategory;
+                const accordionContainer = document.getElementById('assessmentAccordion');
+
+                // Remove "no categories" message if it exists
+                const noCategoriesMessage = document.getElementById('no-categories-message');
+                if (noCategoriesMessage) {
+                    noCategoriesMessage.remove();
                 }
-            } catch (error) {
-                console.error('Failed to add category:', error);
+
+                // Create the HTML for the new accordion item
+                const newAccordionItemHTML = `
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <div class="d-flex align-items-center w-100">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-cat-${newCategory.id}">
+                            <i class="bi bi-folder me-2"></i> ${newCategory.name}
+                        </button>
+                        <div class="dropdown mb-2">
+                            <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </h2>
+                <div id="collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#assessmentAccordion">
+                    <div class="accordion-body">
+                        <ul class="list-unstyled mb-0"><li class="text-muted fst-italic">No assessments in this category yet.</li></ul>
+                        <hr class="my-3">
+                        <div class="text-center">
+                            <button class="btn btn-link text-success text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="${newCategory.id}">
+                                <i class="bi bi-plus-circle"></i> Create Assessment in this Category
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+                // Add the new item to the main accordion
+                accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
+
+                // Manually activate the new dropdown
+                const newAccordionItem = accordionContainer.lastElementChild;
+                const newDropdownToggle = newAccordionItem.querySelector('[data-bs-toggle="dropdown"]');
+                if (newDropdownToggle) {
+                    new bootstrap.Dropdown(newDropdownToggle);
+                }
+
+            } else {
+                alert('Error: ' + (result.error || 'Could not add category.'));
             }
         });
     }
@@ -642,173 +681,103 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const categoryActionModal = document.getElementById('categoryActionModal');
-    if (categoryActionModal) {
-        categoryActionModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // The button that was clicked
+    // --- FINAL SCRIPT for Edit/Delete Category Modal ---
+    const categoryActionModalEl = document.getElementById('categoryActionModal');
+    if (categoryActionModalEl) {
+        // This listener PREPARES the modal when it's about to open
+        categoryActionModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
             const action = button.dataset.action;
             const catId = button.dataset.id;
             const catName = button.dataset.name;
 
-            const modalTitle = categoryActionModal.querySelector('.modal-title');
-            const modalBody = categoryActionModal.querySelector('.modal-body');
-            const modalFooter = categoryActionModal.querySelector('.modal-footer');
+            // Store data on the modal itself to access later
+            this.dataset.categoryId = catId;
+            this.dataset.categoryName = catName;
 
-            // Clear previous content
-            modalBody.innerHTML = '';
-            modalFooter.innerHTML = '';
+            const modalTitle = this.querySelector('.modal-title');
+            const modalBody = this.querySelector('.modal-body');
+            const modalFooter = this.querySelector('.modal-footer');
 
             if (action === 'edit') {
                 modalTitle.textContent = 'Edit Category Name';
-                modalBody.innerHTML = `
-                <label for="editCategoryName" class="form-label">Category Name</label>
-                <input type="text" id="editCategoryName" class="form-control" value="${catName}">
-            `;
-                modalFooter.innerHTML = `
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>
-            `;
-
-                // Add event listener for the save button
-                document.getElementById('saveCategoryBtn').addEventListener('click', async () => {
-                    const newName = document.getElementById('editCategoryName').value;
-                    if (newName && newName.trim() !== '' && newName !== catName) {
-                        const formData = new FormData();
-                        formData.append('action', 'update');
-                        formData.append('category_id', catId);
-                        formData.append('category_name', newName);
-                        await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
-                        location.reload();
-                    }
-                });
-
+                modalBody.innerHTML = `<label for="editCategoryName" class="form-label">Category Name</label><input type="text" id="editCategoryName" class="form-control" value="${catName}">`;
+                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>`;
             } else if (action === 'delete') {
+                // Remember which accordion item to remove
+                this._elementToDelete = button.closest('.accordion-item');
                 modalTitle.textContent = 'Confirm Deletion';
-                modalBody.innerHTML = `
-                <p>Are you sure you want to delete the category "<strong>${catName}</strong>"?</p>
-                <p class="text-muted small">Any assessments inside will become uncategorized.</p>
-            `;
-                modalFooter.innerHTML = `
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>
-            `;
+                modalBody.innerHTML = `<p>Are you sure you want to delete "<strong>${catName}</strong>"?</p><p class="text-danger small">This action cannot be undone.</p>`;
+                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>`;
+            }
+        });
 
-                // Add event listener for the delete button
-                document.getElementById('deleteCategoryBtn').addEventListener('click', async () => {
+        // This listener focuses the input field after the modal opens
+        categoryActionModalEl.addEventListener('shown.bs.modal', function () {
+            const editInput = document.getElementById('editCategoryName');
+            if (editInput) {
+                editInput.focus();
+                editInput.select();
+            }
+        });
+
+        // This listener handles ALL CLICKS on the buttons inside the modal
+        categoryActionModalEl.addEventListener('click', async function (event) {
+            const target = event.target;
+            const modalInstance = bootstrap.Modal.getInstance(this);
+
+            // Logic for the SAVE button
+            if (target.id === 'saveCategoryBtn') {
+                const catId = this.dataset.categoryId;
+                const newName = document.getElementById('editCategoryName').value;
+
+                if (newName && newName.trim() !== '') {
                     const formData = new FormData();
-                    formData.append('action', 'delete');
+                    formData.append('action', 'update');
                     formData.append('category_id', catId);
-                    await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
-                    location.reload();
-                });
+                    formData.append('category_name', newName);
+
+                    const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const accordionButton = document.querySelector(`button[data-bs-target="#collapse-cat-${catId}"]`);
+                        if (accordionButton) accordionButton.innerHTML = `<i class="bi bi-folder me-2"></i> ${result.updatedName}`;
+
+                        const editButton = document.querySelector(`.dropdown-item[data-action="edit"][data-id="${catId}"]`);
+                        if (editButton) editButton.dataset.name = result.updatedName;
+
+                        modalInstance.hide();
+                    } else {
+                        alert("Could not save changes.");
+                    }
+                }
+            }
+
+            // Logic for the DELETE button
+            if (target.id === 'deleteCategoryBtn') {
+                const catId = this.dataset.categoryId;
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('category_id', catId);
+
+                const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (result.success) {
+                    modalInstance.hide();
+                    if (this._elementToDelete) {
+                        this._elementToDelete.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        this._elementToDelete.style.opacity = '0';
+                        this._elementToDelete.style.transform = 'translateX(-20px)';
+                        setTimeout(() => this._elementToDelete.remove(), 300);
+                    }
+                } else {
+                    alert('Error: Could not delete category.');
+                }
             }
         });
     }
-
-    // Add this to strand.js
-    // --- FINAL SCRIPT for Edit/Delete Category Modal ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const categoryActionModalEl = document.getElementById('categoryActionModal');
-        if (categoryActionModalEl) {
-            const categoryActionModal = new bootstrap.Modal(categoryActionModalEl);
-
-            // This listener PREPARES the modal when it's about to open
-            categoryActionModalEl.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const action = button.dataset.action;
-                const catId = button.dataset.id;
-                const catName = button.dataset.name;
-
-                // Store the ID and Name on the modal itself to access later
-                this.dataset.categoryId = catId;
-                this.dataset.categoryName = catName;
-
-                const modalTitle = this.querySelector('.modal-title');
-                const modalBody = this.querySelector('.modal-body');
-                const modalFooter = this.querySelector('.modal-footer');
-
-                if (action === 'edit') {
-                    modalTitle.textContent = 'Edit Category Name';
-                    modalBody.innerHTML = `
-                    <label for="editCategoryName" class="form-label">Category Name</label>
-                    <input type="text" id="editCategoryName" class="form-control" value="${catName}">`;
-                    modalFooter.innerHTML = `
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>`;
-                } else if (action === 'delete') {
-                    modalTitle.textContent = 'Confirm Deletion';
-                    modalBody.innerHTML = `<p>Are you sure you want to delete "<strong>${catName}</strong>"?</p>`;
-                    modalFooter.innerHTML = `
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>`;
-                }
-            });
-
-            // This listener makes the text field editable
-            categoryActionModalEl.addEventListener('shown.bs.modal', function () {
-                const editInput = document.getElementById('editCategoryName');
-                if (editInput) {
-                    editInput.focus();
-                    editInput.select();
-                }
-            });
-
-            // This listener handles the CLICKS on the buttons inside the modal
-            categoryActionModalEl.addEventListener('click', async function (event) {
-                const target = event.target;
-
-                // Logic for the SAVE button
-                if (target.id === 'saveCategoryBtn') {
-                    const catId = this.dataset.categoryId;
-                    const oldName = this.dataset.categoryName;
-                    const newName = document.getElementById('editCategoryName').value;
-
-                    if (newName && newName.trim() !== '' && newName !== oldName) {
-                        const formData = new FormData();
-                        formData.append('action', 'update');
-                        formData.append('category_id', catId);
-                        formData.append('category_name', newName);
-
-                        const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
-                        const result = await response.json();
-
-                        if (result.success) {
-                            // --- NEW CODE: UPDATE THE PAGE WITHOUT RELOADING ---
-
-                            // 1. Find the accordion button and update its text
-                            const accordionButton = document.querySelector(`button[data-bs-target="#collapse-cat-${catId}"]`);
-                            if (accordionButton) {
-                                // Keep the folder icon, just change the text
-                                accordionButton.innerHTML = `<i class="bi bi-folder me-2"></i> ${result.updatedName}`;
-                            }
-
-                            // 2. Find the edit button in the dropdown and update its data-name attribute
-                            const editButton = document.querySelector(`.dropdown-item[data-action="edit"][data-id="${catId}"]`);
-                            if (editButton) {
-                                editButton.dataset.name = result.updatedName;
-                            }
-
-                            // 3. Hide the modal
-                            bootstrap.Modal.getInstance(this).hide();
-
-                        } else {
-                            alert("Could not save changes.");
-                        }
-                    }
-                }
-
-                // Logic for the DELETE button
-                if (target.id === 'deleteCategoryBtn') {
-                    const catId = this.dataset.categoryId;
-                    const formData = new FormData();
-                    formData.append('action', 'delete');
-                    formData.append('category_id', catId);
-                    await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
-                    location.reload();
-                }
-            });
-        }
-    });
 
     // Listener for submitting the EDIT Assessment Form
     // --- Updated Edit Assessment Form Listener ---

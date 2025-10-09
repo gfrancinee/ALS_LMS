@@ -32,8 +32,8 @@ $materials = $materials_stmt->get_result();
 $teacher_id = $_SESSION['user_id'];
 
 // Fetch all categories for the current strand
-$cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? ORDER BY name");
-$cat_stmt->bind_param("i", $strand_id);
+$cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? AND teacher_id = ? ORDER BY id ASC");
+$cat_stmt->bind_param("ii", $strand_id, $teacher_id);
 $cat_stmt->execute();
 $categories = $cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -66,7 +66,6 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
         window.strandId = <?= json_encode($strand_id) ?>;
         window.userRole = '<?= htmlspecialchars($_SESSION['role'] ?? 'guest') ?>'; // ADD THIS LINE
     </script>
-    <script src="js/strnd.js" defer></script>
 
 </head>
 
@@ -123,30 +122,18 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
             <!-- Modules Tab -->
             <div class="tab-pane fade show active" id="modules" role="tabpanel" aria-labelledby="modules-tab">
 
-                <?php // This block checks if the user is a teacher 
-                ?>
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-3">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                            <i class="bi bi-plus-circle me-1"></i>Upload Material
+                            <i class="bi bi-plus-circle me-1"></i> Upload Material
                         </button>
                     </div>
                 <?php endif; ?>
 
                 <div class="mt-3">
                     <?php if ($materials->num_rows > 0): ?>
-                        <?php
-                        // Define the base path for your project ONCE before the loop
-                        $base_path = '/ALS_LMS/';
-                        ?>
+                        <?php $base_path = '/ALS_LMS/'; ?>
                         <?php while ($mat = $materials->fetch_assoc()): ?>
-                            <?php
-                            // Construct the full, correct URL for the file
-                            $full_url = '';
-                            if (!empty($mat['file_path'])) {
-                                $full_url = $base_path . htmlspecialchars($mat['file_path']);
-                            }
-                            ?>
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
@@ -156,39 +143,12 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                             <small class="text-muted">Uploaded: <?= date("F j, Y", strtotime($mat['uploaded_at'])) ?></small>
                                         </div>
 
-                                        <?php // The Edit/Delete menu is hidden from students 
-                                        ?>
-                                        <?php if ($_SESSION['role'] === 'teacher'): ?>
+                                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                                             <div class="dropdown">
-                                                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="bi bi-three-dots-vertical"></i>
-                                                </button>
+                                                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li>
-                                                        <?php
-                                                        $file_location = '';
-                                                        if ($mat['type'] === 'link') {
-                                                            $file_location = htmlspecialchars($mat['link_url'] ?? '');
-                                                        } else if (!empty($mat['file_path'])) {
-                                                            $file_location = $base_path . htmlspecialchars($mat['file_path']);
-                                                        }
-                                                        ?>
-                                                        <button class="dropdown-item edit-material-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#editMaterialModal"
-                                                            data-id="<?= $mat['id'] ?>"
-                                                            data-label="<?= htmlspecialchars($mat['label']) ?>"
-                                                            data-type="<?= htmlspecialchars($mat['type']) ?>"
-                                                            data-file="<?= $file_location ?>"
-                                                            data-link="<?= htmlspecialchars($mat['link_url'] ?? '') ?>">
-                                                            <i class="bi bi-pencil-square me-2 text-success"></i> Edit
-                                                        </button>
-                                                    </li>
-                                                    <li>
-                                                        <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-bs-id="<?= $mat['id'] ?>">
-                                                            <i class="bi bi-trash3 me-2"></i> Delete
-                                                        </button>
-                                                    </li>
+                                                    <li><button class="dropdown-item edit-material-btn" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>" data-label="<?= htmlspecialchars($mat['label']) ?>" data-type="<?= htmlspecialchars($mat['type']) ?>" data-file="<?= ($mat['type'] !== 'link' && !empty($mat['file_path'])) ? $base_path . htmlspecialchars($mat['file_path']) : '' ?>" data-link="<?= htmlspecialchars($mat['link_url'] ?? '') ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
+                                                    <li><button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>" data-label="<?= htmlspecialchars($mat['label']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                                 </ul>
                                             </div>
                                         <?php endif; ?>
@@ -197,31 +157,29 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                     <div class="material-preview mt-3 text-center">
                                         <?php
                                         $icon_class = 'bi-file-earmark-arrow-down';
-                                        $modal_title = htmlspecialchars($mat['label']);
-
                                         if ($mat['type'] === 'image') $icon_class = 'bi-card-image';
                                         if ($mat['type'] === 'video') $icon_class = 'bi-play-btn';
                                         if ($mat['type'] === 'audio') $icon_class = 'bi-music-note-beamed';
                                         if ($mat['type'] === 'file')  $icon_class = 'bi-file-earmark-text';
                                         if ($mat['type'] === 'link')  $icon_class = 'bi-link-45deg';
 
-                                        $media_url = ($mat['type'] === 'link') ? htmlspecialchars($mat['link_url'] ?? '') : $full_url;
+                                        $media_url = ($mat['type'] === 'link') ? htmlspecialchars($mat['link_url'] ?? '') : $base_path . htmlspecialchars($mat['file_path']);
                                         ?>
 
                                         <?php if ($mat['type'] === 'link'): ?>
-                                            <a href="<?= $media_url ?>" target="_blank" class="d-block">
+                                            <a href="<?= $media_url ?>" target="_blank" class="d-block text-decoration-none">
                                                 <i class="bi <?= $icon_class ?>" style="font-size: 4rem;"></i>
-                                                <p class="mt-2">Open Link</p>
+                                                <p class="mt-2 mb-0 text-body">Open Link</p>
                                             </a>
                                         <?php else: ?>
-                                            <a href="#" class="d-block"
+                                            <a href="#" class="d-block text-decoration-none"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#mediaModal"
                                                 data-type="<?= htmlspecialchars($mat['type']) ?>"
                                                 data-url="<?= $media_url ?>"
-                                                data-label="<?= $modal_title ?>">
+                                                data-label="<?= htmlspecialchars($mat['label']) ?>">
                                                 <i class="bi <?= $icon_class ?>" style="font-size: 4rem;"></i>
-                                                <p class="mt-2">View <?= htmlspecialchars($mat['type']) ?></p>
+                                                <p class="mt-2 mb-0 text-body">View <?= htmlspecialchars(ucfirst($mat['type'])) ?></p>
                                             </a>
                                         <?php endif; ?>
                                     </div>
@@ -239,52 +197,44 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-4">
-                        <button type="button" class="btn btn-success text-light text-decoration-none btn-subtle-hover" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
-                            <i class="bi bi-folder"></i> Manage Category
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
+                            <i class="bi bi-folder-plus me-2"></i> Manage Categories
                         </button>
                     </div>
                 <?php endif; ?>
 
                 <div class="accordion assessment-accordion" id="assessmentAccordion">
+
+                    <?php if (empty($categories) && empty($uncategorized_assessments)): ?>
+                        <div id="no-categories-message" class="text-center text-muted p-5">
+                            <p><i class="bi bi-journal-x fs-1"></i></p>
+                            <h5>No assessments or categories have been created yet.</h5>
+                            <p>Click "Manage Categories" to get started.</p>
+                        </div>
+                    <?php endif; ?>
+
                     <?php foreach ($categories as $category): ?>
                         <div class="accordion-item">
-                            <h2 class="accordion-header d-flex align-items-center">
-                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-cat-<?= $category['id'] ?>">
-                                    <i class="bi bi-folder me-2"></i> <?= htmlspecialchars($category['name']) ?>
-                                </button>
+                            <h2 class="accordion-header">
+                                <div class="d-flex align-items-center w-100">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-cat-<?= $category['id'] ?>">
+                                        <i class="bi bi-folder me-2"></i> <?= htmlspecialchars($category['name']) ?>
+                                    </button>
 
-                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                                    <div class="dropdown me-2">
-                                        <button class="btn btn-options mb-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <button class="dropdown-item text-success" type="button"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#categoryActionModal"
-                                                    data-action="edit"
-                                                    data-id="<?= $category['id'] ?>"
-                                                    data-name="<?= htmlspecialchars($category['name']) ?>">
-                                                    <i class="bi bi-pencil-square me-2"></i> Edit
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button class="dropdown-item text-danger" type="button"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#categoryActionModal"
-                                                    data-action="delete"
-                                                    data-id="<?= $category['id'] ?>"
-                                                    data-name="<?= htmlspecialchars($category['name']) ?>">
-                                                    <i class="bi bi-trash3 me-2"></i> Delete
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                <?php endif; ?>
+                                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                        <div class="dropdown me-2">
+                                            <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="<?= $category['id'] ?>" data-name="<?= htmlspecialchars($category['name']) ?>"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="<?= $category['id'] ?>" data-name="<?= htmlspecialchars($category['name']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </h2>
-
-                            <div id="collapse-cat-<?= $category['id'] ?>" class="accordion-collapse collapse show" data-bs-parent="#assessmentAccordion">
+                            <div id="collapse-cat-<?= $category['id'] ?>" class="accordion-collapse collapse" data-bs-parent="#assessmentAccordion">
                                 <div class="accordion-body">
                                     <ul class="list-unstyled mb-0">
                                         <?php if (!empty($category['assessments'])): ?>
@@ -306,27 +256,10 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
 
                                                         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                                                             <div class="dropdown">
-                                                                <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <i class="bi bi-three-dots-vertical"></i>
-                                                                </button>
+                                                                <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
                                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                                    <li>
-                                                                        <button class="dropdown-item text-success edit-assessment-btn" type="button"
-                                                                            data-bs-toggle="modal"
-                                                                            data-bs-target="#editAssessmentModal"
-                                                                            data-id="<?= $assessment['id'] ?>">
-                                                                            <i class="bi bi-pencil-square me-2"></i> Edit
-                                                                        </button>
-                                                                    </li>
-                                                                    <li>
-                                                                        <button class="dropdown-item text-danger delete-assessment-btn" type="button"
-                                                                            data-bs-toggle="modal"
-                                                                            data-bs-target="#deleteAssessmentModal"
-                                                                            data-id="<?= $assessment['id'] ?>"
-                                                                            data-title="<?= htmlspecialchars($assessment['title']) ?>">
-                                                                            <i class="bi bi-trash3 me-2"></i> Delete
-                                                                        </button>
-                                                                    </li>
+                                                                    <li><button class="dropdown-item edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-gear me-2"></i> Edit Settings</button></li>
+                                                                    <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="<?= $assessment['id'] ?>" data-title="<?= htmlspecialchars($assessment['title']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                                                 </ul>
                                                             </div>
                                                         <?php endif; ?>
@@ -341,10 +274,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                                         <hr class="my-3">
                                         <div class="text-center">
-                                            <button class="btn btn-link text-success text-decoration-none create-assessment-btn"
-                                                data-bs-toggle="collapse"
-                                                data-bs-target="#createAssessmentContainer"
-                                                data-category-id="<?= $category['id'] ?>">
+                                            <button class="btn btn-link text-success text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="<?= $category['id'] ?>">
                                                 <i class="bi bi-plus-circle"></i> Create Assessment in this Category
                                             </button>
                                         </div>
@@ -353,12 +283,10 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                             </div>
                         </div>
                     <?php endforeach; ?>
-                </div>
-
-                <?php if (!empty($uncategorized_assessments)): ?>
+                </div> <?php if (!empty($uncategorized_assessments)): ?>
                     <div class="mt-4">
                         <h5 class="mb-3">Uncategorized</h5>
-                        <ul class="list-group shadow-sm rounded-3">
+                        <ul class="list-unstyled mb-0">
                             <?php foreach ($uncategorized_assessments as $assessment): ?>
                                 <li>
                                     <div class="assessment-item">
@@ -372,34 +300,26 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                                     <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
                                                     <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
                                                 </div>
-
-                                                <div class="dropdown">
-                                                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="bi bi-three-dots-vertical"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li>
-                                                            <button class="dropdown-item" type="button">
-                                                                <i class="bi bi-pencil-square me-2"></i> Edit
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="dropdown-item text-danger" type="button">
-                                                                <i class="bi bi-trash3 me-2"></i> Delete
-                                                            </button>
-                                                        </li>
-                                                    </ul>
-                                                </div>
                                             </div>
                                         </a>
+
+                                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                            <div class="dropdown">
+                                                <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><button class="dropdown-item edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-gear me-2"></i> Edit Settings</button></li>
+                                                    <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="<?= $assessment['id'] ?>" data-title="<?= htmlspecialchars($assessment['title']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                </ul>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
                 <?php endif; ?>
-
             </div>
+
             <!-- Participants Tab -->
             <div class="tab-pane fade" id="participants" role="tabpanel" aria-labelledby="participants-tab">
 
@@ -417,10 +337,6 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                 <div id="participantList" class="mt-2"></div>
             </div>
         </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-
 
         <!-- Upload Modal -->
         <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
@@ -568,26 +484,33 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
         </div>
 
         <!-- Create assessment -->
-        <div class="collapse d-none" id="createAssessmentContainer">
-            <div class="card card-body mb-4">
-                <h5 class="mb-3">Create New Assessment</h5>
+        <div class="collapse" id="createAssessmentContainer">
+            <div class="card card-body m-5 shadow-sm border-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Create New Assessment</h5>
+                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" aria-label="Close"></button>
+                </div>
+
+                <hr class="my-3">
+
                 <form id="createAssessmentForm">
                     <input type="hidden" id="assessmentCategoryId" name="category_id">
 
-                    <div class="mb-3">
-                        <label for="assessmentTitle" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="assessmentTitle" name="title" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Type</label>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="type" id="typeQuiz" value="quiz" checked>
-                            <label class="form-check-label" for="typeQuiz">Quiz</label>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="assessmentTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="assessmentTitle" name="title" required>
                         </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="type" id="typeExam" value="exam">
-                            <label class="form-check-label" for="typeExam">Exam</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label d-block">Type</label>
+                            <div class="form-check form-check-inline pt-2">
+                                <input class="form-check-input" type="radio" name="type" id="typeQuiz" value="quiz" checked>
+                                <label class="form-check-label" for="typeQuiz">Quiz</label>
+                            </div>
+                            <div class="form-check form-check-inline pt-2">
+                                <input class="form-check-input" type="radio" name="type" id="typeExam" value="exam">
+                                <label class="form-check-label" for="typeExam">Exam</label>
+                            </div>
                         </div>
                     </div>
 
@@ -608,32 +531,32 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
-                        <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer">Cancel</button>
+                        <button type="button" class="btn btn-secondary" id="cancelCreateAssessmentBtn">Cancel</button>
                         <button type="submit" class="btn btn-success">Create Assessment</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Manage Categories Modal -->
-        <div class="modal fade" id="manageCategoriesModal" tabindex="-1" aria-labelledby="manageCategoriesModalLabel" aria-hidden="true">
+        <div class="modal fade" id="manageCategoriesModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="manageCategoriesModalLabel">Manage Assessment Categories</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title">Manage Categories</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="text-muted small">Create folders to organize your quizzes and exams.</p>
                         <form id="add-category-form" class="mb-4">
+                            <label for="new-category-name" class="form-label">Create New Category</label>
                             <div class="input-group">
-                                <input type="text" name="category_name" class="form-control" placeholder="New category name..." required>
+                                <input type="text" id="new-category-name" name="category_name" class="form-control" required>
                                 <button type="submit" class="btn btn-success">Add</button>
                             </div>
                         </form>
 
                         <h6>Existing Categories:</h6>
-                        <ul class="list-group" id="category-list">
+                        <ul id="category-list" class="list-group">
+                            <li class="list-group-item text-muted">Loading...</li>
                         </ul>
                     </div>
                 </div>
@@ -789,6 +712,10 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                 </div>
             </div>
         </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script src="js/strnd.js"></script>
 </body>
 
 </html>
