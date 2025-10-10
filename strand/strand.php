@@ -39,7 +39,7 @@ $categories = $cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // For each category, fetch its assessments
 foreach ($categories as &$category) {
-    $assess_stmt = $conn->prepare("SELECT id, title, type, duration_minutes, max_attempts FROM assessments WHERE category_id = ?");
+    $assess_stmt = $conn->prepare("SELECT id, title, type, duration_minutes, max_attempts, is_open, description FROM assessments WHERE category_id = ?");
     $assess_stmt->bind_param("i", $category['id']);
     $assess_stmt->execute();
     $category['assessments'] = $assess_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -241,26 +241,60 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                             <?php foreach ($category['assessments'] as $assessment): ?>
                                                 <li>
                                                     <div class="assessment-item">
-                                                        <a href="<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher') ? 'manage_assessment.php?id=' . $assessment['id'] : 'take_assessment.php?id=' . $assessment['id'] ?>" class="assessment-item-link">
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
-                                                                    <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
-                                                                </div>
-                                                                <div class="text-muted small">
-                                                                    <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
-                                                                    <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
-                                                                </div>
-                                                            </div>
-                                                        </a>
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="flex-grow-1">
+                                                                <a href="<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'student' && $assessment['is_open']) ? 'take_assessment.php?id=' . $assessment['id'] : '#' ?>"
+                                                                    class="assessment-item-link <?= (isset($_SESSION['role']) && $_SESSION['role'] === 'student' && !$assessment['is_open']) ? 'disabled' : '' ?>">
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
+                                                                            <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
+                                                                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'student'): ?>
+                                                                                <span class="badge <?= $assessment['is_open'] ? 'bg-success' : 'bg-danger' ?> ms-2"><?= $assessment['is_open'] ? 'Open' : 'Closed' ?></span>
+                                                                            <?php endif; ?>
+                                                                        </div>
+                                                                        <div class="text-muted small">
+                                                                            <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
+                                                                            <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
 
-                                                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                                                            <div class="dropdown">
-                                                                <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
-                                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                                    <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-pencil-square me-2"></i> Edit </button></li>
-                                                                    <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="<?= $assessment['id'] ?>" data-title="<?= htmlspecialchars($assessment['title']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                                                                </ul>
+                                                                <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
+                                                                    <div class="mt-2">
+                                                                        <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-<?= $assessment['id'] ?>">
+                                                                            Show/Hide Description
+                                                                        </button>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                            </div>
+
+                                                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                                                <div class="d-flex align-items-center gap-2 ps-3">
+                                                                    <div class="form-check form-switch">
+                                                                        <input class="form-check-input assessment-status-toggle" type="checkbox" role="switch" data-id="<?= $assessment['id'] ?>" <?= $assessment['is_open'] ? 'checked' : '' ?>>
+                                                                        <label class="form-check-label small"><?= $assessment['is_open'] ? 'Open' : 'Closed' ?></label>
+                                                                    </div>
+                                                                    <div class="dropdown">
+                                                                        <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                                            <li><button class="dropdown-item" href="manage_assessment.php?id=<?= $assessment['id'] ?>"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+                                                                            <li>
+                                                                                <hr class="dropdown-divider">
+                                                                            </li>
+                                                                            <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                                            <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="<?= $assessment['id'] ?>" data-title="<?= htmlspecialchars($assessment['title']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+
+                                                        <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
+                                                            <div class="collapse" id="desc-<?= $assessment['id'] ?>">
+                                                                <div class="small text-muted mt-2 p-3 bg-light rounded">
+                                                                    <?= $assessment['description'] ?>
+                                                                </div>
                                                             </div>
                                                         <?php endif; ?>
                                                     </div>
@@ -318,6 +352,61 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                         </ul>
                     </div>
                 <?php endif; ?>
+
+                <!-- Create assessment -->
+                <div class="collapse" id="createAssessmentContainer">
+                    <div class="card card-body m-5 shadow-sm border-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Create New Assessment</h5>
+                            <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" aria-label="Close"></button>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <form id="createAssessmentForm">
+                            <input type="hidden" id="assessmentCategoryId" name="category_id">
+
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="assessmentTitle" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="assessmentTitle" name="title" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label d-block">Type</label>
+                                    <div class="form-check form-check-inline pt-2">
+                                        <input class="form-check-input" type="radio" name="type" id="typeQuiz" value="quiz" checked>
+                                        <label class="form-check-label" for="typeQuiz">Quiz</label>
+                                    </div>
+                                    <div class="form-check form-check-inline pt-2">
+                                        <input class="form-check-input" type="radio" name="type" id="typeExam" value="exam">
+                                        <label class="form-check-label" for="typeExam">Exam</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="assessmentDesc" class="form-label">Description / Instructions</label>
+                                <textarea class="form-control" id="assessmentDesc" name="description" rows="3"></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="assessmentDuration" class="form-label">Duration (minutes)</label>
+                                    <input type="number" class="form-control" id="assessmentDuration" name="duration_minutes" value="60" min="1" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="assessmentAttempts" class="form-label">Max Attempts</label>
+                                    <input type="number" class="form-control" id="assessmentAttempts" name="max_attempts" value="1" min="1" required>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-secondary" id="cancelCreateAssessmentBtn">Cancel</button>
+                                <button type="submit" class="btn btn-success">Create Assessment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- Participants Tab -->
@@ -483,78 +572,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
             </div>
         </div>
 
-        <!-- Create assessment -->
-        <div class="collapse" id="createAssessmentContainer">
-            <div class="card card-body m-5 shadow-sm border-light">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Create New Assessment</h5>
-                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" aria-label="Close"></button>
-                </div>
-
-                <hr class="my-3">
-
-                <form id="createAssessmentForm">
-                    <input type="hidden" id="assessmentCategoryId" name="category_id">
-
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label for="assessmentTitle" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="assessmentTitle" name="title" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label d-block">Type</label>
-                            <div class="form-check form-check-inline pt-2">
-                                <input class="form-check-input" type="radio" name="type" id="typeQuiz" value="quiz" checked>
-                                <label class="form-check-label" for="typeQuiz">Quiz</label>
-                            </div>
-                            <div class="form-check form-check-inline pt-2">
-                                <input class="form-check-input" type="radio" name="type" id="typeExam" value="exam">
-                                <label class="form-check-label" for="typeExam">Exam</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="assessmentDesc" class="form-label">Description / Instructions</label>
-                        <textarea class="form-control" id="assessmentDesc" name="description" rows="3"></textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="assessmentDuration" class="form-label">Duration (minutes)</label>
-                            <input type="number" class="form-control" id="assessmentDuration" name="duration_minutes" value="60" min="1" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="assessmentAttempts" class="form-label">Max Attempts</label>
-                            <input type="number" class="form-control" id="assessmentAttempts" name="max_attempts" value="1" min="1" required>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2 mt-3">
-                        <button type="button" class="btn btn-secondary" id="cancelCreateAssessmentBtn">Cancel</button>
-                        <button type="submit" class="btn btn-success">Create Assessment</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Assessment Details Modal -->
-        <div class="modal fade" id="assessmentDetailsModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="assessmentDetailsTitle">Assessment Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="assessmentDetailsBody">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- Manage Categories Modal ↓ -->
         <div class="modal fade" id="manageCategoriesModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -595,82 +613,6 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                 </div>
             </div>
         </div>
-
-        <!-- Questions Modal ↓ -->
-        <div
-            class="modal fade"
-            id="questionsModal"
-            tabindex="-1"
-            aria-labelledby="questionsModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <form id="questionForm">
-                        <input type="hidden" name="strand_id" id="questionStrandId" value="<?= htmlspecialchars($strand_id) ?>">
-                        <input type="hidden" name="assessment_id" id="assessmentIdInput" value="">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="questionsModalLabel">
-                                Manage Questions
-                            </h5>
-                            <button
-                                type="button"
-                                class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body p-0">
-                            <div id="formBuilder" class="p-3"></div>
-                            <div class="text-center my-2">
-                                <button
-                                    type="button"
-                                    class="btn btn-primary"
-                                    id="addQuestionBtn"
-                                    data-strand-id="<?= htmlspecialchars($strand_id) ?>">
-                                    + Add Question
-                                </button>
-
-
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">
-                                Save Questions
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <template id="questionTemplate">
-            <div class="question-block border rounded p-3 mb-3 bg-light">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <strong>Question <span class="q-index">1</span></strong>
-                    <div>
-                        <button type="button" class="btn btn-sm btn-danger remove-question">×</button>
-                        <button type="button" class="btn btn-sm btn-secondary move-up">↑</button>
-                        <button type="button" class="btn btn-sm btn-secondary move-down">↓</button>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Question Text</label>
-                    <textarea class="form-control question-text" placeholder="Enter question" required></textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Question Type</label>
-                    <select class="form-select question-type" required>
-                        <option value="">Select type</option>
-                        <option value="mcq">Multiple Choice</option>
-                        <option value="true_false">True/False</option>
-                        <option value="short_answer">Short Answer</option>
-                        <option value="essay">Essay</option>
-                    </select>
-                </div>
-
-                <div class="answer-area"></div>
-            </div>
-        </template>
 
         <!-- View Attempts Modal ↓ -->
         <div class="modal fade" id="viewAttemptsModal" tabindex="-1" aria-labelledby="viewAttemptsModalLabel" aria-hidden="true">

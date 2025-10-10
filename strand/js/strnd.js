@@ -452,9 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Handle the assessment form submission ---
-
-    // --- Handles the 'Create Assessment' form submission (FINAL NO RELOAD VERSION) ---
+    // --- Handles the 'Create Assessment' form submission ---
     const createAssessmentForm = document.getElementById('createAssessmentForm');
     if (createAssessmentForm) {
         const createAssessmentContainer = document.getElementById('createAssessmentContainer');
@@ -462,10 +460,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         createAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            tinymce.triggerSave(); // Save content from TinyMCE editor
+            tinymce.triggerSave();
 
             const formData = new FormData(createAssessmentForm);
-            // The 'strandId' variable should be defined at the top of your DOMContentLoaded listener
             formData.append('strand_id', strandId);
 
             try {
@@ -476,36 +473,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    const assessment = result.data; // Correctly get data from result.data
+                    const assessment = result.data;
                     const categoryId = assessment.category_id;
+                    const typeCapitalized = assessment.type.charAt(0).toUpperCase() + assessment.type.slice(1);
 
-                    // Build the complete HTML for the new assessment item
+                    // This is the new, complete HTML that matches your final design
+                    const hasDescription = assessment.description && assessment.description.trim().replace(/<p>&nbsp;<\/p>/g, '').length > 0;
+
                     const newItemHTML = `
-                    <li>
-                        <div class="assessment-item">
-                            <a href="manage_assessment.php?id=${assessment.id}" class="assessment-item-link">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-bold">${assessment.title}</span>
-                                        <span class="badge bg-light text-dark fw-normal ms-2">${assessment.type.charAt(0).toUpperCase() + assessment.type.slice(1)}</span>
+                <li>
+                    <div class="assessment-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <a href="manage_assessment.php?id=${assessment.id}" class="assessment-item-link">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="fw-bold">${assessment.title}</span>
+                                            <span class="badge bg-light text-dark fw-normal ms-2">${typeCapitalized}</span>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <span class="me-3"><i class="bi bi-clock"></i> ${assessment.duration_minutes} mins</span>
+                                            <span><i class="bi bi-arrow-repeat"></i> ${assessment.max_attempts} attempt(s)</span>
+                                        </div>
                                     </div>
-                                    <div class="text-muted small">
-                                        <span class="me-3"><i class="bi bi-clock"></i> ${assessment.duration_minutes} mins</span>
-                                        <span><i class="bi bi-arrow-repeat"></i> ${assessment.max_attempts} attempt(s)</span>
-                                    </div>
+                                </a>
+                                ${hasDescription ? `
+                                <div class="mt-2">
+                                    <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-<?= $assessment['id'] ?>">
+                                     Show/Hide Description
+                                    </button>
+                                </div>` : ''}
+                            </div>
+                            <div class="d-flex align-items-center gap-2 ps-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input assessment-status-toggle" type="checkbox" role="switch" data-id="${assessment.id}">
+                                    <label class="form-check-label small">Closed</label>
                                 </div>
-                            </a>
-                            <div class="dropdown">
-                                <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><button class="dropdown-item edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-gear me-2"></i> Edit Settings</button></li>
-                                    <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                                </ul>
+                                <div class="dropdown">
+                                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button class="dropdown-item" href="manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                        <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </li>`;
+                        ${hasDescription ? `
+                        <div class="collapse" id="desc-${assessment.id}">
+                            <div class="card card-body small text-muted mt-2">
+                                ${assessment.description} 
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </li>`;
 
-                    // Find the correct list to add the new item to
                     const listContainer = document.querySelector(`#collapse-cat-${categoryId} .list-unstyled`);
                     if (listContainer) {
                         const emptyMsg = listContainer.querySelector('.fst-italic');
@@ -521,10 +544,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
 
-                    // Hide and reset the form
                     collapseInstance.hide();
                     createAssessmentForm.reset();
-                    tinymce.get('assessmentDesc').setContent(''); // Clear the TinyMCE editor
+                    tinymce.get('assessmentDesc').setContent('');
 
                 } else {
                     alert('Error: ' + (result.error || 'Could not create assessment.'));
@@ -535,6 +557,33 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- Handles the Open/Close toggle switch for assessments ---
+    document.body.addEventListener('change', async function (event) {
+        if (event.target.classList.contains('assessment-status-toggle')) {
+            const toggleSwitch = event.target;
+            const assessmentId = toggleSwitch.dataset.id;
+            const label = toggleSwitch.nextElementSibling;
+
+            // Update label text immediately for better UX
+            label.textContent = toggleSwitch.checked ? 'Open' : 'Closed';
+
+            const formData = new FormData();
+            formData.append('assessment_id', assessmentId);
+
+            try {
+                await fetch('../ajax/toggle_assessment_status.php', { method: 'POST', body: formData });
+                // No need to do anything on success, the UI is already updated.
+                // You could add a small success toast/notification here if you want.
+            } catch (error) {
+                // Revert on error
+                label.textContent = toggleSwitch.checked ? 'Closed' : 'Open';
+                toggleSwitch.checked = !toggleSwitch.checked;
+                alert('Failed to update status. Please try again.');
+            }
+        }
+    });
+
     // --- START: Assessment Category Logic ---
     const categoriesModal = document.getElementById('manageCategoriesModal');
 
@@ -564,9 +613,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // When the modal is about to be shown, load the categories
         categoriesModal.addEventListener('show.bs.modal', loadCategories);
-
-        // Handle adding a new category
-        // In strand.js, replace your addCategoryForm listener with this
 
         // Handles adding a new category "smoothly"
         addCategoryForm.addEventListener('submit', async (e) => {
@@ -605,6 +651,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="dropdown mb-2">
                             <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item" href="manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+                                        <li><hr class="dropdown-divider"></li>
                                 <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                                 <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                             </ul>
@@ -848,6 +896,75 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 alert('Error: ' + (result.error || 'Could not delete assessment.'));
+            }
+        });
+    }
+
+    // TQuestion Type Selection Logic
+    const questionTypeSelect = document.getElementById('question_type');
+    const answerFieldsContainer = document.getElementById('answer-fields-container');
+
+    const fieldGroups = {
+        multiple_choice: document.getElementById('multiple-choice-fields'),
+        true_false: document.getElementById('true-false-fields'),
+        identification: document.getElementById('short-answer-fields'),
+        short_answer: document.getElementById('short-answer-fields'),
+        essay: document.getElementById('essay-fields')
+    };
+
+    // --- This function shows/hides the correct answer fields ---
+    const updateVisibleFields = () => {
+        const selectedType = questionTypeSelect.value;
+
+        // Hide all field groups
+        for (const key in fieldGroups) {
+            if (fieldGroups[key]) {
+                fieldGroups[key].style.display = 'none';
+            }
+        }
+
+        // Show the selected one
+        if (fieldGroups[selectedType]) {
+            fieldGroups[selectedType].style.display = 'block';
+        }
+    };
+
+    // --- Event listener for the dropdown ---
+    if (questionTypeSelect) {
+        questionTypeSelect.addEventListener('change', updateVisibleFields);
+        // Run it once on page load
+        updateVisibleFields();
+    }
+
+    // --- Event listener for the form submission ---
+    const addQuestionForm = document.getElementById('add-question-form');
+    if (addQuestionForm) {
+        addQuestionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(addQuestionForm);
+            const submitButton = addQuestionForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
+
+            try {
+                const response = await fetch('../ajax/add_question.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Question added successfully!');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (result.error || 'Could not add question.'));
+                }
+            } catch (error) {
+                console.error('Submission failed:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Question';
             }
         });
     }
