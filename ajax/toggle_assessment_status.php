@@ -3,23 +3,33 @@ session_start();
 require_once '../includes/db.php';
 header('Content-Type: application/json');
 
-if ($_SESSION['role'] !== 'teacher') { /* ... unauthorized error ... */
+// Security Check: Only for logged-in teachers
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
-$id = $data['id'] ?? null;
-$status = $data['status'] ?? null;
+// 1. Reads from $_POST to match the JavaScript
+$assessment_id = $_POST['assessment_id'] ?? 0;
+$teacher_id = $_SESSION['user_id'];
 
-if (!$id || !in_array($status, ['open', 'closed'])) {
-    echo json_encode(['success' => false, 'message' => 'Invalid data.']);
+if (empty($assessment_id)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Assessment ID is required.']);
     exit;
 }
 
-$stmt = $conn->prepare("UPDATE assessments SET status = ? WHERE id = ? AND teacher_id = ?");
-$stmt->bind_param("sii", $status, $id, $_SESSION['user_id']);
-if ($stmt->execute()) {
+// 2. Updates the 'is_open' column and automatically toggles the value (0 to 1, or 1 to 0)
+$stmt = $conn->prepare("UPDATE assessments SET is_open = !is_open WHERE id = ? AND teacher_id = ?");
+$stmt->bind_param("ii", $assessment_id, $teacher_id);
+
+if ($stmt->execute() && $stmt->affected_rows > 0) {
     echo json_encode(['success' => true]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Database error.']);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Could not update status or assessment not found.']);
 }
+
+$stmt->close();
+$conn->close();

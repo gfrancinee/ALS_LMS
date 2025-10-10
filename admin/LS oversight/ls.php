@@ -68,7 +68,7 @@ if (!isset($conn) || $conn->connect_error) {
 
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">User Management</h2>
+            <h2 class="mb-0">Learning Strand Oversight</h2>
             <div class="mb-3">
                 <a href="../admin.php" class="back-link">
                     <i class="bi bi-arrow-left me-1"></i>Back

@@ -472,7 +472,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Are you sure you want to permanently delete the assessment: <strong id="assessmentNameToDelete"></strong>?</p>
+                        <p>Are you sure you want to delete "<strong><span id="assessmentNameToDelete">this assessment</span></strong>"?</p>
                         <p class="text-danger small">This action cannot be undone.</p>
                     </div>
                     <div class="modal-footer">
@@ -535,6 +535,23 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                         <button type="submit" class="btn btn-success">Create Assessment</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Assessment Details Modal -->
+        <div class="modal fade" id="assessmentDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="assessmentDetailsTitle">Assessment Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="assessmentDetailsBody">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -714,7 +731,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
+        <script src="https://cdn.tiny.cloud/1/qk934997maqmdownvd6tot030m8mvxhup6knjftrm2gdjxqm/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
         <script src="js/strnd.js"></script>
 </body>
 

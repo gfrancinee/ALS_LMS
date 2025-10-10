@@ -1,10 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Get the user role from the global variable we set in the PHP file
-    const userRole = window.userRole;
+    // --- Initialize TinyMCE ---
+    tinymce.init({
+        selector: '#assessmentDesc', // Targets the 'Description' textarea
+        plugins: 'lists link autoresize code',
+        toolbar: 'undo redo | bold italic underline | bullist numlist | link | code',
+        menubar: false,
+        statusbar: false,
+        height: 250,
+        autoresize_bottom_margin: 20
+    });
 
-    // SECTION 1: ELEMENT REFERENCES
-    const strandId = window.strandId;
+    // Get the user role from the global variable we set in the PHP file
+    const strandId = new URLSearchParams(window.location.search).get('id');
 
     // Modals
     const editModal = document.getElementById('editMaterialModal');
@@ -444,9 +452,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Handle the form submission ---
-    // In strand.js, replace the entire 'createAssessmentForm' listener
+    // --- Handle the assessment form submission ---
 
+    // --- Handles the 'Create Assessment' form submission (FINAL NO RELOAD VERSION) ---
     const createAssessmentForm = document.getElementById('createAssessmentForm');
     if (createAssessmentForm) {
         const createAssessmentContainer = document.getElementById('createAssessmentContainer');
@@ -454,8 +462,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         createAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const strandId = new URLSearchParams(window.location.search).get('id');
+            tinymce.triggerSave(); // Save content from TinyMCE editor
+
             const formData = new FormData(createAssessmentForm);
+            // The 'strandId' variable should be defined at the top of your DOMContentLoaded listener
             formData.append('strand_id', strandId);
 
             try {
@@ -466,38 +476,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    const newAssessment = result.newAssessment;
-                    const categoryId = formData.get('category_id');
+                    const assessment = result.data; // Correctly get data from result.data
+                    const categoryId = assessment.category_id;
 
-                    // Find the correct category's list in the accordion
-                    const list = document.querySelector(`#collapse-cat-${categoryId} .list-unstyled`);
+                    // Build the complete HTML for the new assessment item
+                    const newItemHTML = `
+                    <li>
+                        <div class="assessment-item">
+                            <a href="manage_assessment.php?id=${assessment.id}" class="assessment-item-link">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-bold">${assessment.title}</span>
+                                        <span class="badge bg-light text-dark fw-normal ms-2">${assessment.type.charAt(0).toUpperCase() + assessment.type.slice(1)}</span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <span class="me-3"><i class="bi bi-clock"></i> ${assessment.duration_minutes} mins</span>
+                                        <span><i class="bi bi-arrow-repeat"></i> ${assessment.max_attempts} attempt(s)</span>
+                                    </div>
+                                </div>
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><button class="dropdown-item edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-gear me-2"></i> Edit Settings</button></li>
+                                    <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>`;
 
-                    if (list) {
-                        // Create the new list item HTML
-                        const newItem = document.createElement('li');
-                        newItem.innerHTML = `
-                        <a href="take_assessment.php?id=${newAssessment.id}">
-                            ${newAssessment.title}
-                            <span class="badge bg-light text-dark fw-normal ms-2">${newAssessment.type.charAt(0).toUpperCase() + newAssessment.type.slice(1)}</span>
-                        </a>
-                    `;
+                    // Find the correct list to add the new item to
+                    const listContainer = document.querySelector(`#collapse-cat-${categoryId} .list-unstyled`);
+                    if (listContainer) {
+                        const emptyMsg = listContainer.querySelector('.fst-italic');
+                        if (emptyMsg) emptyMsg.remove();
 
-                        // Check if the "No assessments" message is there and remove it
-                        const noAssessmentsMsg = list.querySelector('.text-muted');
-                        if (noAssessmentsMsg) {
-                            noAssessmentsMsg.remove();
+                        listContainer.insertAdjacentHTML('beforeend', newItemHTML);
+
+                        // Activate the new dropdown menu
+                        const newItemElement = listContainer.lastElementChild;
+                        const newDropdownToggle = newItemElement.querySelector('[data-bs-toggle="dropdown"]');
+                        if (newDropdownToggle) {
+                            new bootstrap.Dropdown(newDropdownToggle);
                         }
-
-                        // Add the new assessment to the list
-                        list.appendChild(newItem);
                     }
 
                     // Hide and reset the form
                     collapseInstance.hide();
                     createAssessmentForm.reset();
+                    tinymce.get('assessmentDesc').setContent(''); // Clear the TinyMCE editor
 
                 } else {
-                    alert('Error: ' + result.error);
+                    alert('Error: ' + (result.error || 'Could not create assessment.'));
                 }
             } catch (error) {
                 console.error('Submission failed:', error);
@@ -775,6 +805,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     alert('Error: Could not delete category.');
                 }
+            }
+        });
+    }
+
+    // --- Logic for the DELETE Assessment Modal ---
+    const deleteAssessmentModalEl = document.getElementById('deleteAssessmentModal');
+    if (deleteAssessmentModalEl) {
+        const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteAssessmentModalEl);
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        let elementToDelete = null;
+
+        // This runs WHEN THE DELETE MODAL IS ABOUT TO OPEN
+        deleteAssessmentModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const assessmentId = button.dataset.id;
+            const assessmentTitle = button.dataset.title;
+
+            // Set the ID on the confirm button and find the element to remove
+            confirmDeleteBtn.dataset.id = assessmentId;
+            elementToDelete = button.closest('.assessment-item');
+
+            document.getElementById('assessmentNameToDelete').textContent = assessmentTitle;
+        });
+
+        // This runs WHEN YOU CLICK THE FINAL "DELETE" BUTTON
+        confirmDeleteBtn.addEventListener('click', async function () {
+            const assessmentId = this.dataset.id;
+            const formData = new FormData();
+            formData.append('assessment_id', assessmentId);
+
+            const response = await fetch('../ajax/delete_assessment.php', { method: 'POST', body: formData });
+            const result = await response.json();
+
+            if (result.success) {
+                deleteModal.hide();
+                // Smoothly remove the assessment from the page
+                if (elementToDelete) {
+                    elementToDelete.style.transition = 'opacity 0.3s ease';
+                    elementToDelete.style.opacity = '0';
+                    setTimeout(() => elementToDelete.remove(), 300);
+                }
+            } else {
+                alert('Error: ' + (result.error || 'Could not delete assessment.'));
             }
         });
     }
