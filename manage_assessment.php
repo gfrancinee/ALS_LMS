@@ -30,6 +30,9 @@ $result = $stmt->get_result();
 $assessment = $result->fetch_assoc();
 $stmt->close();
 
+// Note: I also corrected the path to remove the extra '/strand/' folder
+$back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) . '#assessments';
+
 if (!$assessment) {
     echo "<div class='container mt-4'><div class='alert alert-danger'>Assessment not found or you do not have permission.</div></div>";
     require_once 'includes/footer.php';
@@ -56,16 +59,14 @@ $questions_stmt->close();
 
 ?>
 
-<div class="container mt-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="teacher.php">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="strand.php?id=<?= $assessment['strand_id'] ?>">Strand Page</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Manage Assessment</li>
-        </ol>
-    </nav>
-    <div class="card">
-        <div class="card-header bg-white py-3">
+<div class="container">
+    <div class="back-container">
+        <a href="<?= htmlspecialchars($back_link) ?>" class="back-link <?= $back_link_class ?>">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-lightwhite py-3">
             <h3>Manage: <?= htmlspecialchars($assessment['title']) ?></h3>
         </div>
         <div class="card-body">
@@ -109,6 +110,7 @@ $questions_stmt->close();
             <h4 class="mt-4">Add New Question</h4>
             <form id="add-question-form">
                 <input type="hidden" name="assessment_id" value="<?= $assessment['id'] ?>">
+
                 <div class="row">
                     <div class="col-md-8">
                         <label for="question_text" class="form-label fw-bold">Question:</label>
@@ -125,14 +127,16 @@ $questions_stmt->close();
                         </select>
                     </div>
                 </div>
+
                 <div id="answer-fields-container" class="mt-3">
+
                     <div id="multiple-choice-fields">
                         <label class="form-label fw-bold">Options (Select the correct answer):</label>
                         <div class="input-group mb-2">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="0" required></div><input type="text" class="form-control" name="options[]">
+                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="0" required></div><input type="text" class="form-control" name="options[]" required>
                         </div>
                         <div class="input-group mb-2">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="1"></div><input type="text" class="form-control" name="options[]">
+                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="1"></div><input type="text" class="form-control" name="options[]" required>
                         </div>
                         <div class="input-group mb-2">
                             <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="2"></div><input type="text" class="form-control" name="options[]">
@@ -141,19 +145,24 @@ $questions_stmt->close();
                             <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="3"></div><input type="text" class="form-control" name="options[]">
                         </div>
                     </div>
+
                     <div id="true-false-fields" style="display: none;">
-                        <label class="form-label fw-bold">Correct Answer:</label>
-                        <div class="form-check"><input class="form-check-input" type="radio" name="true_false_answer" id="true_answer" value="True"><label class="form-check-label" for="true_answer">True</label></div>
-                        <div class="form-check"><input class="form-check-input" type="radio" name="true_false_answer" id="false_answer" value="False"><label class="form-check-label" for="false_answer">False</label></div>
+                        <label class="form-label fw-bold">Options (Select the correct answer):</label>
+                        <div class="input-group mb-2">
+                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="tf_correct_option" value="0" required></div><input type="text" class="form-control" name="tf_options[]" value="True">
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="tf_correct_option" value="1"></div><input type="text" class="form-control" name="tf_options[]" value="False">
+                        </div>
                     </div>
-                    <div id="short-answer-fields" style="display: none;">
-                        <label for="short_answer_text" class="form-label fw-bold">Correct Answer (Optional for manual grading):</label>
-                        <input type="text" class="form-control" id="short_answer_text" name="short_answer_text" placeholder="For enumeration, separate answers with a comma (e.g., red, blue, yellow)">
+
+                    <div id="single-answer-fields" style="display: none;">
+                        <label for="single_answer_text" class="form-label fw-bold">Correct Answer:</label>
+                        <input type="text" class="form-control" id="single_answer_text" name="single_answer_text" placeholder="Optional for Short Answer / Essay">
                     </div>
-                    <div id="essay-fields" style="display: none;">
-                        <p class="text-muted">Essay questions do not have a pre-defined answer and require manual grading.</p>
-                    </div>
+
                 </div>
+
                 <button type="submit" class="btn btn-primary mt-3">Add Question</button>
             </form>
         </div>

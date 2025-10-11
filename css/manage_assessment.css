@@ -1,0 +1,23 @@
+.back-container {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 1000;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.back-link:hover {
+    color: green;
+}
+
+/* Custom class for extra top margin */
+.container .card {
+    margin-top: 80px;
+    /* You can change this number to make it higher or lower */
+}

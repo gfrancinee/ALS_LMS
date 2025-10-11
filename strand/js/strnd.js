@@ -11,6 +11,21 @@ document.addEventListener('DOMContentLoaded', () => {
         autoresize_bottom_margin: 20
     });
 
+    // --- CORRECTED CODE TO ACTIVATE TAB FROM URL HASH ---
+    const urlHash = window.location.hash; // e.g., "#assessments"
+    if (urlHash) {
+        const tabToActivate = document.querySelector('.nav-tabs a[href="' + urlHash + '"]');
+
+        if (tabToActivate) {
+            const tab = new bootstrap.Tab(tabToActivate);
+            tab.show();
+
+            // ADD THIS LINE: After showing the tab, remove the hash from the URL
+            // This prevents the tab from being "sticky" on future reloads.
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+    }
+
     // Get the user role from the global variable we set in the PHP file
     const strandId = new URLSearchParams(window.location.search).get('id');
 
@@ -651,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="dropdown mb-2">
                             <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                            <li><button class="dropdown-item" href="manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+                            <li><button type="button" class="dropdown-item" onclick="window.location.href='/ALS_LMS/manage_assessment.php?id=${assessment.id}'"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
                                         <li><hr class="dropdown-divider"></li>
                                 <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                                 <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>

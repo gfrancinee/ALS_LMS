@@ -388,3 +388,9 @@ h2 {
 .dropdown-item:active {
     background-color: transparent;
 }
+
+/* Removes the background highlight from links inside a dropdown menu on click */
+a.dropdown-item:focus,
+a.dropdown-item:active {
+    background-color: transparent !important;
+}
