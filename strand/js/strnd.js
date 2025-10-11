@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="assessment-item">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
-                                <a href="manage_assessment.php?id=${assessment.id}" class="assessment-item-link">
+                                <a href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}" class="assessment-item-link">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <span class="fw-bold">${assessment.title}</span>
@@ -527,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="dropdown">
                                     <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><button class="dropdown-item" href="manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+                                        <li><button class="dropdown-item" href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                                         <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>

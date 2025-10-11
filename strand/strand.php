@@ -243,7 +243,8 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                                     <div class="assessment-item">
                                                         <div class="d-flex justify-content-between align-items-start">
                                                             <div class="flex-grow-1">
-                                                                <a href="<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'student' && $assessment['is_open']) ? 'take_assessment.php?id=' . $assessment['id'] : '#' ?>"
+
+                                                                <a href="<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'student' && $assessment['is_open']) ? 'take_assessment.php?id=' . $assessment['id'] : '/ALS_LMS/strand/preview_assessment.php?id=' . $assessment['id'] ?>"
                                                                     class="assessment-item-link <?= (isset($_SESSION['role']) && $_SESSION['role'] === 'student' && !$assessment['is_open']) ? 'disabled' : '' ?>">
                                                                     <div class="d-flex justify-content-between align-items-center">
                                                                         <div>
@@ -278,7 +279,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
                                                                     <div class="dropdown">
                                                                         <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                                         <ul class="dropdown-menu dropdown-menu-end">
-                                                                            <li><button type="button" class="dropdown-item" onclick="window.location.href='/ALS_LMS/manage_assessment.php?id=<?= $assessment['id'] ?>'"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+                                                                            <li><button type="button" class="dropdown-item" onclick="window.location.href='/ALS_LMS/strand/manage_assessment.php?id=<?= $assessment['id'] ?>'"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
                                                                             <li>
                                                                                 <hr class="dropdown-divider">
                                                                             </li>

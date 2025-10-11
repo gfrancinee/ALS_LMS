@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once 'includes/db.php';
-require_once 'includes/header.php';
+require_once '../includes/db.php';
+require_once '../includes/header.php';
 
 // --- SECURITY CHECK ---
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
 }
 
 // --- GET ASSESSMENT ID ---
-$assessment_id = $_GET['id'] ?? 0;
+$assessment_id = $_GET['id'] ?? $_GET['assessment_id'] ?? 0;
 if (empty($assessment_id)) {
     echo "<div class='container mt-4'><div class='alert alert-danger'>Error: Assessment ID not provided.</div></div>";
     require_once 'includes/footer.php';
@@ -93,7 +93,7 @@ $questions_stmt->close();
                                         <p class="mb-0"><?= nl2br(htmlspecialchars($question['question_text'])) ?></p>
                                     </div>
                                     <div class="actions-container">
-                                        <button class="btn btn-action-icon edit" title="Edit Question">
+                                        <button class="btn btn-action-icon edit" title="Edit Question" data-bs-toggle="modal" data-bs-target="#editQuestionModal" data-question-id="<?= $question['id'] ?>">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <button class="btn btn-action-icon delete" title="Delete Question" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal" data-question-id="<?= $question['id'] ?>">
@@ -173,7 +173,77 @@ $questions_stmt->close();
     </div>
 </div>
 
+<!-- Edit Question Modal -->
+<div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editQuestionModalLabel">Edit Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="edit-question-loader" class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <form id="edit-question-form" style="display:none;">
+                    <input type="hidden" name="question_id" id="edit_question_id">
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="edit_question_text" class="form-label fw-bold">Question:</label>
+                            <textarea class="form-control" id="edit_question_text" name="question_text" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="edit_question_type" class="form-label fw-bold">Question Type:</label>
+                            <select class="form-select" id="edit_question_type" name="question_type" disabled>
+                                <option value="multiple_choice">Multiple Choice</option>
+                                <option value="true_false">True/False</option>
+                                <option value="identification">Identification</option>
+                                <option value="short_answer">Short Answer / Enumeration</option>
+                                <option value="essay">Essay</option>
+                            </select>
+                            <div class="form-text">Question type cannot be changed after creation.</div>
+                        </div>
+                    </div>
+
+                    <div id="edit-answer-fields-container">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="edit-question-form" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Question Modal -->
+<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-labelledby="deleteQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteQuestionModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to remove this question from the assessment?
+            </div>
+            <div class="modal-footer">
+                <form id="delete-question-form">
+                    <input type="hidden" name="question_id" id="delete_question_id">
+                    <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php
-require_once 'includes/footer.php';
+require_once '../includes/footer.php';
 $conn->close();
 ?>
