@@ -35,13 +35,16 @@ try {
     $stmt_question->close();
 
     // --- Step 2: Add the answer options based on question type ---
-    $stmt_options = $conn->prepare("INSERT INTO options (question_id, option_text, is_correct) VALUES (?, ?, ?)");
+    // CORRECTED TABLE NAME: 'question_options'
+    $stmt_options = $conn->prepare("INSERT INTO question_options (question_id, option_text, is_correct) VALUES (?, ?, ?)");
 
     switch ($question_type) {
         case 'multiple_choice':
             $options = $_POST['options'] ?? [];
             $correct_option_index = $_POST['correct_option'] ?? -1;
-            if (count($options) < 1 || $correct_option_index === -1) throw new Exception("Multiple choice options are missing.");
+            if (count($options) < 2 || $correct_option_index === -1) {
+                throw new Exception("Multiple choice requires at least two options and a correct answer.");
+            }
 
             foreach ($options as $index => $option_text) {
                 if (empty(trim($option_text))) continue; // Skip empty options
@@ -52,12 +55,15 @@ try {
             break;
 
         case 'true_false':
-            $correct_answer = $_POST['true_false_answer'] ?? null;
-            if ($correct_answer === null) throw new Exception("True/False answer is missing.");
+            // CORRECTED VARIABLE NAME
+            $correct_option_index = $_POST['tf_correct_option'] ?? -1;
+            if ($correct_option_index === -1) {
+                throw new Exception("True/False answer selection is missing.");
+            }
 
             $options = ['True', 'False'];
-            foreach ($options as $option_text) {
-                $is_correct = ($option_text == $correct_answer) ? 1 : 0;
+            foreach ($options as $index => $option_text) {
+                $is_correct = ($index == $correct_option_index) ? 1 : 0;
                 $stmt_options->bind_param("isi", $new_question_id, $option_text, $is_correct);
                 $stmt_options->execute();
             }
@@ -65,8 +71,14 @@ try {
 
         case 'identification':
         case 'short_answer':
-            $answer_text = trim($_POST['short_answer_text'] ?? '');
-            // Only save an answer if one was provided (it's optional)
+            // CORRECTED VARIABLE NAME
+            $answer_text = trim($_POST['single_answer_text'] ?? '');
+
+            // For 'identification', the answer is required.
+            if ($question_type === 'identification' && empty($answer_text)) {
+                throw new Exception("Identification questions require an answer.");
+            }
+
             if (!empty($answer_text)) {
                 $is_correct = 1;
                 $stmt_options->bind_param("isi", $new_question_id, $answer_text, $is_correct);
@@ -81,7 +93,7 @@ try {
     $stmt_options->close();
 
     // --- Step 3: Link the question to this specific assessment ---
-    $stmt_link = $conn->prepare("INSERT INTO assessment_questions (assessment_id, question_id, points) VALUES (?, ?, 1)");
+    $stmt_link = $conn->prepare("INSERT INTO assessment_questions (assessment_id, question_id) VALUES (?, ?)");
     $stmt_link->bind_param("ii", $assessment_id, $new_question_id);
     $stmt_link->execute();
     $stmt_link->close();

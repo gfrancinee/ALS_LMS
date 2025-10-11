@@ -92,9 +92,13 @@ $questions_stmt->close();
                                         </p>
                                         <p class="mb-0"><?= nl2br(htmlspecialchars($question['question_text'])) ?></p>
                                     </div>
-                                    <div class="d-flex flex-column">
-                                        <button class="btn btn-sm btn-outline-primary mb-1">Edit</button>
-                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <div class="actions-container">
+                                        <button class="btn btn-action-icon edit" title="Edit Question">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button class="btn btn-action-icon delete" title="Delete Question" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal" data-question-id="<?= $question['id'] ?>">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -158,7 +162,7 @@ $questions_stmt->close();
 
                     <div id="single-answer-fields" style="display: none;">
                         <label for="single_answer_text" class="form-label fw-bold">Correct Answer:</label>
-                        <input type="text" class="form-control" id="single_answer_text" name="single_answer_text" placeholder="Optional for Short Answer / Essay">
+                        <input type="text" class="form-control" id="single_answer_text" name="single_answer_text">
                     </div>
 
                 </div>

@@ -10,7 +10,6 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/manage_assessment.css">
-    <script src="js/manage_assessment.js" defer></script>
 </head>
 
 <body>

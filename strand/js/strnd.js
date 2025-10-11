@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (type === "true_false") {
                     area.innerHTML = `<label class="form-label">Correct Answer</label><select class="form-select" name="correct_answer" required><option value="">Select</option><option value="True">True</option><option value="False">False</option></select>`;
                 } else if (type === "short_answer" || type === "essay") {
-                    area.innerHTML = `<label class="form-label">Expected Answer</label><input type="text" class="form-control" name="correct_answer" placeholder="Enter correct answer (optional)">`;
+                    area.innerHTML = `<label class="form-label">Expected Answer</label><input type="text" class="form-control" name="correct_answer" placeholder="Enter correct answer (Optional)">`;
                 }
             }
 
@@ -630,11 +630,17 @@ document.addEventListener('DOMContentLoaded', () => {
         categoriesModal.addEventListener('show.bs.modal', loadCategories);
 
         // Handles adding a new category "smoothly"
+        // --- AJAX for Adding a New Category ---
         addCategoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(addCategoryForm);
             formData.append('action', 'create');
             formData.append('strand_id', strandId);
+
+            // --- Start of submission logic (spinner, etc.) ---
+            const submitButton = addCategoryForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            // --- End of submission logic ---
 
             const response = await fetch('../ajax/manage_categories.php', {
                 method: 'POST',
@@ -649,13 +655,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newCategory = result.newCategory;
                 const accordionContainer = document.getElementById('assessmentAccordion');
 
-                // Remove "no categories" message if it exists
                 const noCategoriesMessage = document.getElementById('no-categories-message');
                 if (noCategoriesMessage) {
                     noCategoriesMessage.remove();
                 }
 
-                // Create the HTML for the new accordion item
+                // --- THIS IS THE CORRECTED HTML TEMPLATE ---
                 const newAccordionItemHTML = `
             <div class="accordion-item">
                 <h2 class="accordion-header">
@@ -663,11 +668,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-cat-${newCategory.id}">
                             <i class="bi bi-folder me-2"></i> ${newCategory.name}
                         </button>
-                        <div class="dropdown mb-2">
+                        <div class="dropdown">
                             <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                            <li><button type="button" class="dropdown-item" onclick="window.location.href='/ALS_LMS/manage_assessment.php?id=${assessment.id}'"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
-                                        <li><hr class="dropdown-divider"></li>
                                 <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                                 <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                             </ul>
@@ -687,10 +690,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>`;
 
-                // Add the new item to the main accordion
                 accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
 
-                // Manually activate the new dropdown
+                // Re-initialize the new dropdown
                 const newAccordionItem = accordionContainer.lastElementChild;
                 const newDropdownToggle = newAccordionItem.querySelector('[data-bs-toggle="dropdown"]');
                 if (newDropdownToggle) {
@@ -700,6 +702,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 alert('Error: ' + (result.error || 'Could not add category.'));
             }
+
+            // --- Reset button ---
+            submitButton.disabled = false;
+            submitButton.textContent = 'Add Category';
         });
     }
 
@@ -960,7 +966,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(addQuestionForm);
             const submitButton = addQuestionForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
 
             try {
                 const response = await fetch('../ajax/add_question.php', {

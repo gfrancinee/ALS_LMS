@@ -19,5 +19,57 @@
 /* Custom class for extra top margin */
 .container .card {
     margin-top: 80px;
-    /* You can change this number to make it higher or lower */
+}
+
+/* Custom green focus border for form inputs and selects */
+.form-control:focus,
+.form-select:focus {
+    border-color: #198754;
+    border-width: 2px;
+    box-shadow: none;
+}
+
+/* --- Modern styling for icon-based action buttons --- */
+.actions-container {
+    display: flex;
+    gap: 0.5rem;
+    /* Creates space between the buttons */
+    align-items: center;
+}
+
+.btn-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    /* Sets a fixed size */
+    height: 34px;
+    /* Sets a fixed size */
+    border-radius: 50%;
+    /* Makes the button circular */
+    border: 1px solid #ffffff;
+    /* A light grey border */
+    color: #6c757d;
+    /* A muted grey icon color */
+    background-color: #fff;
+    transition: all 0.2s ease-in-out;
+    /* Smooth transition for hover */
+}
+
+.btn-action-icon:hover {
+    color: #fff;
+    /* Icon becomes white on hover */
+    border-color: transparent;
+}
+
+/* Style for the Edit button on hover */
+.btn-action-icon.edit:hover {
+    background-color: #198754;
+    /* Bootstrap's primary blue */
+}
+
+/* Style for the Delete button on hover */
+.btn-action-icon.delete:hover {
+    background-color: #dc3545;
+    /* Bootstrap's danger red */
 }
