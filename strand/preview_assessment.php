@@ -73,7 +73,7 @@ $back_link = '../strand.php?id=' . $assessment['strand_id'] . '#assessments';
         <div class="card-body p-4">
             <h5 class="card-title">Instructions</h5>
             <div class="p-3 mb-4 bg-light border rounded">
-                <?= nl2br(htmlspecialchars($assessment['description'])) ?>
+                <?= $assessment['description'] ?>
             </div>
             <hr class="mb-4">
 

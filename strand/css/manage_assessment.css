@@ -73,3 +73,17 @@
     background-color: #dc3545;
     /* Bootstrap's danger red */
 }
+
+/* Custom styles for a green 'success' radio button */
+.form-check-input-success:checked {
+    background-color: #198754;
+    /* Bootstrap's success green */
+    border-color: #198754 !important;
+}
+
+.form-check-input-success:focus {
+    border-color: #146c43 !important;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    /* Green glow on focus */
+}

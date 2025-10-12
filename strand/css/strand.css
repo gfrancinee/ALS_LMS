@@ -361,9 +361,6 @@ h2 {
     box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.5);
 }
 
-/* Final style for the Show/Hide Description button */
-/* FINAL FIX for Show/Hide Description button */
-
 /* This makes the button transparent by default */
 .btn-toggle-desc {
     color: #6c757d;
@@ -402,4 +399,25 @@ a.dropdown-item:active {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
+}
+
+/* --- Student View Blue Theme --- */
+
+/* Changes the active tab border and text color to blue */
+.student-view-theme .nav-tabs.tabs-student .nav-link.active {
+    color: #0d6efd;
+    /* Bootstrap Primary Blue */
+    border-color: #0d6efd #0d6efd #0d6efd;
+}
+
+/* Changes the accordion border color to blue */
+.student-view-theme .assessment-accordion .accordion-item {
+    border: 1px solid #0d6efd;
+    margin-bottom: 1rem;
+}
+
+/* Changes the accordion header color when open to light blue */
+.student-view-theme .assessment-accordion .accordion-button:not(.collapsed) {
+    background-color: rgba(13, 110, 253, 0.1);
+
 }

@@ -137,26 +137,38 @@ $questions_stmt->close();
                     <div id="multiple-choice-fields">
                         <label class="form-label fw-bold">Options (Select the correct answer):</label>
                         <div class="input-group mb-2">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="0" required></div><input type="text" class="form-control" name="options[]" required>
+                            <div class="input-group-text">
+                                <input class="form-check-input mt-0 form-check-input-success" type="radio" name="correct_option" value="0" required>
+                            </div>
+                            <input type="text" class="form-control" name="options[]" required>
                         </div>
                         <div class="input-group mb-2">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="1"></div><input type="text" class="form-control" name="options[]" required>
+                            <div class="input-group-text">
+                                <input class="form-check-input mt-0 form-check-input-success" type="radio" name="correct_option" value="1">
+                            </div>
+                            <input type="text" class="form-control" name="options[]" required>
                         </div>
                         <div class="input-group mb-2">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="2"></div><input type="text" class="form-control" name="options[]">
+                            <div class="input-group-text">
+                                <input class="form-check-input mt-0 form-check-input-success" type="radio" name="correct_option" value="2">
+                            </div>
+                            <input type="text" class="form-control" name="options[]">
                         </div>
                         <div class="input-group">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct_option" value="3"></div><input type="text" class="form-control" name="options[]">
+                            <div class="input-group-text">
+                                <input class="form-check-input mt-0 form-check-input-success" type="radio" name="correct_option" value="3">
+                            </div>
+                            <input type="text" class="form-control" name="options[]">
                         </div>
                     </div>
 
                     <div id="true-false-fields" style="display: none;">
                         <label class="form-label fw-bold">Options (Select the correct answer):</label>
                         <div class="input-group mb-2">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="tf_correct_option" value="0" required></div><input type="text" class="form-control" name="tf_options[]" value="True">
+                            <div class="input-group-text"><input class="form-check-input mt-0 form-check-input-success" type="radio" name="tf_correct_option" value="0" required></div><input type="text" class="form-control" name="tf_options[]" value="True">
                         </div>
                         <div class="input-group">
-                            <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="tf_correct_option" value="1"></div><input type="text" class="form-control" name="tf_options[]" value="False">
+                            <div class="input-group-text"><input class="form-check-input mt-0 form-check-input-success" type="radio" name="tf_correct_option" value="1"></div><input type="text" class="form-control" name="tf_options[]" value="False">
                         </div>
                     </div>
 

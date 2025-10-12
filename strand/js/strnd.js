@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
         autoresize_bottom_margin: 20
     });
 
+    // Add this to initialize the editor in the Edit modal
+    tinymce.init({
+        selector: '#editAssessmentDesc',
+        plugins: 'lists link image table code help wordcount',
+        toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | help'
+    });
+
     // --- CORRECTED CODE TO ACTIVATE TAB FROM URL HASH ---
     const urlHash = window.location.hash; // e.g., "#assessments"
     if (urlHash) {
@@ -719,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = result.data;
                     document.getElementById('editAssessmentId').value = data.id;
                     document.getElementById('editAssessmentTitle').value = data.title;
-                    document.getElementById('editAssessmentDesc').value = data.description;
+                    tinymce.get('editAssessmentDesc').setContent(data.description || '');
                     document.getElementById('editAssessmentDuration').value = data.duration_minutes;
                     document.getElementById('editAssessmentAttempts').value = data.max_attempts;
                     document.getElementById('editAssessmentCategory').value = data.category_id;
@@ -738,6 +745,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // This is the updated part that runs WHEN YOU CLICK "SAVE CHANGES"
         editAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            tinymce.triggerSave();
+
             const formData = new FormData(editAssessmentForm);
             const response = await fetch('../ajax/update_assessment.php', { method: 'POST', body: formData });
             const result = await response.json();

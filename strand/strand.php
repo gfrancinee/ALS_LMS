@@ -2,55 +2,72 @@
 session_start();
 require_once '../includes/db.php';
 
-$strand_id = $_GET['id'] ?? null;
-
+// Fetch strand and material details (Restored)
+$strand_id = $_GET['id'] ?? 0;
 if (!$strand_id) {
     die("Strand not found.");
 }
-
 $stmt = $conn->prepare("SELECT * FROM learning_strands WHERE id = ?");
 $stmt->bind_param("i", $strand_id);
 $stmt->execute();
-$result = $stmt->get_result();
-$strand = $result->fetch_assoc();
-
+$strand = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 if (!$strand) {
     die("Strand not found.");
 }
-
-// Fetch learning materials for this strand
-$materials_stmt = $conn->prepare("
-    SELECT id, label, type, file_path, link_url, uploaded_at
-    FROM learning_materials
-    WHERE strand_id = ?
-    ORDER BY uploaded_at ASC
-");
+$materials_stmt = $conn->prepare("SELECT * FROM learning_materials WHERE strand_id = ? ORDER BY uploaded_at ASC");
 $materials_stmt->bind_param("i", $strand_id);
 $materials_stmt->execute();
 $materials = $materials_stmt->get_result();
+$materials_stmt->close();
 
-$teacher_id = $_SESSION['user_id'];
+// Correct logic for fetching assessments
+$user_id = $_SESSION['user_id'];
+$user_role = $_SESSION['role'];
+$categories = [];
+$uncategorized_assessments = [];
 
-// Fetch all categories for the current strand
-$cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? AND teacher_id = ? ORDER BY id ASC");
-$cat_stmt->bind_param("ii", $strand_id, $teacher_id);
-$cat_stmt->execute();
-$categories = $cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+if ($user_role === 'teacher') {
+    // Teacher logic (your original code)
+    $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? AND teacher_id = ? ORDER BY name ASC");
+    $cat_stmt->bind_param("ii", $strand_id, $user_id);
+    $cat_stmt->execute();
+    $categories = $cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $cat_stmt->close();
+    foreach ($categories as &$category) {
+        $assess_stmt = $conn->prepare("SELECT * FROM assessments WHERE category_id = ?");
+        $assess_stmt->bind_param("i", $category['id']);
+        $assess_stmt->execute();
+        $category['assessments'] = $assess_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $assess_stmt->close();
+    }
+    unset($category);
+} elseif ($user_role === 'student') {
+    // --- STUDENT LOGIC (WITH THE FIX) ---
+    $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? ORDER BY name ASC");
+    $cat_stmt->bind_param("i", $strand_id);
+    $cat_stmt->execute();
+    $categories = $cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $cat_stmt->close();
 
-// For each category, fetch its assessments
-foreach ($categories as &$category) {
-    $assess_stmt = $conn->prepare("SELECT id, title, type, duration_minutes, max_attempts, is_open, description FROM assessments WHERE category_id = ?");
-    $assess_stmt->bind_param("i", $category['id']);
-    $assess_stmt->execute();
-    $category['assessments'] = $assess_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    foreach ($categories as &$category) {
+        $assessment_sql = "
+            SELECT 
+                a.id, a.title, a.type, a.description, a.duration_minutes, a.max_attempts, a.is_open,
+                (SELECT COUNT(*) FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ?) as attempts_taken,
+                (SELECT MAX(score) FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ?) as highest_score,
+                (SELECT total_items FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ? ORDER BY score DESC, submitted_at DESC LIMIT 1) as total_items
+            FROM assessments a
+            WHERE a.category_id = ? AND a.is_open = 1
+        "; // THE FIX IS HERE: a.is_open = 1 instead of status='published'
+        $assess_stmt = $conn->prepare($assessment_sql);
+        $assess_stmt->bind_param("iiii", $user_id, $user_id, $user_id, $category['id']);
+        $assess_stmt->execute();
+        $category['assessments'] = $assess_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $assess_stmt->close();
+    }
+    unset($category);
 }
-unset($category); // Unset reference after loop
-
-// Fetch any assessments that don't have a category
-$no_cat_stmt = $conn->prepare("SELECT id, title, type, duration_minutes, max_attempts FROM assessments WHERE strand_id = ? AND category_id IS NULL");
-$no_cat_stmt->bind_param("i", $strand_id);
-$no_cat_stmt->execute();
-$uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -69,7 +86,7 @@ $uncategorized_assessments = $no_cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC)
 
 </head>
 
-<body>
+<body class="<?= ($_SESSION['role'] === 'student') ? 'student-view-theme' : '' ?>">
     <script>
         // This makes the current strand ID available to all JavaScript files
         window.strandId = <?= json_encode($strand_id); ?>;

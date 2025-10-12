@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             html += `
                                 <div class="input-group mb-2">
                                     <div class="input-group-text">
-                                        <input class="form-check-input mt-0" type="radio" name="correct_option" value="${index}" ${checked} required>
+                                        <input class="form-check-input mt-0 form-check-input-success" type="radio" name="correct_option" value="${index}" ${checked} required>
                                     </div>
                                     <input type="text" class="form-control" name="options[]" value="${opt.option_text}" required>
                                 </div>`;
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             html += `
                                 <div class="input-group mb-2">
                                     <div class="input-group-text">
-                                        <input class="form-check-input mt-0" type="radio" name="tf_correct_option" value="${index}" ${checked} required>
+                                        <input class="form-check-input mt-0 form-check-input-success" type="radio" name="tf_correct_option" value="${index}" ${checked} required>
                                     </div>
                                     <input type="text" class="form-control" name="tf_options[]" value="${opt.option_text}" readonly>
                                 </div>`;
