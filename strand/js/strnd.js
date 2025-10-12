@@ -488,75 +488,66 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    const assessment = result.data;
+                    const assessment = result.assessment; // Changed from result.data to result.assessment
                     const categoryId = assessment.category_id;
                     const typeCapitalized = assessment.type.charAt(0).toUpperCase() + assessment.type.slice(1);
-
-                    // This is the new, complete HTML that matches your final design
                     const hasDescription = assessment.description && assessment.description.trim().replace(/<p>&nbsp;<\/p>/g, '').length > 0;
 
+                    // Replace your old newItemHTML variable with this one
                     const newItemHTML = `
-                <li>
-                    <div class="assessment-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <a href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}" class="assessment-item-link">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="fw-bold">${assessment.title}</span>
-                                            <span class="badge bg-light text-dark fw-normal ms-2">${typeCapitalized}</span>
-                                        </div>
-                                        <div class="text-muted small">
-                                            <span class="me-3"><i class="bi bi-clock"></i> ${assessment.duration_minutes} mins</span>
-                                            <span><i class="bi bi-arrow-repeat"></i> ${assessment.max_attempts} attempt(s)</span>
-                                        </div>
-                                    </div>
-                                </a>
-                                ${hasDescription ? `
-                                <div class="mt-2">
-                                    <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-<?= $assessment['id'] ?>">
-                                     Show/Hide Description
-                                    </button>
-                                </div>` : ''}
-                            </div>
-                            <div class="d-flex align-items-center gap-2 ps-3">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input assessment-status-toggle" type="checkbox" role="switch" data-id="${assessment.id}">
-                                    <label class="form-check-label small">Closed</label>
-                                </div>
-                                <div class="dropdown">
-                                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><button class="dropdown-item" href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                                        <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                                    </ul>
-                                </div>
-                            </div>
+<li>
+    <div class="assessment-item">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <a href="/ALS_LMS/strand/preview_assessment.php?id=${assessment.id}" class="assessment-item-link">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold">${assessment.title}</span>
+                            <span class="badge bg-light text-dark fw-normal ms-2">${typeCapitalized}</span>
                         </div>
-                        ${hasDescription ? `
-                        <div class="collapse" id="desc-${assessment.id}">
-                            <div class="card card-body small text-muted mt-2">
-                                ${assessment.description} 
-                            </div>
-                        </div>` : ''}
+                        <div class="text-muted small">
+                            <span class="me-3"><i class="bi bi-clock"></i> ${assessment.duration_minutes} mins</span>
+                            <span><i class="bi bi-arrow-repeat"></i> ${assessment.max_attempts} attempt(s)</span>
+                        </div>
                     </div>
-                </li>`;
+                </a>
+                ${hasDescription ? `
+                <div class="mt-2">
+                    <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-${assessment.id}">
+                       Show/Hide Description
+                    </button>
+                </div>` : ''}
+            </div>
+            <div class="d-flex align-items-center gap-2 ps-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input assessment-status-toggle" type="checkbox" role="switch" data-id="${assessment.id}">
+                    <label class="form-check-label small">Closed</label>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                       <li><a class="dropdown-item no-border-button" href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                        <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        ${hasDescription ? `
+        <div class="collapse" id="desc-${assessment.id}">
+            <div class="card card-body small text-muted mt-2">
+                ${assessment.description} 
+            </div>
+        </div>` : ''}
+    </div>
+</li>`;
 
                     const listContainer = document.querySelector(`#collapse-cat-${categoryId} .list-unstyled`);
                     if (listContainer) {
                         const emptyMsg = listContainer.querySelector('.fst-italic');
                         if (emptyMsg) emptyMsg.remove();
-
                         listContainer.insertAdjacentHTML('beforeend', newItemHTML);
-
-                        // Activate the new dropdown menu
-                        const newItemElement = listContainer.lastElementChild;
-                        const newDropdownToggle = newItemElement.querySelector('[data-bs-toggle="dropdown"]');
-                        if (newDropdownToggle) {
-                            new bootstrap.Dropdown(newDropdownToggle);
-                        }
                     }
 
                     collapseInstance.hide();
@@ -1265,42 +1256,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // --- MANAGE QUESTIONS MODAL LOGIC ---
-    if (!questionsModal) return;
-
-    // This event fires right when the "Manage Questions" modal is opened
-    questionsModal.addEventListener('show.bs.modal', async (event) => {
-        const button = event.relatedTarget; // The "Manage Questions" button
-        const assessmentId = button.dataset.assessmentId;
-
-        // Set the hidden assessment_id input in the form
-        document.getElementById('assessmentIdInput').value = assessmentId;
-
-        const formBuilder = document.getElementById('formBuilder');
-        formBuilder.innerHTML = '<p class="text-center">Loading questions...</p>'; // Show a loading message
-
-        try {
-            // Use the new PHP file to fetch existing questions
-            const response = await fetch(`../ajax/get_questions.php?assessment_id=${assessmentId}`);
-            const questions = await response.json();
-
-            formBuilder.innerHTML = ''; // Clear the loading message
-
-            if (questions.length > 0) {
-                // If questions exist, add them to the form
-                questions.forEach(q => {
-                    addQuestionBlock(formBuilder, q); // A helper function we will use
-                });
-            } else {
-                // If no questions exist, show a message
-                formBuilder.innerHTML = '<p class="text-center text-muted">No questions have been added yet.</p>';
-            }
-        } catch (error) {
-            console.error('Failed to load questions:', error);
-            formBuilder.innerHTML = '<p class="text-center text-danger">Could not load questions.</p>';
-        }
-    });
 
     // Helper function to add a question block to the form
     function addQuestionBlock(container, data = null) {

@@ -18,8 +18,6 @@ $duration_minutes = $_POST['duration_minutes'] ?? 60;
 $max_attempts = $_POST['max_attempts'] ?? 1;
 $teacher_id = $_SESSION['user_id'];
 $strand_id = $_POST['strand_id'] ?? 0;
-
-// This is the updated, safer way to handle an empty category
 $category_id = empty($_POST['category_id']) ? null : $_POST['category_id'];
 
 // Validation
@@ -42,14 +40,16 @@ if ($stmt->execute()) {
     // IMPORTANT: Send back ALL the data the JavaScript needs to build the new item
     $new_assessment_data = [
         'id' => $new_id,
-        'title' => $title,
+        'title' => htmlspecialchars($title),
         'category_id' => $category_id,
-        'type' => $type,
-        'description' => $description,
+        'type' => htmlspecialchars($type),
+        'description' => $description, // Keep original for TinyMCE display
         'duration_minutes' => $duration_minutes,
         'max_attempts' => $max_attempts
     ];
-    echo json_encode(['success' => true, 'data' => $new_assessment_data]);
+
+    // Use 'assessment' as the key to match the JavaScript
+    echo json_encode(['success' => true, 'assessment' => $new_assessment_data]);
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Database error: ' . $stmt->error]);

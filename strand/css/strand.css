@@ -394,3 +394,12 @@ a.dropdown-item:focus,
 a.dropdown-item:active {
     background-color: transparent !important;
 }
+
+/* Removes border, outline, and shadow from specific dropdown items */
+.no-border-button,
+.no-border-button:focus,
+.no-border-button:active {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}

@@ -28,6 +28,7 @@ if ($result->num_rows === 0) {
   exit;
 }
 
+// --- START: Replace your existing while loop with this code ---
 while ($row = $result->fetch_assoc()) {
   $id = $row['id'];
   $title = htmlspecialchars($row['title']);
@@ -56,10 +57,13 @@ while ($row = $result->fetch_assoc()) {
     $toggle_text = $row['status'] === 'open' ? 'Close' : 'Open';
     $status_text = ucfirst($row['status']);
 
+    // --- THIS TEACHER VIEW IS NOW CORRECTED ---
     echo "
             <div class='d-flex gap-2 align-items-center'>
+                
+                <a href='/ALS_LMS/strand/manage_assessment.php?id=$id' class='btn btn-sm btn-outline-primary'>Manage Questions</a>
+
                 <button class='btn btn-sm btn-outline-info view-attempts-btn' data-bs-toggle='modal' data-bs-target='#viewAttemptsModal' data-id='$id'>View Attempts</button>
-                <button class='btn btn-sm btn-outline-primary manage-questions' data-assessment-id='$id' data-bs-toggle='modal' data-bs-target='#questionsModal'>Manage Questions</button>
                 <button class='btn btn-sm btn-outline-$status_color toggle-status-btn' data-id='$id' data-status='$toggle_action'>$toggle_text</button>
                 
                 <div class='dropdown'>
@@ -67,6 +71,11 @@ while ($row = $result->fetch_assoc()) {
                         <i class='bi bi-three-dots-vertical'></i>
                     </button>
                     <ul class='dropdown-menu dropdown-menu-end'>
+                        <li>
+                            <a class='dropdown-item' href='/ALS_LMS/strand/preview_assessment.php?id=$id'>
+                                <i class='bi bi-eye me-2'></i> Preview
+                            </a>
+                        </li>
                         <li>
                             <button class='dropdown-item edit-assessment-btn'
                                 data-bs-toggle='modal'
@@ -89,7 +98,7 @@ while ($row = $result->fetch_assoc()) {
             </div>
             <span class='badge bg-$status_color'>$status_text</span>
         ";
-  } else { // Student View
+  } else { // Student View (This part was already good)
     $attempt_count = (int)$row['attempt_count'];
     $attempts_left = $max_attempts - $attempt_count;
 
@@ -119,3 +128,4 @@ while ($row = $result->fetch_assoc()) {
         </div>
     </div>";
 }
+// --- END: Replacement block ---
