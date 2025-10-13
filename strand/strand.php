@@ -29,7 +29,7 @@ $uncategorized_assessments = [];
 
 if ($user_role === 'teacher') {
     // Teacher logic (your original code)
-    $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? AND teacher_id = ? ORDER BY name ASC");
+    $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? AND teacher_id = ? ORDER BY id ASC");
     $cat_stmt->bind_param("ii", $strand_id, $user_id);
     $cat_stmt->execute();
     $categories = $cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -44,7 +44,7 @@ if ($user_role === 'teacher') {
     unset($category);
 } elseif ($user_role === 'student') {
     // --- STUDENT LOGIC (WITH THE FIX) ---
-    $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? ORDER BY name ASC");
+    $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? ORDER BY id ASC");
     $cat_stmt->bind_param("i", $strand_id);
     $cat_stmt->execute();
     $categories = $cat_stmt->get_result()->fetch_all(MYSQLI_ASSOC);

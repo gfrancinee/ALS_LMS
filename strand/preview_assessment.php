@@ -56,13 +56,13 @@ foreach ($questions as $key => $question) {
 $stmt_options->close();
 
 // The back link needs to go up one level to find strand.php
-$back_link = '../strand.php?id=' . $assessment['strand_id'] . '#assessments';
+$back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) . '#assessments';
 ?>
 
 <div class="container my-4">
-    <div class="mb-3">
-        <a href="<?= htmlspecialchars($back_link) ?>" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Back to Strand
+    <div class="back-container">
+        <a href="<?= htmlspecialchars($back_link) ?>" class="back-link <?= $back_link_class ?>">
+            <i class="bi bi-arrow-left me-1"></i>Back
         </a>
     </div>
 
