@@ -2,7 +2,7 @@
 session_start();
 require_once '../includes/db.php';
 
-// Fetch strand and material details (Restored)
+// Fetch strand and material details
 $strand_id = $_GET['id'] ?? 0;
 if (!$strand_id) {
     die("Strand not found.");
@@ -25,10 +25,9 @@ $materials_stmt->close();
 $user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['role'];
 $categories = [];
-$uncategorized_assessments = [];
 
 if ($user_role === 'teacher') {
-    // Teacher logic (your original code)
+    // Teacher logic (your original code is fine)
     $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? AND teacher_id = ? ORDER BY id ASC");
     $cat_stmt->bind_param("ii", $strand_id, $user_id);
     $cat_stmt->execute();
@@ -43,7 +42,7 @@ if ($user_role === 'teacher') {
     }
     unset($category);
 } elseif ($user_role === 'student') {
-    // --- STUDENT LOGIC (WITH THE FIX) ---
+    // --- STUDENT LOGIC (WITH THE BUG FIX) ---
     $cat_stmt = $conn->prepare("SELECT * FROM assessment_categories WHERE strand_id = ? ORDER BY id ASC");
     $cat_stmt->bind_param("i", $strand_id);
     $cat_stmt->execute();
@@ -51,6 +50,7 @@ if ($user_role === 'teacher') {
     $cat_stmt->close();
 
     foreach ($categories as &$category) {
+        // THIS SQL IS NOW CORRECTED
         $assessment_sql = "
             SELECT 
                 a.id, a.title, a.type, a.description, a.duration_minutes, a.max_attempts, a.is_open,
@@ -58,8 +58,8 @@ if ($user_role === 'teacher') {
                 (SELECT MAX(score) FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ?) as highest_score,
                 (SELECT total_items FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ? ORDER BY score DESC, submitted_at DESC LIMIT 1) as total_items
             FROM assessments a
-            WHERE a.category_id = ? AND a.is_open = 1
-        "; // THE FIX IS HERE: a.is_open = 1 instead of status='published'
+            WHERE a.category_id = ? 
+        "; // THE BUG FIX: The "AND a.is_open = 1" has been REMOVED.
         $assess_stmt = $conn->prepare($assessment_sql);
         $assess_stmt->bind_param("iiii", $user_id, $user_id, $user_id, $category['id']);
         $assess_stmt->execute();
@@ -257,46 +257,40 @@ if ($user_role === 'teacher') {
                                         <?php if (!empty($category['assessments'])): ?>
                                             <?php foreach ($category['assessments'] as $assessment): ?>
                                                 <li>
-                                                    <div class="assessment-item">
-                                                        <div class="d-flex justify-content-between align-items-start">
-                                                            <div class="flex-grow-1">
+                                                    <?php if ($_SESSION['role'] === 'teacher'): ?>
 
-                                                                <a href="<?= (isset($_SESSION['role']) && $_SESSION['role'] === 'student' && $assessment['is_open']) ? 'take_assessment.php?id=' . $assessment['id'] : '/ALS_LMS/strand/preview_assessment.php?id=' . $assessment['id'] ?>"
-                                                                    class="assessment-item-link <?= (isset($_SESSION['role']) && $_SESSION['role'] === 'student' && !$assessment['is_open']) ? 'disabled' : '' ?>">
-                                                                    <div class="d-flex justify-content-between align-items-center">
-                                                                        <div>
-                                                                            <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
-                                                                            <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
-                                                                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'student'): ?>
-                                                                                <span class="badge <?= $assessment['is_open'] ? 'bg-success' : 'bg-danger' ?> ms-2"><?= $assessment['is_open'] ? 'Open' : 'Closed' ?></span>
-                                                                            <?php endif; ?>
+                                                        <div class="assessment-item">
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div class="flex-grow-1">
+                                                                    <a href="/ALS_LMS/strand/preview_assessment.php?id=<?= $assessment['id'] ?>" class="assessment-item-link">
+                                                                        <div class="d-flex justify-content-between align-items-center">
+                                                                            <div>
+                                                                                <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
+                                                                                <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
+                                                                            </div>
+                                                                            <div class="text-muted small">
+                                                                                <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
+                                                                                <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
+                                                                            </div>
                                                                         </div>
-                                                                        <div class="text-muted small">
-                                                                            <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
-                                                                            <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
+                                                                    </a>
+                                                                    <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
+                                                                        <div class="mt-2">
+                                                                            <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-<?= $assessment['id'] ?>">
+                                                                                Show/Hide Description
+                                                                            </button>
                                                                         </div>
-                                                                    </div>
-                                                                </a>
-
-                                                                <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
-                                                                    <div class="mt-2">
-                                                                        <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-<?= $assessment['id'] ?>">
-                                                                            Show/Hide Description
-                                                                        </button>
-                                                                    </div>
-                                                                <?php endif; ?>
-                                                            </div>
-
-                                                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                                                    <?php endif; ?>
+                                                                </div>
                                                                 <div class="d-flex align-items-center gap-2 ps-3">
                                                                     <div class="form-check form-switch">
-                                                                        <input class="form-check-input assessment-status-toggle" type="checkbox" role="switch" data-id="<?= $assessment['id'] ?>" <?= $assessment['is_open'] ? 'checked' : '' ?>>
-                                                                        <label class="form-check-label small"><?= $assessment['is_open'] ? 'Open' : 'Closed' ?></label>
+                                                                        <input class="form-check-input assessment-status-toggle" type="checkbox" role="switch" data-id="<?= $assessment['id'] ?>" <?= !empty($assessment['is_open']) ? 'checked' : '' ?>>
+                                                                        <label class="form-check-label small"><?= !empty($assessment['is_open']) ? 'Open' : 'Closed' ?></label>
                                                                     </div>
                                                                     <div class="dropdown">
                                                                         <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                                         <ul class="dropdown-menu dropdown-menu-end">
-                                                                            <li><a class="dropdown-item no-border-button" href="/ALS_LMS/strand/manage_assessment.php?id=<?= $assessment['id'] ?>"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
+                                                                            <li><a class="dropdown-item" href="/ALS_LMS/strand/manage_assessment.php?id=<?= $assessment['id'] ?>"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
                                                                             <li>
                                                                                 <hr class="dropdown-divider">
                                                                             </li>
@@ -305,17 +299,69 @@ if ($user_role === 'teacher') {
                                                                         </ul>
                                                                     </div>
                                                                 </div>
+                                                            </div>
+                                                            <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
+                                                                <div class="collapse" id="desc-<?= $assessment['id'] ?>">
+                                                                    <div class="small text-muted mt-2 p-3 bg-light rounded">
+                                                                        <?= $assessment['description'] ?>
+                                                                    </div>
+                                                                </div>
                                                             <?php endif; ?>
                                                         </div>
+                                                    <?php else: // This is the Student View 
+                                                    ?>
 
-                                                        <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
-                                                            <div class="collapse" id="desc-<?= $assessment['id'] ?>">
-                                                                <div class="small text-muted mt-2 p-3 bg-light rounded">
-                                                                    <?= $assessment['description'] ?>
+                                                        <div class="assessment-item">
+                                                            <?php
+                                                            $attempts_left = $assessment['max_attempts'] - $assessment['attempts_taken'];
+                                                            $is_available = !empty($assessment['is_open']) && $attempts_left > 0;
+                                                            ?>
+
+                                                            <a href="<?= $is_available ? 'take_assessment.php?id=' . $assessment['id'] : '#' ?>" class="assessment-item-link <?= !$is_available ? 'disabled' : '' ?>">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
+                                                                        <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
+
+                                                                        <?php if (empty($assessment['is_open'])): ?>
+                                                                            <span class="badge text-danger ms-2">Closed</span>
+                                                                        <?php elseif ($attempts_left <= 0): ?>
+                                                                            <span class="badge text-dark ms-2">Completed</span>
+                                                                        <?php else: ?>
+                                                                            <span class="badge text-success ms-2">Open</span>
+                                                                        <?php endif; ?>
+
+                                                                        <?php if (isset($assessment['highest_score']) && $assessment['highest_score'] !== null): ?>
+                                                                            <span class="badge bg-primary ms-2">
+                                                                                Score: <?= $assessment['highest_score'] ?> / <?= $assessment['total_items'] ?>
+                                                                            </span>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                    <div class="text-muted small">
+                                                                        <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
+                                                                        <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        <?php endif; ?>
-                                                    </div>
+                                                            </a>
+
+                                                            <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-student-<?= $assessment['id'] ?>">
+                                                                        Show/Hide Description
+                                                                    </button>
+                                                                </div>
+                                                            <?php endif; ?>
+
+                                                            <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
+                                                                <div class="collapse" id="desc-student-<?= $assessment['id'] ?>">
+                                                                    <div class="small text-muted mt-2 p-3 bg-light rounded">
+                                                                        <?= $assessment['description'] ?>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </li>
                                             <?php endforeach; ?>
                                         <?php else: ?>

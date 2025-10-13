@@ -166,7 +166,7 @@ h2 {
    rounded container, so it follows the corners perfectly. */
 .assessment-accordion .accordion-item:has(.accordion-button:not(.collapsed)),
 .assessment-accordion .accordion-item:has(.accordion-button:focus) {
-    box-shadow: 0 0 0 1px #198754, 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 0 0 0.5px #198754, 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* --- Styles for each assessment item in the list --- */
@@ -401,23 +401,34 @@ a.dropdown-item:active {
     box-shadow: none !important;
 }
 
-/* --- Student View Blue Theme --- */
-
-/* Changes the active tab border and text color to blue */
+/* 1. Makes the ACTIVE TAB BORDER blue */
 .student-view-theme .nav-tabs.tabs-student .nav-link.active {
-    color: #0d6efd;
-    /* Bootstrap Primary Blue */
-    border-color: #0d6efd #0d6efd #0d6efd;
+    color: #0d6efd !important;
+    border-color: #0d6efd #0d6efd #0d6efd !important;
 }
 
-/* Changes the accordion border color to blue */
+/* 1. Sets the DEFAULT accordion border to the thin, neutral gray color */
 .student-view-theme .assessment-accordion .accordion-item {
-    border: 1px solid #0d6efd;
+    border: 1px solid #eeeff1 !important;
     margin-bottom: 1rem;
+    border-radius: 0.375rem;
+    box-shadow: none !important;
+    /* Also remove any base shadow */
+    transition: border-color 0.15s ease-in-out;
 }
 
-/* Changes the accordion header color when open to light blue */
-.student-view-theme .assessment-accordion .accordion-button:not(.collapsed) {
-    background-color: rgba(13, 110, 253, 0.1);
+/* 2. When the item is focused, change ONLY the border color to blue */
+.student-view-theme .assessment-accordion .accordion-item:focus-within {
+    border-color: #0d6efd !important;
+}
 
+/* 4. This is the FIX: It forcefully removes the box-shadow (the source of the thickness)
+      and background color from the accordion button itself. */
+.student-view-theme .assessment-accordion .accordion-button:focus,
+.student-view-theme .assessment-accordion .accordion-button:not(.collapsed) {
+    background-color: transparent !important;
+    box-shadow: #0d6efd;
+    /* This is the key to removing the "thick" look */
+    color: #212529 !important;
+    /* Keeps text black */
 }
