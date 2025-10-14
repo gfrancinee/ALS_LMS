@@ -22,3 +22,33 @@ h1 {
 a {
     text-decoration: none;
 }
+
+/*
+  This applies the modern, borderless style to all text fields and the dropdown menu.
+*/
+.form-control,
+.form-select {
+    /* The border exists but is transparent, preventing layout shifts on click */
+    border: 2px solid transparent;
+    background-color: #ebebeb;
+    /* A light gray background to define the input area */
+    transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.form-control:hover,
+.form-select:hover {
+    background-color: #e9ecef;
+    /* A slightly darker gray for the hover background */
+}
+
+/*
+  This makes the transparent border become a thick red border only when the
+  text field or dropdown is clicked.
+*/
+.form-control:focus,
+.form-select:focus {
+    border-color: #dc3545;
+    background-color: #fff;
+    /* Return background to white for readability */
+    box-shadow: none;
+}

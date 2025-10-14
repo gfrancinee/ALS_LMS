@@ -117,7 +117,7 @@ button#loginBtn {
 }
 
 button#loginBtn:hover {
-    background: #77c87d;
+    background: #a1eda6;
 }
 
 /* Spinner animation */
@@ -162,4 +162,32 @@ a:hover {
     color: red;
     text-align: center;
     font-family: 'Segoe UI', sans-serif;
+}
+
+/*
+  This creates a modern, borderless text field with a background hover.
+*/
+.form-control {
+    border-radius: 0.5rem;
+    /* This is the key: the border exists but is transparent, preventing layout shifts on click */
+    border: 2px solid transparent;
+    background-color: #f8f9fa;
+    /* A light gray background to define the input area */
+    transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.form-control:hover {
+    background-color: #e9ecef;
+    /* A slightly darker gray for the hover background */
+}
+
+/*
+  This is your existing style. It will now make the transparent border
+  become a thick red border only when the text field is clicked.
+*/
+.form-control:focus {
+    border-color: #dc3545;
+    background-color: #fff;
+    /* Return background to white for readability while typing */
+    box-shadow: none;
 }

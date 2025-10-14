@@ -15,11 +15,25 @@ $stmt->close();
 if (!$strand) {
     die("Strand not found.");
 }
-$materials_stmt = $conn->prepare("SELECT * FROM learning_materials WHERE strand_id = ? ORDER BY uploaded_at ASC");
-$materials_stmt->bind_param("i", $strand_id);
-$materials_stmt->execute();
-$materials = $materials_stmt->get_result();
-$materials_stmt->close();
+// Find and replace the old $materials_stmt block with this
+
+// Fetch material categories for the current strand
+$material_categories_stmt = $conn->prepare("SELECT * FROM material_categories WHERE strand_id = ? ORDER BY name ASC");
+$material_categories_stmt->bind_param("i", $strand_id);
+$material_categories_stmt->execute();
+$material_categories_result = $material_categories_stmt->get_result();
+$material_categories = [];
+while ($category = $material_categories_result->fetch_assoc()) {
+    // For each category, fetch its materials
+    $materials_stmt = $conn->prepare("SELECT * FROM learning_materials WHERE category_id = ? ORDER BY uploaded_at ASC");
+    $materials_stmt->bind_param("i", $category['id']);
+    $materials_stmt->execute();
+    $materials_result = $materials_stmt->get_result();
+    $category['materials'] = $materials_result->fetch_all(MYSQLI_ASSOC);
+    $materials_stmt->close();
+    $material_categories[] = $category;
+}
+$material_categories_stmt->close();
 
 // Correct logic for fetching assessments
 $user_id = $_SESSION['user_id'];
@@ -107,6 +121,41 @@ if ($user_role === 'teacher') {
             $back_link = '/ALS_LMS/student/student.php';
             $back_link_class = 'back-link-student';
             $tab_class = 'tabs-student';
+
+            // --- ADD THE RECOMMENDATION CODE HERE ---
+            $recommendations = [];
+            // This query finds materials viewed by other students active in this strand.
+            $rec_sql = "
+            SELECT 
+                lm.id, lm.label, lm.type, lm.file_path, lm.link_url,
+                COUNT(DISTINCT mv.student_id) as similar_views
+            FROM material_views mv
+            JOIN learning_materials lm ON mv.material_id = lm.id
+            WHERE 
+                lm.strand_id = ? 
+                AND mv.student_id IN (
+                    -- Find IDs of other students who have taken quizzes in this strand
+                    SELECT DISTINCT qa.student_id 
+                    FROM quiz_attempts qa
+                    JOIN assessments a ON qa.assessment_id = a.id
+                    WHERE a.strand_id = ? AND qa.student_id != ?
+                )
+                AND lm.id NOT IN (
+                    -- Exclude materials the current student has already seen
+                    SELECT material_id FROM material_views WHERE student_id = ?
+                )
+            GROUP BY lm.id
+            ORDER BY similar_views DESC
+            LIMIT 3
+        ";
+            $rec_stmt = $conn->prepare($rec_sql);
+            // Note: Make sure $strand_id and $user_id are defined before this block
+            $rec_stmt->bind_param("iiii", $strand_id, $strand_id, $user_id, $user_id);
+            $rec_stmt->execute();
+            $recommendations = $rec_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $rec_stmt->close();
+            // --- END OF RECOMMENDATION CODE ---
+
         } elseif ($_SESSION['role'] === 'admin') {
             $back_link = '/ALS_LMS/admin/admin.php';
         }
@@ -141,70 +190,93 @@ if ($user_role === 'teacher') {
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-3">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                            <i class="bi bi-plus-circle me-1"></i> Upload Material
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
+                            <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>
                 <?php endif; ?>
 
-                <div class="mt-3">
-                    <?php if ($materials->num_rows > 0): ?>
-                        <?php $base_path = '/ALS_LMS/'; ?>
-                        <?php while ($mat = $materials->fetch_assoc()): ?>
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h5 class="card-title mb-1"><?= htmlspecialchars($mat['label']) ?></h5>
-                                            <span class="badge bg-info text-dark me-2"><?= htmlspecialchars($mat['type']) ?></span>
-                                            <small class="text-muted">Uploaded: <?= date("F j, Y", strtotime($mat['uploaded_at'])) ?></small>
-                                        </div>
-
+                <div class="accordion" id="materialsAccordion">
+                    <?php if (!empty($material_categories)): ?>
+                        <?php foreach ($material_categories as $index => $category): ?>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="material-heading-<?= $category['id'] ?>">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#material-collapse-<?= $category['id'] ?>">
+                                        <?= htmlspecialchars($category['name']) ?>
+                                    </button>
+                                </h2>
+                                <div id="material-collapse-<?= $category['id'] ?>" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
+                                    <div class="accordion-body">
                                         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li><button class="dropdown-item edit-material-btn" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>" data-label="<?= htmlspecialchars($mat['label']) ?>" data-type="<?= htmlspecialchars($mat['type']) ?>" data-file="<?= ($mat['type'] !== 'link' && !empty($mat['file_path'])) ? $base_path . htmlspecialchars($mat['file_path']) : '' ?>" data-link="<?= htmlspecialchars($mat['link_url'] ?? '') ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
-                                                    <li><button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>" data-label="<?= htmlspecialchars($mat['label']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                                                </ul>
+                                            <div class="d-flex justify-content-end mb-3">
+                                                <button class="btn btn-primary btn-sm upload-material-btn" data-bs-toggle="modal" data-bs-target="#uploadModal" data-category-id="<?= $category['id'] ?>">
+                                                    <i class="bi bi-plus-circle me-1"></i> Upload to this Category
+                                                </button>
                                             </div>
                                         <?php endif; ?>
-                                    </div>
 
-                                    <div class="material-preview mt-3 text-center">
-                                        <?php
-                                        $icon_class = 'bi-file-earmark-arrow-down';
-                                        if ($mat['type'] === 'image') $icon_class = 'bi-card-image';
-                                        if ($mat['type'] === 'video') $icon_class = 'bi-play-btn';
-                                        if ($mat['type'] === 'audio') $icon_class = 'bi-music-note-beamed';
-                                        if ($mat['type'] === 'file')  $icon_class = 'bi-file-earmark-text';
-                                        if ($mat['type'] === 'link')  $icon_class = 'bi-link-45deg';
+                                        <div class="list-group">
+                                            <?php if (!empty($category['materials'])): ?>
+                                                <?php foreach ($category['materials'] as $mat): ?>
+                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
 
-                                        $media_url = ($mat['type'] === 'link') ? htmlspecialchars($mat['link_url'] ?? '') : $base_path . htmlspecialchars($mat['file_path']);
-                                        ?>
+                                                        <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="text-decoration-none text-dark flex-grow-1 d-flex align-items-center">
+                                                            <?php
+                                                            // Smarter icon logic
+                                                            $icon = 'bi-file-earmark-text'; // Default
+                                                            if ($mat['type'] === 'file') {
+                                                                $extension = strtolower(pathinfo($mat['file_path'], PATHINFO_EXTENSION));
+                                                                if ($extension === 'pdf') $icon = 'bi-file-earmark-pdf-fill text-danger';
+                                                                elseif (in_array($extension, ['ppt', 'pptx'])) $icon = 'bi-file-earmark-slides-fill text-warning';
+                                                                elseif (in_array($extension, ['doc', 'docx'])) $icon = 'bi-file-earmark-word-fill text-primary';
+                                                            } elseif ($mat['type'] === 'link') {
+                                                                if (strpos($mat['link_url'], 'youtube') !== false || strpos($mat['link_url'], 'youtu.be') !== false) {
+                                                                    $icon = 'bi-youtube text-danger';
+                                                                } else {
+                                                                    $icon = 'bi-link-45deg text-primary';
+                                                                }
+                                                            }
+                                                            ?>
+                                                            <i class="bi <?= $icon ?> fs-2 me-3"></i>
+                                                            <div class="w-100">
+                                                                <h5 class="mb-1"><?= htmlspecialchars($mat['label']) ?></h5>
+                                                                <?php if (!empty($mat['description'])): ?>
+                                                                    <p class="mb-1 text-muted small"><?= htmlspecialchars($mat['description']) ?></p>
+                                                                <?php endif; ?>
+                                                                <small class="text-muted">Type: <?= ucfirst($mat['type']) ?></small>
+                                                            </div>
+                                                        </a>
 
-                                        <?php if ($mat['type'] === 'link'): ?>
-                                            <a href="<?= $media_url ?>" target="_blank" class="d-block text-decoration-none">
-                                                <i class="bi <?= $icon_class ?>" style="font-size: 4rem;"></i>
-                                                <p class="mt-2 mb-0 text-body">Open Link</p>
-                                            </a>
-                                        <?php else: ?>
-                                            <a href="#" class="d-block text-decoration-none"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#mediaModal"
-                                                data-type="<?= htmlspecialchars($mat['type']) ?>"
-                                                data-url="<?= $media_url ?>"
-                                                data-label="<?= htmlspecialchars($mat['label']) ?>">
-                                                <i class="bi <?= $icon_class ?>" style="font-size: 4rem;"></i>
-                                                <p class="mt-2 mb-0 text-body">View <?= htmlspecialchars(ucfirst($mat['type'])) ?></p>
-                                            </a>
-                                        <?php endif; ?>
+                                                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                                            <div class="dropdown ms-3">
+                                                                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                                    <li><button class="dropdown-item edit-material-btn" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
+                                                                    <li><button type="button" class="dropdown-item text-danger delete-material-btn" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                                </ul>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <p class="text-center text-muted p-3">No materials uploaded in this category yet.</p>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="alert alert-info">No materials have been uploaded yet.</div>
+                        <div class="text-center p-5 text-muted">
+                            <i class="bi bi-journal-x fs-1"></i>
+
+                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                <p class="mt-3">No material categories have been created. Please use the "Manage Categories" button to get started.</p>
+                            <?php else: ?>
+                                <p class="mt-3">No learning materials have been uploaded for this strand yet.</p>
+                            <?php endif; ?>
+
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -215,7 +287,7 @@ if ($user_role === 'teacher') {
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-4">
                         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
-                            <i class="bi bi-folder-plus me-2"></i> Manage Categories
+                            <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>
                 <?php endif; ?>
