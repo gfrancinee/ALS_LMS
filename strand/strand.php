@@ -792,7 +792,7 @@ if ($user_role === 'teacher') {
             </div>
         </div>
 
-        <!-- Manage Categories Modal ↓ -->
+        <!-- Manage Assessment Categories Modal ↓ -->
         <div class="modal fade" id="manageCategoriesModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
