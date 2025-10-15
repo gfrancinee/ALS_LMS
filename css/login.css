@@ -68,6 +68,7 @@ header h1 {
 
 .form-label {
     font-size: small;
+    margin-bottom: 2.5px;
 }
 
 /* Form field spacing */
@@ -169,8 +170,8 @@ a:hover {
 */
 .form-control {
     border-radius: 0.5rem;
+    border-width: 1px;
     /* This is the key: the border exists but is transparent, preventing layout shifts on click */
-    border: 2px solid transparent;
     background-color: #f8f9fa;
     /* A light gray background to define the input area */
     transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
@@ -187,6 +188,7 @@ a:hover {
 */
 .form-control:focus {
     border-color: #dc3545;
+    border-width: 2px;
     background-color: #fff;
     /* Return background to white for readability while typing */
     box-shadow: none;

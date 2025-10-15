@@ -23,13 +23,16 @@ a {
     text-decoration: none;
 }
 
+.form-label {
+    font-size: small;
+    margin-bottom: 2.5px;
+}
+
 /*
   This applies the modern, borderless style to all text fields and the dropdown menu.
 */
 .form-control,
 .form-select {
-    /* The border exists but is transparent, preventing layout shifts on click */
-    border: 2px solid transparent;
     background-color: #ebebeb;
     /* A light gray background to define the input area */
     transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
@@ -48,6 +51,7 @@ a {
 .form-control:focus,
 .form-select:focus {
     border-color: #dc3545;
+    border-width: 2px;
     background-color: #fff;
     /* Return background to white for readability */
     box-shadow: none;

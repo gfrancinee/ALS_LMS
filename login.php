@@ -92,7 +92,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         id="email"
                         name="email"
                         class="form-control"
-                        placeholder="email@example.com"
                         required />
                     <div class="error-message" id="emailError" aria-live="assertive"></div>
                 </div>
@@ -104,7 +103,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         id="password"
                         name="password"
                         class="form-control"
-                        placeholder="password"
                         required />
                     <div class="error-message" id="passwordError" aria-live="assertive"></div>
                 </div>
