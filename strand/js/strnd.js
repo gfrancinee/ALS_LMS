@@ -597,13 +597,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- START: Assessment Category Logic ---
+
+    // --- Assessment Category Logic ---
     const categoriesModal = document.getElementById('manageCategoriesModal');
 
     if (categoriesModal) {
         const addCategoryForm = document.getElementById('add-category-form');
         const categoryList = document.getElementById('category-list');
-        const strandId = new URLSearchParams(window.location.search).get('id');
 
         // Function to load categories from the server
         const loadCategories = async () => {
@@ -706,6 +706,179 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.textContent = 'Add Category';
         });
     }
+
+    // --- START: Material Category Logic (Final Version with Edit/Delete) ---
+    const manageMaterialModal = document.getElementById('manageMaterialCategoriesModal');
+    if (manageMaterialModal) {
+        const materialActionModalEl = document.getElementById('materialCategoryActionModal');
+        const materialActionModal = new bootstrap.Modal(materialActionModalEl);
+        const materialActionForm = document.getElementById('materialCategoryActionForm');
+        const addMaterialCategoryForm = document.getElementById('add-material-category-form');
+        const materialCategoryListEl = document.getElementById('material-category-list');
+        const materialStrandId = new URLSearchParams(window.location.search).get('id');
+
+        // This function now builds a SIMPLE list without any buttons.
+        const loadMaterialCategories = async () => {
+            if (!strandId) return;
+            const response = await fetch(`../ajax/manage_material_categories.php?action=fetch&strand_id=${strandId}`);
+            const result = await response.json();
+            materialCategoryList.innerHTML = '';
+            if (result.success && result.data.length > 0) {
+                result.data.forEach(cat => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = cat.name; // This just adds the name, no buttons.
+                    materialCategoryList.appendChild(li);
+                });
+            } else {
+                materialCategoryList.innerHTML = '<li class="list-group-item text-muted">No categories created yet.</li>';
+            }
+        };
+
+        manageMaterialModal.addEventListener('show.bs.modal', loadMaterialCategories);
+
+        addMaterialCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = e.target.querySelector('input[name="name"]');
+            const name = input.value;
+            if (!name) return;
+
+            const formData = new FormData();
+            formData.append('action', 'create');
+            formData.append('name', name);
+            formData.append('strand_id', materialStrandId);
+
+            const response = await fetch('../ajax/manage_material_categories.php', { method: 'POST', body: formData });
+            const result = await response.json();
+            if (result.success) {
+                location.reload(); // Simple reload on create
+            } else {
+                alert('Error: ' + (result.error || 'Could not add category.'));
+            }
+        });
+
+        materialActionModalEl.addEventListener('show.bs.modal', (e) => {
+            const button = e.relatedTarget;
+            const action = button.dataset.action;
+            const id = button.dataset.id || '';
+            const name = button.dataset.name || '';
+
+            const modalTitle = materialActionModalEl.querySelector('.modal-title');
+            const submitBtn = document.getElementById('materialCategorySubmitBtn');
+            const nameGroup = document.getElementById('materialCategoryNameGroup');
+            const deleteConfirm = document.getElementById('materialCategoryDeleteConfirm');
+
+            materialActionForm.reset();
+            document.getElementById('materialCategoryActionInput').value = action;
+            document.getElementById('materialCategoryIdInput').value = id;
+            document.getElementById('materialCategoryNameInput').value = name;
+
+            if (action === 'edit') {
+                modalTitle.textContent = 'Edit Category Name';
+                submitBtn.textContent = 'Save Changes';
+                submitBtn.className = 'btn btn-primary';
+                nameGroup.style.display = 'block';
+                deleteConfirm.style.display = 'none';
+            } else if (action === 'delete') {
+                modalTitle.textContent = 'Delete Category';
+                submitBtn.textContent = 'Delete';
+                submitBtn.className = 'btn btn-danger';
+                nameGroup.style.display = 'none';
+                deleteConfirm.style.display = 'block';
+                document.getElementById('deleteMaterialCategoryName').textContent = name;
+            }
+        });
+
+        materialActionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(materialActionForm);
+            formData.append('strand_id', materialStrandId);
+
+            const response = await fetch('../ajax/manage_material_categories.php', { method: 'POST', body: formData });
+            const result = await response.json();
+
+            if (result.success) {
+                materialActionModal.hide();
+                // Simple reload is the most reliable way to update everything
+                location.reload();
+            } else {
+                alert('Error: ' + (result.error || 'An unknown error occurred.'));
+            }
+        });
+    }
+    // --- END: Material Category Logic ---
+
+    // --- LOGIC FOR EDIT/DELETE MATERIAL ---
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Edit Material Logic ---
+        const editMaterialModalEl = document.getElementById('editMaterialModal');
+        if (editMaterialModalEl) {
+            const editMaterialForm = document.getElementById('editMaterialForm');
+            let materialElementToUpdate = null;
+
+            editMaterialModalEl.addEventListener('show.bs.modal', async function (event) {
+                const button = event.relatedTarget;
+                const materialId = button.dataset.id;
+                materialElementToUpdate = button.closest('.material-item');
+
+                // Populate the form
+                document.getElementById('editMaterialId').value = materialId;
+                const response = await fetch(`../ajax/get_material_details.php?id=${materialId}`);
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('editMaterialLabel').value = result.data.label;
+                    document.getElementById('editMaterialDescription').value = result.data.description;
+                }
+            });
+
+            editMaterialForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const response = await fetch('../ajax/update_material.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    bootstrap.Modal.getInstance(editMaterialModalEl).hide();
+                    // Update on page without reload
+                    if (materialElementToUpdate) {
+                        materialElementToUpdate.querySelector('.fw-bold').textContent = formData.get('label');
+                        materialElementToUpdate.querySelector('.text-muted.small').textContent = formData.get('description');
+                    }
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            });
+        }
+
+        // --- Delete Material Logic ---
+        const deleteMaterialModalEl = document.getElementById('deleteMaterialModal');
+        if (deleteMaterialModalEl) {
+            let materialIdToDelete = null;
+            let materialElementToDelete = null;
+
+            deleteMaterialModalEl.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                materialIdToDelete = button.dataset.id;
+                materialElementToDelete = button.closest('.material-item');
+            });
+
+            document.getElementById('confirmDeleteMaterialBtn').addEventListener('click', async function () {
+                const formData = new FormData();
+                formData.append('id', materialIdToDelete);
+                const response = await fetch('../ajax/delete_material.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    bootstrap.Modal.getInstance(deleteMaterialModalEl).hide();
+                    // Remove from page without reload
+                    if (materialElementToDelete) {
+                        materialElementToDelete.remove();
+                    }
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            });
+        }
+    });
 
     // --- Listeners for Edit and Delete Assessment Modals ---
     const editAssessmentModalEl = document.getElementById('editAssessmentModal');

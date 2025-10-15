@@ -1,43 +1,32 @@
 <?php
+// /ajax/delete_material.php
 session_start();
 require_once '../includes/db.php';
 header('Content-Type: application/json');
 
-// Security checks
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
 
-if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_POST['material_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+$material_id = $_POST['id'] ?? 0;
+if (empty($material_id)) {
+    echo json_encode(['success' => false, 'error' => 'Material ID not provided.']);
     exit;
 }
 
-$material_id = $_POST['material_id'];
-$teacher_id = $_SESSION['user_id'];
+// Optional: Code to delete the physical file from your server
+// $stmt = $conn->prepare("SELECT file_path FROM learning_materials WHERE id = ? AND teacher_id = ?");
+// ... fetch file_path ...
+// if (file_exists('../' . $file_path)) { unlink('../' . $file_path); }
 
-// Prepare a secure delete statement
-// This query ensures a teacher can only delete materials from strands they own
-$stmt = $conn->prepare("
-    DELETE lm FROM learning_materials lm
-    JOIN learning_strands ls ON lm.strand_id = ls.id
-    WHERE lm.id = ? AND ls.creator_id = ?
-");
-
-$stmt->bind_param("ii", $material_id, $teacher_id);
+$stmt = $conn->prepare("DELETE FROM learning_materials WHERE id = ? AND teacher_id = ?");
+$stmt->bind_param("ii", $material_id, $_SESSION['user_id']);
 
 if ($stmt->execute()) {
-    // Check if a row was actually deleted
-    if ($stmt->affected_rows > 0) {
-        echo json_encode(['success' => true]);
-    } else {
-        // No rows deleted, likely because the teacher doesn't own this material
-        echo json_encode(['success' => false, 'message' => 'You do not have permission to delete this material or it does not exist.']);
-    }
+    echo json_encode(['success' => true]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Database error.']);
+    echo json_encode(['success' => false, 'error' => 'Database error.']);
 }
-
 $stmt->close();
-$conn->close();

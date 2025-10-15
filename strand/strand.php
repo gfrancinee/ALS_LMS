@@ -185,99 +185,112 @@ if ($user_role === 'teacher') {
         </ul>
 
         <div class="tab-content" id="myTabContent">
-            <!-- Modules Tab -->
+
+            <!-- Modules Tabs -->
             <div class="tab-pane fade show active" id="modules" role="tabpanel" aria-labelledby="modules-tab">
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                    <div class="d-flex justify-content-end mb-3">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
+                    <div class="d-flex justify-content-end mb-4">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>
                 <?php endif; ?>
 
-                <div class="accordion" id="materialsAccordion">
-                    <?php if (!empty($material_categories)): ?>
-                        <?php foreach ($material_categories as $index => $category): ?>
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="material-heading-<?= $category['id'] ?>">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#material-collapse-<?= $category['id'] ?>">
-                                        <?= htmlspecialchars($category['name']) ?>
-                                    </button>
-                                </h2>
-                                <div id="material-collapse-<?= $category['id'] ?>" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
-                                    <div class="accordion-body">
-                                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                                            <div class="d-flex justify-content-end mb-3">
-                                                <button class="btn btn-primary btn-sm upload-material-btn" data-bs-toggle="modal" data-bs-target="#uploadModal" data-category-id="<?= $category['id'] ?>">
-                                                    <i class="bi bi-plus-circle me-1"></i> Upload to this Category
-                                                </button>
-                                            </div>
-                                        <?php endif; ?>
+                <div class="accordion assessment-accordion" id="materialsAccordion">
 
-                                        <div class="list-group">
-                                            <?php if (!empty($category['materials'])): ?>
-                                                <?php foreach ($category['materials'] as $mat): ?>
-                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-
-                                                        <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="text-decoration-none text-dark flex-grow-1 d-flex align-items-center">
-                                                            <?php
-                                                            // Smarter icon logic
-                                                            $icon = 'bi-file-earmark-text'; // Default
-                                                            if ($mat['type'] === 'file') {
-                                                                $extension = strtolower(pathinfo($mat['file_path'], PATHINFO_EXTENSION));
-                                                                if ($extension === 'pdf') $icon = 'bi-file-earmark-pdf-fill text-danger';
-                                                                elseif (in_array($extension, ['ppt', 'pptx'])) $icon = 'bi-file-earmark-slides-fill text-warning';
-                                                                elseif (in_array($extension, ['doc', 'docx'])) $icon = 'bi-file-earmark-word-fill text-primary';
-                                                            } elseif ($mat['type'] === 'link') {
-                                                                if (strpos($mat['link_url'], 'youtube') !== false || strpos($mat['link_url'], 'youtu.be') !== false) {
-                                                                    $icon = 'bi-youtube text-danger';
-                                                                } else {
-                                                                    $icon = 'bi-link-45deg text-primary';
-                                                                }
-                                                            }
-                                                            ?>
-                                                            <i class="bi <?= $icon ?> fs-2 me-3"></i>
-                                                            <div class="w-100">
-                                                                <h5 class="mb-1"><?= htmlspecialchars($mat['label']) ?></h5>
-                                                                <?php if (!empty($mat['description'])): ?>
-                                                                    <p class="mb-1 text-muted small"><?= htmlspecialchars($mat['description']) ?></p>
-                                                                <?php endif; ?>
-                                                                <small class="text-muted">Type: <?= ucfirst($mat['type']) ?></small>
-                                                            </div>
-                                                        </a>
-
-                                                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                                                            <div class="dropdown ms-3">
-                                                                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                                    <li><button class="dropdown-item edit-material-btn" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
-                                                                    <li><button type="button" class="dropdown-item text-danger delete-material-btn" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                                                                </ul>
-                                                            </div>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                <?php endforeach; ?>
-                                            <?php else: ?>
-                                                <p class="text-center text-muted p-3">No materials uploaded in this category yet.</p>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="text-center p-5 text-muted">
-                            <i class="bi bi-journal-x fs-1"></i>
-
+                    <?php if (empty($material_categories)): ?>
+                        <div id="no-material-categories-message" class="text-center text-muted p-5">
+                            <p><i class="bi bi-journal-x fs-1"></i></p>
                             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
-                                <p class="mt-3">No material categories have been created. Please use the "Manage Categories" button to get started.</p>
+                                <h5>No material categories have been created yet.</h5>
+                                <p>Click "Manage Categories" to get started.</p>
                             <?php else: ?>
-                                <p class="mt-3">No learning materials have been uploaded for this strand yet.</p>
+                                <h5>No learning materials are available yet.</h5>
                             <?php endif; ?>
-
                         </div>
                     <?php endif; ?>
+
+                    <?php foreach ($material_categories as $category): ?>
+                        <div class="accordion-item" id="material-category-item-<?= $category['id'] ?>">
+                            <h2 class="accordion-header">
+                                <div class="d-flex align-items-center w-100">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#material-collapse-cat-<?= $category['id'] ?>">
+                                        <i class="bi bi-folder me-2"></i> <?= htmlspecialchars($category['name']) ?>
+                                    </button>
+
+                                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                        <div class="dropdown mb-2">
+                                            <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#materialCategoryActionModal" data-action="edit" data-id="<?= $category['id'] ?>" data-name="<?= htmlspecialchars($category['name']) ?>"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#materialCategoryActionModal" data-action="delete" data-id="<?= $category['id'] ?>" data-name="<?= htmlspecialchars($category['name']) ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </h2>
+                            <div id="material-collapse-cat-<?= $category['id'] ?>" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
+                                <div class="accordion-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <?php if (!empty($category['materials'])): ?>
+                                            <?php foreach ($category['materials'] as $mat): ?>
+                                                <li>
+                                                    <div class="assessment-item">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="assessment-item-link">
+                                                                <div class="d-flex align-items-center">
+                                                                    <?php
+                                                                    $icon = 'bi-file-earmark-text';
+                                                                    if ($mat['type'] === 'file') {
+                                                                        $ext = strtolower(pathinfo($mat['file_path'], PATHINFO_EXTENSION));
+                                                                        if ($ext === 'pdf') $icon = 'bi-file-earmark-pdf-fill text-danger';
+                                                                        elseif (in_array($ext, ['ppt', 'pptx'])) $icon = 'bi-file-earmark-slides-fill text-warning';
+                                                                    } elseif ($mat['type'] === 'link') $icon = 'bi-link-45deg text-primary';
+                                                                    ?>
+                                                                    <i class="bi <?= $icon ?> fs-2 me-3"></i>
+                                                                    <div>
+                                                                        <span class="fw-bold"><?= htmlspecialchars($mat['label']) ?></span>
+                                                                        <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($mat['type']) ?></span>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+
+                                                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                                                <div class="dropdown">
+                                                                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                                        <li><button class="dropdown-item edit-material-btn" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
+                                                                        <li><button type="button" class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                                    </ul>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted fst-italic p-3 text-center no-materials-message">No materials in this category yet.</li>
+                                        <?php endif; ?>
+                                    </ul>
+
+                                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                        <hr class="my-3">
+                                        <div class="text-center">
+                                            <button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="<?= $category['id'] ?>">
+                                                <i class="bi bi-plus-circle"></i> Upload Material to this Category
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="collapse" id="uploadMaterialContainer">
                 </div>
             </div>
 
@@ -563,40 +576,29 @@ if ($user_role === 'teacher') {
             </div>
         </div>
 
-        <!-- Upload Modal -->
-        <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <!-- Manage Material Categories Modal ↓ -->
+        <div class="modal fade" id="manageMaterialCategoriesModal" tabindex="-1" aria-labelledby="manageMaterialCategoriesModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form id="uploadForm" enctype="multipart/form-data">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="uploadModalLabel">Upload Learning Material</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="materialLabel" class="form-label">Material Label</label>
-                                <input type="text" class="form-control" name="materialLabel" id="materialLabel" placeholder="e.g. Week 1: Introduction" required>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="manageMaterialCategoriesModalLabel">Manage Categories</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6 class="mb-3">Create New Category</h6>
+                        <form id="add-material-category-form" class="mb-4">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="name" required>
+                                <button type="submit" class="btn btn-success">Add</button>
                             </div>
-                            <div class="mb-3">
-                                <label for="materialType" class="form-label">Material Type</label>
-                                <select class="form-select" name="materialType" id="materialType" required>
-                                    <option value="">Select type</option>
-                                    <option value="file">File</option>
-                                    <option value="video">Video</option>
-                                    <option value="image">Image</option>
-                                    <option value="audio">Audio</option>
-                                    <option value="link">Link</option>
-                                </select>
-                            </div>
-                            <div class="mb-3" id="dynamicInputArea"></div>
-                            <div id="uploadAlertModal" style="display:none;"></div>
-                        </div>
-                        <div class="modal-footer">
-                            <input type="hidden" name="strand_id" value="<?= htmlspecialchars($strand_id) ?>">
-                            <input type="hidden" name="teacher_id" value="<?= htmlspecialchars($_SESSION['user_id']) ?>">
-                            <button type="submit" class="btn btn-success">Upload</button>
-                        </div>
-                    </form>
+                        </form>
+
+                        <hr>
+
+                        <h6 class="mb-3">Existing Categories:</h6>
+                        <ul id="material-category-list" class="list-group">
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -607,6 +609,88 @@ if ($user_role === 'teacher') {
             return;
         }
         ?>
+
+        <!-- Edit Material Modal -->
+        <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="editMaterialForm" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editMaterialModalLabel">Edit Material</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="editMaterialId" name="material_id">
+                            <div class="mb-3">
+                                <label for="editMaterialLabel" class="form-label">Label / Title</label>
+                                <input type="text" class="form-control" id="editMaterialLabel" name="label" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editMaterialDescription" class="form-label">Description (Optional)</label>
+                                <textarea class="form-control" id="editMaterialDescription" name="description" rows="3"></textarea>
+                            </div>
+                            <!-- The rest of the form (type, file/link inputs) will be loaded by JavaScript -->
+                            <div id="edit-material-type-specific-fields"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Material Confirmation Modal -->
+        <div class="modal fade" id="deleteMaterialModal" tabindex="-1" aria-labelledby="deleteMaterialModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteMaterialModalLabel">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to permanently delete this material?</p>
+                        <p class="text-danger small">This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteMaterialBtn">Yes, Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="materialCategoryActionModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="materialCategoryActionModalLabel">Category Action</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="materialCategoryActionForm">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" id="materialCategoryActionInput">
+                            <input type="hidden" name="id" id="materialCategoryIdInput">
+
+                            <div class="mb-3" id="materialCategoryNameGroup">
+                                <label for="materialCategoryNameInput" class="form-label">Category Name</label>
+                                <input type="text" class="form-control" id="materialCategoryNameInput" name="name" required>
+                            </div>
+
+                            <div id="materialCategoryDeleteConfirm" style="display: none;">
+                                <p>Are you sure you want to delete "<strong><span id="deleteMaterialCategoryName">this category</span></strong>"?</p>
+                                <small class="text-danger">This action cannot be undone.</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="materialCategorySubmitBtn">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         <!-- Universal Media Modal -->
         <div class="modal fade" id="mediaModal" tabindex="-1" aria-labelledby="mediaModalLabel" aria-hidden="true">

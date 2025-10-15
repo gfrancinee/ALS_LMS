@@ -151,7 +151,6 @@ h2 {
 /* Optional: Add a subtle hover effect for inactive tabs */
 .nav-tabs .nav-link:not(.active):hover {
     border-color: #e9ecef;
-    border-radius: 1rem;
     /* A very light grey underline on hover */
 }
 
