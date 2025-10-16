@@ -1,84 +1,92 @@
 <?php
-// Turn off error reporting to prevent it from breaking the JSON response
-error_reporting(0);
-
+// /ajax/upload_material.php (Final Corrected Version - Direct Strand ID)
 session_start();
 require_once '../includes/db.php';
-// ADDED FOR NOTIFICATIONS: Include the new functions file
 require_once '../includes/functions.php';
-
-// Set the header AFTER all requires
 header('Content-Type: application/json');
 
-// Security check: only allow teachers
+// --- Security Check ---
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
-    echo json_encode(['status' => 'error', 'message' => 'Unauthorized access.']);
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized access.']);
+    exit;
+}
+$teacher_id = $_SESSION['user_id'];
+
+// --- THIS IS THE FIX: Read strand_id DIRECTLY from POST data ---
+$strand_id = filter_input(INPUT_POST, 'strand_id', FILTER_VALIDATE_INT);
+$category_id = filter_input(INPUT_POST, 'category_id', FILTER_VALIDATE_INT);
+$label = trim($_POST['label'] ?? '');
+$type = $_POST['material_type'] ?? '';
+
+// --- Validation for all required fields ---
+if (empty($strand_id)) {
+    echo json_encode(['success' => false, 'error' => 'Strand ID was not received. This is a bug.']);
+    exit;
+}
+if (empty($category_id) || empty($label) || empty($type)) {
+    echo json_encode(['success' => false, 'error' => 'Missing required fields: Category, Label, or Type.']);
     exit;
 }
 
-// Validation
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['strand_id']) || empty($_POST['teacher_id']) || empty($_POST['materialLabel'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request. Required fields are missing.']);
-    exit;
-}
+// The unnecessary database lookup for strand_id has been REMOVED.
 
-$strand_id = $_POST['strand_id'];
-$teacher_id = $_POST['teacher_id'];
-$label = $_POST['materialLabel'];
-$type = $_POST['materialType'];
-$link_url = null;
 $file_path = null;
+$link_url = null;
 
-// Handle link or file (This section is unchanged)
+// --- Handle File or Link ---
 if ($type === 'link') {
-    $link_url = $_POST['materialLink'] ?? null;
-    if (empty($link_url) || !filter_var($link_url, FILTER_VALIDATE_URL)) {
-        echo json_encode(['status' => 'error', 'message' => 'A valid Link URL is required.']);
+    $link_url = filter_input(INPUT_POST, 'link_url', FILTER_VALIDATE_URL);
+    if (!$link_url) {
+        echo json_encode(['success' => false, 'error' => 'The provided URL is not valid.']);
         exit;
     }
-} else if (isset($_FILES['materialFile']) && $_FILES['materialFile']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = '../uploads/';
-    if (!is_dir($uploadDir)) {
-        if (!mkdir($uploadDir, 0777, true)) {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to create uploads directory. Check permissions.']);
+} else { // Handles 'file', 'image', 'video', 'audio'
+    if (isset($_FILES['material_file']) && $_FILES['material_file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['material_file'];
+        $upload_dir = '../uploads/materials/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        $original_filename = basename($file['name']);
+        $safe_filename = preg_replace("/[^a-zA-Z0-9\.\-\_]/", "", $original_filename);
+        $filename = uniqid() . '-' . $safe_filename;
+        $destination = $upload_dir . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            $file_path = 'uploads/materials/' . $filename;
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Server error: Failed to move uploaded file.']);
             exit;
         }
-    }
-    $fileName = uniqid() . '_' . basename($_FILES['materialFile']['name']);
-    $targetFilePath = $uploadDir . $fileName;
-
-    if (move_uploaded_file($_FILES['materialFile']['tmp_name'], $targetFilePath)) {
-        $file_path = 'uploads/' . $fileName;
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to move uploaded file. Check folder permissions.']);
+        echo json_encode(['success' => false, 'error' => 'No file was uploaded or an upload error occurred.']);
         exit;
     }
-} else {
-    echo json_encode(['status' => 'error', 'message' => 'No file was uploaded or an upload error occurred.']);
-    exit;
 }
 
-// Insert into database
-$stmt = $conn->prepare("INSERT INTO learning_materials (strand_id, teacher_id, label, type, file_path, link_url) VALUES (?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("iissss", $strand_id, $teacher_id, $label, $type, $file_path, $link_url);
+// --- Insert into Database (Corrected: uses the direct strand_id) ---
+$stmt = $conn->prepare(
+    "INSERT INTO learning_materials (teacher_id, strand_id, category_id, label, type, file_path, link_url) VALUES (?, ?, ?, ?, ?, ?, ?)"
+);
+$stmt->bind_param("iiissss", $teacher_id, $strand_id, $category_id, $label, $type, $file_path, $link_url);
 
 if ($stmt->execute()) {
+    $new_id = $stmt->insert_id;
 
-    // ADDED FOR NOTIFICATIONS: This whole block creates the notifications after a successful upload
-    // -----------------------------------------------------------------------------------------
-    // 1. Get all students in the strand
+    // --- Notification Logic ---
     $student_ids = [];
     $stmt_students = $conn->prepare("SELECT student_id FROM strand_participants WHERE strand_id = ? AND role = 'student'");
     $stmt_students->bind_param("i", $strand_id);
     $stmt_students->execute();
-    $result = $stmt_students->get_result();
-    while ($row = $result->fetch_assoc()) {
+    $result_students = $stmt_students->get_result();
+    while ($row = $result_students->fetch_assoc()) {
         $student_ids[] = $row['student_id'];
     }
     $stmt_students->close();
 
-    // 2. Get the strand title for a better message
-    $strand_title = "your course"; // A default title
+    $strand_title = "your course";
     $stmt_title = $conn->prepare("SELECT strand_title FROM learning_strands WHERE id = ?");
     $stmt_title->bind_param("i", $strand_id);
     $stmt_title->execute();
@@ -87,22 +95,29 @@ if ($stmt->execute()) {
     }
     $stmt_title->close();
 
-    // 3. Define the notification message and link
-    $message = "New material has been uploaded in '" . htmlspecialchars($strand_title) . "'";
+    $message = "New material '" . htmlspecialchars($label) . "' has been added to '" . htmlspecialchars($strand_title) . "'.";
     $link = "strand/strand.php?id=" . $strand_id;
 
-    // 4. Loop through each student and call the function from functions.php
     foreach ($student_ids as $student_id) {
         create_notification($conn, $student_id, $message, $link);
     }
-    // -----------------------------------------------------------------------------------------
+    // --- End Notification Logic ---
 
-    echo json_encode(['status' => 'success', 'message' => 'Material uploaded successfully.']);
+    // Send the correct JSON response for the "no-reload" feature
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'id' => $new_id,
+            'label' => $label,
+            'type' => $type,
+            'file_path' => $file_path,
+            'link_url' => $link_url
+        ]
+    ]);
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Database insert failed: ' . $stmt->error]);
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $stmt->error]);
 }
 
 $stmt->close();
 $conn->close();
-// ADDED FOR NOTIFICATIONS: Ensure the script stops here
 exit;
