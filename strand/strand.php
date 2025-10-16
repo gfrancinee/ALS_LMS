@@ -290,7 +290,66 @@ if ($user_role === 'teacher') {
                     <?php endforeach; ?>
                 </div>
 
+                <!-- Upload Material -->
                 <div class="collapse" id="uploadMaterialContainer">
+                    <div class="card card-body m-5 shadow-sm border-light-subtle">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Upload New Material</h5>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <form id="uploadMaterialForm" enctype="multipart/form-data">
+                            <input type="hidden" name="category_id" id="uploadMaterialCategoryId">
+
+                            <div class="mb-3">
+                                <label class="form-label">Material Type</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="material_type" id="typeFile" value="file" checked>
+                                        <label class="form-check-label" for="typeFile">File</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="material_type" id="typeImage" value="image">
+                                        <label class="form-check-label" for="typeImage">Image</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="material_type" id="typeVideo" value="video">
+                                        <label class="form-check-label" for="typeVideo">Video</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="material_type" id="typeAudio" value="audio">
+                                        <label class="form-check-label" for="typeAudio">Audio</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="material_type" id="typeLink" value="link">
+                                        <label class="form-check-label" for="typeLink">Link/URL</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="materialLabel" class="form-label">Label/Title</label>
+                                <input type="text" class="form-control" id="materialLabel" name="label" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <div id="fileUploadGroup">
+                                    <label for="materialFile" class="form-label">Select File</label>
+                                    <input class="form-control" type="file" id="materialFile" name="material_file" required>
+                                </div>
+                                <div id="linkUploadGroup" style="display: none;">
+                                    <label for="materialLink" class="form-label">Enter URL</label>
+                                    <input type="url" class="form-control" id="materialLink" name="link_url" placeholder="https://example.com">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-secondary me-2" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Upload</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -504,10 +563,9 @@ if ($user_role === 'teacher') {
 
                 <!-- Create assessment -->
                 <div class="collapse" id="createAssessmentContainer">
-                    <div class="card card-body m-5 shadow-sm border-light">
+                    <div class="card card-body m-5 shadow-sm border-light-subtle">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Create New Assessment</h5>
-                            <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" aria-label="Close"></button>
                         </div>
 
                         <hr class="my-3">
@@ -550,7 +608,7 @@ if ($user_role === 'teacher') {
                             </div>
 
                             <div class="d-flex justify-content-end gap-2 mt-3">
-                                <button type="button" class="btn btn-secondary" id="cancelCreateAssessmentBtn">Cancel</button>
+                                <button type="button" class="btn btn-secondary me-2" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer">Cancel</button>
                                 <button type="submit" class="btn btn-success">Create Assessment</button>
                             </div>
                         </form>
