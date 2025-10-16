@@ -191,7 +191,7 @@ if ($user_role === 'teacher') {
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-4">
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>

@@ -33,7 +33,10 @@ a {
 */
 .form-control,
 .form-select {
-    background-color: #ebebeb;
+    border-radius: 0.5rem;
+    border-width: 0.5px;
+    border-color: #b4b4b4;
+    background-color: #ffffff;
     /* A light gray background to define the input area */
     transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
 }
