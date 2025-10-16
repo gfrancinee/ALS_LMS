@@ -906,42 +906,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (result.success && result.data) {
                     const categoryId = formData.get('category_id');
+                    const newMaterial = result.data;
+
+                    // Find the <ul> for the correct category.
                     const materialList = document.querySelector(`#material-collapse-cat-${categoryId} .material-list-group`);
 
                     if (materialList) {
-                        materialList.querySelector('.no-materials-message')?.remove();
+                        // Find and remove the "No materials..." message if it exists.
+                        const noMaterialsMessage = materialList.querySelector('.no-materials-message');
+                        if (noMaterialsMessage) {
+                            noMaterialsMessage.remove();
+                        }
 
-                        const newMaterial = result.data;
-                        const icons = {
-                            file: 'bi-file-earmark-text',
-                            link: 'bi-link-45deg',
-                            image: 'bi-file-earmark-image',
-                            video: 'bi-file-earmark-play',
-                            audio: 'bi-file-earmark-music'
-                        };
-                        const iconClass = icons[newMaterial.type] || 'bi-file-earmark';
-                        const materialLink = newMaterial.link_url ? newMaterial.link_url : '../' + newMaterial.file_path;
+                        // Determine icon based on new material data
+                        let iconClass = 'bi-file-earmark-text';
+                        if (newMaterial.type === 'file' && newMaterial.file_path) {
+                            const ext = newMaterial.file_path.split('.').pop().toLowerCase();
+                            if (ext === 'pdf') iconClass = 'bi-file-earmark-pdf-fill text-danger';
+                            else if (['ppt', 'pptx'].includes(ext)) iconClass = 'bi-file-earmark-slides-fill text-warning';
+                        } else if (newMaterial.type === 'link') {
+                            iconClass = 'bi-link-45deg text-primary';
+                        }
+
+                        const materialLink = newMaterial.link_url ? newMaterial.link_url : `/ALS_LMS/strand/view_material.php?id=${newMaterial.id}`;
 
                         const newMaterialHTML = `
-                            <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-${newMaterial.id}">
-                                <div>
-                                    <i class="bi ${iconClass} me-2"></i>
-                                    <a href="${materialLink}" target="_blank" class="fw-bold text-decoration-none">${newMaterial.label}</a>
-                                </div>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil me-2"></i>Edit</button></li>
-                                        <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-trash me-2"></i>Delete</button></li>
-                                    </ul>
-                                </div>
-                            </li>`;
+            <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-${newMaterial.id}">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                     <a href="${materialLink}" target="_blank" class="material-item-link">
+                        <div class="d-flex align-items-center">
+                            <i class="bi ${iconClass} fs-2 me-3"></i>
+                            <div>
+                                <span class="fw-bold">${newMaterial.label}</span>
+                                <span class="badge bg-light text-dark fw-normal ms-2">${newMaterial.type.charAt(0).toUpperCase() + newMaterial.type.slice(1)}</span>
+                            </div>
+                        </div>
+                    </a>
+
+                <div class="dropdown">
+                        <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
+                            <li><button type="button" class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>`;
                         materialList.insertAdjacentHTML('beforeend', newMaterialHTML);
                     }
 
+                    // Reset and hide the form
                     uploadForm.reset();
-                    document.getElementById('typeFile').dispatchEvent(new Event('change'));
-                    bootstrap.Collapse.getInstance(uploadFormContainer)?.hide();
+                    const uploadFormContainer = document.getElementById('uploadMaterialContainer');
+                    if (uploadFormContainer) {
+                        bootstrap.Collapse.getInstance(uploadFormContainer)?.hide();
+                    }
+
                 } else {
                     alert('Error: ' + (result.error || 'An unknown error occurred.'));
                 }

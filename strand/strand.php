@@ -2,6 +2,9 @@
 session_start();
 require_once '../includes/db.php';
 
+$user_role = $_SESSION['role'] ?? 'guest';
+$is_teacher = ($user_role === 'teacher');
+
 // Fetch strand and material details
 $strand_id = $_GET['id'] ?? 0;
 if (!$strand_id) {
@@ -234,13 +237,13 @@ if ($user_role === 'teacher') {
                             </h2>
                             <div id="material-collapse-cat-<?= $category['id'] ?>" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
                                 <div class="accordion-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <?php if (!empty($category['materials'])): ?>
-                                            <?php foreach ($category['materials'] as $mat): ?>
-                                                <li>
-                                                    <div class="assessment-item">
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="assessment-item-link">
+                                    <div id="material-list-container-cat-<?= $category['id'] ?>">
+                                        <ul class="list-unstyled mb-0 material-list-group">
+                                            <?php if (!empty($category['materials'])): ?>
+                                                <?php foreach ($category['materials'] as $mat): ?>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-<?= $mat['id'] ?>">
+                                                        <div class="d-flex justify-content-between align-items-center w-100">
+                                                            <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="material-item-link">
                                                                 <div class="d-flex align-items-center">
                                                                     <?php
                                                                     $icon = 'bi-file-earmark-text';
@@ -257,30 +260,29 @@ if ($user_role === 'teacher') {
                                                                     </div>
                                                                 </div>
                                                             </a>
-
-                                                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                                            <?php if ($is_teacher): ?>
                                                                 <div class="dropdown">
                                                                     <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                                     <ul class="dropdown-menu dropdown-menu-end">
-                                                                        <li><button class="dropdown-item edit-material-btn" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
+                                                                        <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
                                                                         <li><button type="button" class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                                                     </ul>
                                                                 </div>
                                                             <?php endif; ?>
                                                         </div>
-                                                    </div>
-                                                </li>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <li class="text-muted fst-italic p-3 text-center no-materials-message">No materials in this category yet.</li>
-                                        <?php endif; ?>
-                                    </ul>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <li class="text-muted fst-italic p-3 text-center no-materials-message">No materials in this category yet.</li>
+                                            <?php endif; ?>
+                                        </ul>
+                                    </div>
 
-                                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
+                                    <?php if ($is_teacher): ?>
                                         <hr class="my-3">
                                         <div class="text-center">
                                             <button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="<?= $category['id'] ?>">
-                                                <i class="bi bi-plus-circle"></i> Upload Material to this Category
+                                                <i class="bi bi-plus-circle"></i> Upload Material
                                             </button>
                                         </div>
                                     <?php endif; ?>
@@ -592,7 +594,7 @@ if ($user_role === 'teacher') {
                             </div>
 
                             <div class="mb-3">
-                                <label for="assessmentDesc" class="form-label">Description / Instructions</label>
+                                <label for="assessmentDesc" class="form-label">Description/Instructions</label>
                                 <textarea class="form-control" id="assessmentDesc" name="description" rows="3"></textarea>
                             </div>
 
