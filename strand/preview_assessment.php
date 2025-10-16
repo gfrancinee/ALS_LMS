@@ -67,7 +67,7 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
     </div>
 
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
+        <div class="card-header bg-light py-3">
             <h3 class="mb-0"><?= htmlspecialchars($assessment['title']) ?></h3>
         </div>
         <div class="card-body p-4">

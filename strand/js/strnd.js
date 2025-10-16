@@ -32,10 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
             history.replaceState(null, '', window.location.pathname + window.location.search);
         }
     }
-
-    // Get the user role from the global variable we set in the PHP file
-    const strandId = new URLSearchParams(window.location.search).get('id');
-
     // Modals
     const editModal = document.getElementById('editMaterialModal');
     const assessmentModal = document.getElementById('assessmentModal');
@@ -597,21 +593,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Declare the strandId only ONCE at the top for all features to use.
+    const strandId = new URLSearchParams(window.location.search).get('id');
 
-    // --- Assessment Category Logic ---
+    // --- START: YOUR ORIGINAL ASSESSMENT CATEGORY LOGIC (RESTORED) ---
     const categoriesModal = document.getElementById('manageCategoriesModal');
-
     if (categoriesModal) {
         const addCategoryForm = document.getElementById('add-category-form');
         const categoryList = document.getElementById('category-list');
 
-        // Function to load categories from the server
         const loadCategories = async () => {
             if (!strandId) return;
             const response = await fetch(`../ajax/manage_categories.php?action=fetch&strand_id=${strandId}`);
             const categories = await response.json();
-
-            categoryList.innerHTML = ''; // Clear the current list
+            categoryList.innerHTML = '';
             if (categories.success && categories.data.length > 0) {
                 categories.data.forEach(cat => {
                     const li = document.createElement('li');
@@ -624,92 +619,137 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // When the modal is about to be shown, load the categories
         categoriesModal.addEventListener('show.bs.modal', loadCategories);
 
-        // Handles adding a new category "smoothly"
-        // --- AJAX for Adding a New Category ---
         addCategoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(addCategoryForm);
             formData.append('action', 'create');
             formData.append('strand_id', strandId);
-
-            // --- Start of submission logic (spinner, etc.) ---
             const submitButton = addCategoryForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            // --- End of submission logic ---
 
-            const response = await fetch('../ajax/manage_categories.php', {
-                method: 'POST',
-                body: formData
-            });
+            const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
             const result = await response.json();
 
-            if (result.success) {
+            if (result.success && result.newCategory) {
                 addCategoryForm.reset();
-                await loadCategories(); // Updates list inside the modal
-
+                await loadCategories();
+                document.getElementById('no-categories-message')?.remove();
                 const newCategory = result.newCategory;
                 const accordionContainer = document.getElementById('assessmentAccordion');
-
-                const noCategoriesMessage = document.getElementById('no-categories-message');
-                if (noCategoriesMessage) {
-                    noCategoriesMessage.remove();
-                }
-
-                // --- THIS IS THE CORRECTED HTML TEMPLATE ---
                 const newAccordionItemHTML = `
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <div class="d-flex align-items-center w-100">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-cat-${newCategory.id}">
-                            <i class="bi bi-folder me-2"></i> ${newCategory.name}
-                        </button>
-                        <div class="dropdown mb-2">
-                            <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                                <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                            </ul>
+                    <div class="accordion-item" data-category-id="${newCategory.id}">
+                        <h2 class="accordion-header">
+                            <div class="d-flex align-items-center w-100">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-cat-${newCategory.id}"><i class="bi bi-folder me-2"></i> ${newCategory.name}</button>
+                                <div class="dropdown mb-2">
+                                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="edit" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                        <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#categoryActionModal" data-action="delete" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </h2>
+                        <div id="collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#assessmentAccordion">
+                            <div class="accordion-body"><ul class="list-unstyled mb-0"><li class="text-muted fst-italic">No assessments in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="${newCategory.id}"><i class="bi bi-plus-circle"></i> Create Assessment</button></div></div>
                         </div>
-                    </div>
-                </h2>
-                <div id="collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#assessmentAccordion">
-                    <div class="accordion-body">
-                        <ul class="list-unstyled mb-0"><li class="text-muted fst-italic">No assessments in this category yet.</li></ul>
-                        <hr class="my-3">
-                        <div class="text-center">
-                            <button class="btn btn-link text-success text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="${newCategory.id}">
-                                <i class="bi bi-plus-circle"></i> Create Assessment in this Category
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-
+                    </div>`;
                 accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
-
-                // Re-initialize the new dropdown
                 const newAccordionItem = accordionContainer.lastElementChild;
                 const newDropdownToggle = newAccordionItem.querySelector('[data-bs-toggle="dropdown"]');
                 if (newDropdownToggle) {
                     new bootstrap.Dropdown(newDropdownToggle);
                 }
-
             } else {
                 alert('Error: ' + (result.error || 'Could not add category.'));
             }
-
-            // --- Reset button ---
             submitButton.disabled = false;
             submitButton.textContent = 'Add Category';
         });
     }
 
-    // --- START: Material Category Logic (Final Corrected Version) ---
+    const categoryActionModalEl = document.getElementById('categoryActionModal');
+    if (categoryActionModalEl) {
+        categoryActionModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const action = button.dataset.action;
+            const catId = button.dataset.id;
+            const catName = button.dataset.name;
+            this.dataset.categoryId = catId;
+            const modalTitle = this.querySelector('.modal-title');
+            const modalBody = this.querySelector('.modal-body');
+            const modalFooter = this.querySelector('.modal-footer');
+            if (action === 'edit') {
+                modalTitle.textContent = 'Edit Category Name';
+                modalBody.innerHTML = `<label for="editCategoryName" class="form-label">Category Name</label><input type="text" id="editCategoryName" class="form-control" value="${catName}">`;
+                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>`;
+            } else if (action === 'delete') {
+                this._elementToDelete = button.closest('.accordion-item');
+                modalTitle.textContent = 'Confirm Deletion';
+                modalBody.innerHTML = `<p>Are you sure you want to delete "<strong>${catName}</strong>"?</p><p class="text-danger small">This action cannot be undone.</p>`;
+                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>`;
+            }
+        });
+
+        categoryActionModalEl.addEventListener('shown.bs.modal', function () {
+            const editInput = document.getElementById('editCategoryName');
+            if (editInput) {
+                editInput.focus();
+                editInput.select();
+            }
+        });
+
+        categoryActionModalEl.addEventListener('click', async function (event) {
+            const target = event.target;
+            const modalInstance = bootstrap.Modal.getInstance(this);
+            if (target.id === 'saveCategoryBtn') {
+                const catId = this.dataset.categoryId;
+                const newName = document.getElementById('editCategoryName').value;
+                if (newName && newName.trim() !== '') {
+                    const formData = new FormData();
+                    formData.append('action', 'update');
+                    formData.append('category_id', catId);
+                    formData.append('category_name', newName);
+                    const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                    const result = await response.json();
+                    if (result.success) {
+                        const accordionButton = document.querySelector(`button[data-bs-target="#collapse-cat-${catId}"]`);
+                        if (accordionButton) accordionButton.innerHTML = `<i class="bi bi-folder me-2"></i> ${result.updatedName}`;
+                        const editButton = document.querySelector(`.dropdown-item[data-action="edit"][data-id="${catId}"]`);
+                        if (editButton) editButton.dataset.name = result.updatedName;
+                        modalInstance.hide();
+                    } else {
+                        alert("Could not save changes.");
+                    }
+                }
+            }
+            if (target.id === 'deleteCategoryBtn') {
+                const catId = this.dataset.categoryId;
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('category_id', catId);
+                const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    modalInstance.hide();
+                    if (this._elementToDelete) {
+                        this._elementToDelete.remove();
+                    }
+                } else {
+                    alert('Error: Could not delete category.');
+                }
+            }
+        });
+    }
+    // --- END: ASSESSMENT CATEGORY LOGIC ---
+
+
+    // --- START: MATERIAL CATEGORY LOGIC (No Conflicts) ---
     const manageMaterialModal = document.getElementById('manageMaterialCategoriesModal');
     if (manageMaterialModal) {
+        // All variables here use a 'material' prefix to guarantee they are unique
         const materialActionModalEl = document.getElementById('materialCategoryActionModal');
         const materialActionModal = new bootstrap.Modal(materialActionModalEl);
         const materialActionForm = document.getElementById('materialCategoryActionForm');
@@ -717,105 +757,127 @@ document.addEventListener('DOMContentLoaded', () => {
         const materialCategoryListEl = document.getElementById('material-category-list');
 
         const loadMaterialCategories = async () => {
-            // ... (this function remains the same)
+            if (!strandId) return;
+            const response = await fetch(`../ajax/manage_material_categories.php?action=fetch&strand_id=${strandId}`);
+            const result = await response.json();
+            materialCategoryListEl.innerHTML = '';
+            if (result.success && result.data.length > 0) {
+                result.data.forEach(cat => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = cat.name;
+                    materialCategoryListEl.appendChild(li);
+                });
+            } else {
+                materialCategoryListEl.innerHTML = '<li class="list-group-item text-muted">No categories created yet.</li>';
+            }
         };
 
         manageMaterialModal.addEventListener('show.bs.modal', loadMaterialCategories);
+
         addMaterialCategoryForm.addEventListener('submit', async (e) => {
-            // ... (this function remains the same)
+            e.preventDefault();
+            const input = e.target.querySelector('input[name="name"]');
+            const name = input.value;
+            if (!name) return;
+            const formData = new FormData();
+            formData.append('action', 'create');
+            formData.append('name', name);
+            formData.append('strand_id', strandId);
+            const response = await fetch('../ajax/manage_material_categories.php', { method: 'POST', body: formData });
+            const result = await response.json();
+            if (result.success && result.data) {
+                addMaterialCategoryForm.reset();
+                await loadMaterialCategories();
+                document.getElementById('no-material-categories-message')?.remove();
+                const newCategory = result.data;
+                const accordionContainer = document.getElementById('materialsAccordion');
+                const newAccordionItemHTML = `
+                    <div class="accordion-item" id="material-category-item-${newCategory.id}">
+                        <h2 class="accordion-header">
+                            <div class="d-flex align-items-center w-100">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#material-collapse-cat-${newCategory.id}"><i class="bi bi-folder me-2"></i> ${newCategory.name}</button>
+                                <div class="dropdown mb-2">
+                                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#materialCategoryActionModal" data-action="edit" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                        <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#materialCategoryActionModal" data-action="delete" data-id="${newCategory.id}" data-name="${newCategory.name}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </h2>
+                        <div id="material-collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
+                            <div class="accordion-body"><ul class="list-unstyled mb-0 material-list-group"><li class="text-muted fst-italic p-3 text-center no-materials-message">No materials yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="${newCategory.id}"><i class="bi bi-plus-circle"></i> Upload Material</button></div></div>
+                        </div>
+                    </div>`;
+                accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
+            } else {
+                alert('Error: ' + (result.error || 'Could not add category.'));
+            }
         });
 
-        // This is the main controller for the action modal
         materialActionModalEl.addEventListener('show.bs.modal', (e) => {
             const button = e.relatedTarget;
             const action = button.dataset.action;
             const id = button.dataset.id || '';
             const name = button.dataset.name || '';
-
             const modalTitle = materialActionModalEl.querySelector('.modal-title');
             const submitBtn = document.getElementById('materialCategorySubmitBtn');
             const nameGroup = document.getElementById('materialCategoryNameGroup');
             const deleteConfirm = document.getElementById('materialCategoryDeleteConfirm');
-
             materialActionForm.reset();
             document.getElementById('materialCategoryActionInput').value = action;
             document.getElementById('materialCategoryIdInput').value = id;
             document.getElementById('materialCategoryNameInput').value = name;
-
             if (action === 'edit') {
-                modalTitle.textContent = 'Edit Category';
+                modalTitle.textContent = 'Edit Category Name';
                 submitBtn.textContent = 'Save Changes';
                 submitBtn.className = 'btn btn-primary';
                 nameGroup.style.display = 'block';
                 deleteConfirm.style.display = 'none';
             } else if (action === 'delete') {
-                // ... (delete logic remains the same)
+                modalTitle.textContent = 'Delete Category';
+                submitBtn.textContent = 'Delete';
+                submitBtn.className = 'btn btn-danger';
+                nameGroup.style.display = 'none';
+                deleteConfirm.style.display = 'block';
+                document.getElementById('deleteMaterialCategoryName').textContent = name;
             }
         });
 
-        // --- THIS IS THE FIX ---
-        // It runs AFTER the modal is fully visible.
         materialActionModalEl.addEventListener('shown.bs.modal', () => {
             const nameInput = document.getElementById('materialCategoryNameInput');
-            // Check if the input is actually visible
             if (nameInput && nameInput.offsetParent !== null) {
-                nameInput.focus(); // Gives the text field the blue border
-                nameInput.select(); // Highlights all the text inside
+                nameInput.focus();
+                nameInput.select();
             }
         });
-        // --- END OF FIX ---
 
-        // This handles the form submission for both Edit and Delete
         materialActionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(materialActionForm);
-            formData.append('strand_id', strandId); // Assumes 'strandId' is defined in the outer scope
-
-            const response = await fetch('../ajax/manage_material_categories.php', {
-                method: 'POST',
-                body: formData
-            });
+            formData.append('strand_id', strandId);
+            const response = await fetch('../ajax/manage_material_categories.php', { method: 'POST', body: formData });
             const result = await response.json();
-
             if (result.success) {
                 const action = formData.get('action');
-
                 if (action === 'edit') {
                     const categoryId = result.data.id;
                     const newName = result.data.name;
-
-                    // Instantly update the accordion button's text on the main page
                     const button = document.querySelector(`#material-category-item-${categoryId} .accordion-button`);
-                    if (button) {
-                        button.innerHTML = `<i class="bi bi-folder me-2"></i> ${newName}`;
-                    }
-
-                    // Also update the 'data-name' attribute on the dropdown button so it's correct next time
-                    const editButton = document.querySelector(`#material-category-item-${categoryId} .dropdown-item[data-action='edit']`);
-                    if (editButton) {
-                        editButton.dataset.name = newName;
-                    }
-
+                    if (button) button.innerHTML = `<i class="bi bi-folder me-2"></i> ${newName}`;
                 } else if (action === 'delete') {
                     const categoryId = formData.get('id');
-                    // Find and remove the entire accordion item from the page
-                    const itemToDelete = document.getElementById(`material-category-item-${categoryId}`);
-                    if (itemToDelete) {
-                        itemToDelete.remove();
-                    }
+                    document.getElementById(`material-category-item-${categoryId}`)?.remove();
                 }
-
-                // Refresh the list inside the "Manage Categories" modal
                 await loadMaterialCategories();
-
-                // Hide the small action modal (Edit/Delete)
                 materialActionModal.hide();
             } else {
                 alert('Error: ' + (result.error || 'An unknown error occurred.'));
             }
         });
     }
-    // --- END: Material Category Logic ---
+    // --- END: MATERIAL CATEGORY LOGIC ---
 
     // --- LOGIC FOR EDIT/DELETE MATERIAL ---
     // --- Edit Material Logic ---
@@ -886,17 +948,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Listeners for Edit and Delete Assessment Modals ---
+    // --- Listeners for Edit and Delete Assessment Modals (Updated & Complete) ---
     const editAssessmentModalEl = document.getElementById('editAssessmentModal');
-    if (editAssessmentModalEl && editAssessmentForm) {
-        const editModal = bootstrap.Modal.getOrCreateInstance(editAssessmentModalEl);
+    if (editAssessmentModalEl) {
+        const editAssessmentForm = document.getElementById('editAssessmentForm');
+        const editModalInstance = new bootstrap.Modal(editAssessmentModalEl);
+        let elementToUpdate = null; // Scoped variable to hold the element being edited
 
         // This runs WHEN THE EDIT MODAL IS ABOUT TO OPEN to fill the form
         editAssessmentModalEl.addEventListener('show.bs.modal', async function (event) {
-            this._elementToUpdate = event.relatedTarget.closest('.assessment-item');
-
-            const button = event.relatedTarget;
-            const assessmentId = button.dataset.id;
+            elementToUpdate = event.relatedTarget.closest('.assessment-item'); // Remember which item to update
+            const assessmentId = event.relatedTarget.dataset.id;
 
             try {
                 const response = await fetch(`../ajax/get_assessment_details.php?id=${assessmentId}`);
@@ -909,7 +971,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('editAssessmentDuration').value = data.duration_minutes;
                     document.getElementById('editAssessmentAttempts').value = data.max_attempts;
                     document.getElementById('editAssessmentCategory').value = data.category_id;
-                    document.querySelector(`#editAssessmentModal input[name="type"][value="${data.type}"]`).checked = true;
+                    const typeRadio = document.querySelector(`#editAssessmentModal input[name="type"][value="${data.type}"]`);
+                    if (typeRadio) typeRadio.checked = true;
                 } else {
                     alert('Error fetching details: ' + result.error);
                     event.preventDefault();
@@ -921,7 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // This is the updated part that runs WHEN YOU CLICK "SAVE CHANGES"
+        // This runs WHEN YOU CLICK "SAVE CHANGES"
         editAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             tinymce.triggerSave();
@@ -931,19 +994,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.success) {
-                // 1. Hide the modal
-                editModal.hide();
+                editModalInstance.hide();
 
-                // 2. THIS IS THE NEW "NO RELOAD" LOGIC
-                const elementToUpdate = editAssessmentModalEl._elementToUpdate;
                 if (elementToUpdate) {
+                    // Instantly update all the visible information on the page
                     const newTitle = formData.get('title');
                     const newType = formData.get('type');
                     const newDuration = formData.get('duration_minutes');
                     const newAttempts = formData.get('max_attempts');
+                    const newDescription = tinymce.get('editAssessmentDesc').getContent({ format: 'html' });
                     const newTypeCapitalized = newType.charAt(0).toUpperCase() + newType.slice(1);
 
-                    // Update the text on the page instantly
                     elementToUpdate.querySelector('.fw-bold').textContent = newTitle;
                     elementToUpdate.querySelector('.badge').textContent = newTypeCapitalized;
 
@@ -952,107 +1013,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const attemptsSpan = elementToUpdate.querySelector('.bi-arrow-repeat').parentElement;
                     if (attemptsSpan) attemptsSpan.innerHTML = `<i class="bi bi-arrow-repeat"></i> ${newAttempts} attempt(s)`;
+
+                    // Update the hidden description content as well
+                    const descriptionDiv = elementToUpdate.querySelector('.collapse .p-3');
+                    if (descriptionDiv) {
+                        descriptionDiv.innerHTML = newDescription;
+                    }
                 }
             } else {
                 alert('Error: ' + (result.error || 'Could not save changes.'));
-            }
-        });
-    }
-
-    // --- FINAL SCRIPT for Edit/Delete Category Modal ---
-    const categoryActionModalEl = document.getElementById('categoryActionModal');
-    if (categoryActionModalEl) {
-        // This listener PREPARES the modal when it's about to open
-        categoryActionModalEl.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const action = button.dataset.action;
-            const catId = button.dataset.id;
-            const catName = button.dataset.name;
-
-            // Store data on the modal itself to access later
-            this.dataset.categoryId = catId;
-            this.dataset.categoryName = catName;
-
-            const modalTitle = this.querySelector('.modal-title');
-            const modalBody = this.querySelector('.modal-body');
-            const modalFooter = this.querySelector('.modal-footer');
-
-            if (action === 'edit') {
-                modalTitle.textContent = 'Edit Category Name';
-                modalBody.innerHTML = `<label for="editCategoryName" class="form-label">Category Name</label><input type="text" id="editCategoryName" class="form-control" value="${catName}">`;
-                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>`;
-            } else if (action === 'delete') {
-                // Remember which accordion item to remove
-                this._elementToDelete = button.closest('.accordion-item');
-                modalTitle.textContent = 'Confirm Deletion';
-                modalBody.innerHTML = `<p>Are you sure you want to delete "<strong>${catName}</strong>"?</p><p class="text-danger small">This action cannot be undone.</p>`;
-                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>`;
-            }
-        });
-
-        // This listener focuses the input field after the modal opens
-        categoryActionModalEl.addEventListener('shown.bs.modal', function () {
-            const editInput = document.getElementById('editCategoryName');
-            if (editInput) {
-                editInput.focus();
-                editInput.select();
-            }
-        });
-
-        // This listener handles ALL CLICKS on the buttons inside the modal
-        categoryActionModalEl.addEventListener('click', async function (event) {
-            const target = event.target;
-            const modalInstance = bootstrap.Modal.getInstance(this);
-
-            // Logic for the SAVE button
-            if (target.id === 'saveCategoryBtn') {
-                const catId = this.dataset.categoryId;
-                const newName = document.getElementById('editCategoryName').value;
-
-                if (newName && newName.trim() !== '') {
-                    const formData = new FormData();
-                    formData.append('action', 'update');
-                    formData.append('category_id', catId);
-                    formData.append('category_name', newName);
-
-                    const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
-                    const result = await response.json();
-
-                    if (result.success) {
-                        const accordionButton = document.querySelector(`button[data-bs-target="#collapse-cat-${catId}"]`);
-                        if (accordionButton) accordionButton.innerHTML = `<i class="bi bi-folder me-2"></i> ${result.updatedName}`;
-
-                        const editButton = document.querySelector(`.dropdown-item[data-action="edit"][data-id="${catId}"]`);
-                        if (editButton) editButton.dataset.name = result.updatedName;
-
-                        modalInstance.hide();
-                    } else {
-                        alert("Could not save changes.");
-                    }
-                }
-            }
-
-            // Logic for the DELETE button
-            if (target.id === 'deleteCategoryBtn') {
-                const catId = this.dataset.categoryId;
-                const formData = new FormData();
-                formData.append('action', 'delete');
-                formData.append('category_id', catId);
-
-                const response = await fetch('../ajax/manage_categories.php', { method: 'POST', body: formData });
-                const result = await response.json();
-
-                if (result.success) {
-                    modalInstance.hide();
-                    if (this._elementToDelete) {
-                        this._elementToDelete.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                        this._elementToDelete.style.opacity = '0';
-                        this._elementToDelete.style.transform = 'translateX(-20px)';
-                        setTimeout(() => this._elementToDelete.remove(), 300);
-                    }
-                } else {
-                    alert('Error: Could not delete category.');
-                }
             }
         });
     }

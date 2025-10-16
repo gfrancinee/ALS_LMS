@@ -818,18 +818,35 @@ if ($user_role === 'teacher') {
             </div>
         </div>
 
-        <!-- Category Action Modal ↓ -->
-        <div class="modal fade" id="categoryActionModal" tabindex="-1" aria-labelledby="categoryActionModalLabel" aria-hidden="true">
+        <!-- Assessment Category Action Modal ↓ -->
+        <div class="modal fade" id="categoryActionModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="categoryActionModalLabel">Category Action</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title">Assessment Category</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body" id="categoryActionModalBody">
-                    </div>
-                    <div class="modal-footer" id="categoryActionModalFooter">
-                    </div>
+                    <form id="assessmentCategoryActionForm">
+                        <div class="modal-body">
+                            <input type="hidden" id="assessmentCategoryAction" name="action">
+                            <input type="hidden" id="assessmentCategoryIdInput" name="category_id">
+
+                            <div id="assessmentCategoryNameGroup" style="display: none;">
+                                <label for="assessmentCategoryNameInput" class="form-label">Category Name</label>
+                                <input type="text" id="assessmentCategoryNameInput" name="category_name" class="form-control" required>
+                            </div>
+
+                            <div id="assessmentCategoryDeleteConfirm" style="display: none;">
+                                <p>Are you sure you want to delete "<strong id="deleteAssessmentCategoryName"></strong>"?</p>
+                                <p class="text-danger small">This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="saveAssessmentCategoryBtn">Save Changes</button>
+                            <button type="submit" class="btn btn-danger" id="deleteAssessmentCategoryBtn">Delete</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
