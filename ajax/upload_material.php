@@ -1,5 +1,5 @@
 <?php
-// /ajax/upload_material.php (Final Corrected Version - Direct Strand ID)
+// /ajax/upload_material.php (Final Corrected Version)
 session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
@@ -28,8 +28,6 @@ if (empty($category_id) || empty($label) || empty($type)) {
     echo json_encode(['success' => false, 'error' => 'Missing required fields: Category, Label, or Type.']);
     exit;
 }
-
-// The unnecessary database lookup for strand_id has been REMOVED.
 
 $file_path = null;
 $link_url = null;
@@ -66,7 +64,7 @@ if ($type === 'link') {
     }
 }
 
-// --- Insert into Database (Corrected: uses the direct strand_id) ---
+// --- Insert into Database ---
 $stmt = $conn->prepare(
     "INSERT INTO learning_materials (teacher_id, strand_id, category_id, label, type, file_path, link_url) VALUES (?, ?, ?, ?, ?, ?, ?)"
 );
@@ -103,7 +101,6 @@ if ($stmt->execute()) {
     }
     // --- End Notification Logic ---
 
-    // Send the correct JSON response for the "no-reload" feature
     echo json_encode([
         'success' => true,
         'data' => [

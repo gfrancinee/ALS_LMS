@@ -61,6 +61,83 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionTemplate = document.getElementById("questionTemplate");
 
     // SECTION 2: FUNCTIONS
+    // --- Material Upload Logic ---
+    const uploadForm = document.getElementById('uploadForm');
+    const materialType = document.getElementById('materialType');
+    const dynamicInputArea = document.getElementById('dynamicInputArea');
+    const uploadModal = document.getElementById('uploadModal');
+
+    function injectMaterialInput() {
+        if (!materialType || !dynamicInputArea) return;
+        const type = materialType.value;
+        dynamicInputArea.innerHTML = ''; // Clear previous input
+        if (type === 'link') {
+            dynamicInputArea.innerHTML = `<label for="materialLink" class="form-label">Link URL</label><input type="url" class="form-control" id="materialLink" name="materialLink" required>`;
+        } else if (type !== '') {
+            dynamicInputArea.innerHTML = `<label for="materialFile" class="form-label">Upload File</label><input type="file" class="form-control" id="materialFile" name="materialFile" required>`;
+        }
+    }
+
+    if (materialType) materialType.addEventListener('change', injectMaterialInput);
+    if (uploadModal) uploadModal.addEventListener('shown.bs.modal', injectMaterialInput);
+
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // This is the most important line to prevent page refresh
+
+            const uploadAlertModal = document.getElementById('uploadAlertModal');
+            const submitButton = this.querySelector('button[type="submit"]');
+            const formData = new FormData(this);
+
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...`;
+            uploadAlertModal.style.display = 'none';
+
+            fetch('ajax/upload_material.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => {
+                    if (!res.ok) { throw new Error('Network response was not ok'); }
+                    return res.json();
+                })
+                .then(data => {
+                    let alertClass = data.status === 'success' ? 'alert-success' : 'alert-danger';
+                    uploadAlertModal.innerHTML = `<div class="alert ${alertClass} mb-0">${data.message}</div>`;
+                    uploadAlertModal.style.display = 'block';
+
+                    if (data.status === 'success') {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Upload';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    uploadAlertModal.style.display = 'block';
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Upload';
+                });
+        });
+    }
+
+    function getAcceptType(type) {
+        switch (type) {
+            case 'file': return '.pdf,.doc,.docx,.ppt,.pptx';
+            case 'video': return 'video/*';
+            case 'image': return 'image/*';
+            case 'audio': return 'audio/*';
+            default: return '*/*';
+        }
+    }
+
+    // --- AJAX Refresh Functions ---
+    window.refreshMaterialList = function () {
+        location.reload();
+    };
 
     // --- Question Builder (Final Corrected Version) ---
     const questionsModal = document.getElementById('questionsModal');
@@ -282,6 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // SECTION 3: EVENT LISTENERS
+
+
     if (materialType) {
         materialType.addEventListener('change', injectMaterialInput);
     }
@@ -489,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Declare the strandId only ONCE at the top for all features to use.
     const strandId = new URLSearchParams(window.location.search).get('id');
 
-    // --- START: YOUR ORIGINAL ASSESSMENT CATEGORY LOGIC (RESTORED) ---
+    // --- START: YOUR ORIGINAL ASSESSMENT CATEGORY LOGIC (RESTORED & UNCHANGED) ---
     const categoriesModal = document.getElementById('manageCategoriesModal');
     if (categoriesModal) {
         const addCategoryForm = document.getElementById('add-category-form');
@@ -639,10 +718,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- END: ASSESSMENT CATEGORY LOGIC ---
 
 
-    // --- START: MATERIAL CATEGORY LOGIC ---
+    // --- START: YOUR ORIGINAL MATERIAL CATEGORY LOGIC (UNCHANGED) ---
     const manageMaterialModal = document.getElementById('manageMaterialCategoriesModal');
     if (manageMaterialModal) {
-        // All variables here use a 'material' prefix to guarantee they are unique
         const materialActionModalEl = document.getElementById('materialCategoryActionModal');
         const materialActionModal = new bootstrap.Modal(materialActionModalEl);
         const materialActionForm = document.getElementById('materialCategoryActionForm');
@@ -772,7 +850,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- END: MATERIAL CATEGORY LOGIC ---
 
-    // --- START: Upload Material Logic (THIS IS THE FIX) ---
+
+    // --- START: UPLOAD MATERIAL LOGIC (UPDATED AND CORRECTED) ---
     const uploadFormContainer = document.getElementById('uploadMaterialContainer');
     if (uploadFormContainer) {
         const uploadForm = document.getElementById('uploadMaterialForm');
@@ -783,7 +862,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileInput = document.getElementById('materialFile');
         const linkInput = document.getElementById('materialLink');
 
-        // Listener for the "Upload Material" button to set the category ID
         document.getElementById('materialsAccordion').addEventListener('click', function (e) {
             if (e.target.classList.contains('upload-material-btn')) {
                 const categoryId = e.target.dataset.categoryId;
@@ -791,7 +869,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Logic to switch between file and link inputs
         typeRadios.forEach(radio => {
             radio.addEventListener('change', function () {
                 if (this.value === 'link') {
@@ -812,14 +889,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Handles the form submission with NO PAGE RELOAD (Corrected)
         uploadForm.addEventListener('submit', async function (e) {
-            e.preventDefault(); // This stops the page from reloading.
-
+            e.preventDefault();
             const formData = new FormData(this);
 
-            // THIS IS THE FIX: We must manually add the strandId to the form data
-            // before sending it to the PHP script.
+            // This line ensures the strandId is always sent with the upload
             formData.append('strand_id', strandId);
 
             const submitButton = this.querySelector('button[type="submit"]');
@@ -831,15 +905,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    // Find the correct category list to add the new material to
                     const categoryId = formData.get('category_id');
                     const materialList = document.querySelector(`#material-collapse-cat-${categoryId} .material-list-group`);
 
                     if (materialList) {
-                        // Remove the "No materials" message
                         materialList.querySelector('.no-materials-message')?.remove();
 
-                        // Create and append the new material item
                         const newMaterial = result.data;
                         const icons = {
                             file: 'bi-file-earmark-text',
@@ -852,37 +923,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         const materialLink = newMaterial.link_url ? newMaterial.link_url : '../' + newMaterial.file_path;
 
                         const newMaterialHTML = `
-                    <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-${newMaterial.id}">
-                        <div>
-                            <i class="bi ${iconClass} me-2"></i>
-                            <a href="${materialLink}" target="_blank" class="fw-bold text-decoration-none">${newMaterial.label}</a>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil me-2"></i>Edit</button></li>
-                                <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-trash me-2"></i>Delete</button></li>
-                            </ul>
-                        </div>
-                    </li>`;
+                            <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-${newMaterial.id}">
+                                <div>
+                                    <i class="bi ${iconClass} me-2"></i>
+                                    <a href="${materialLink}" target="_blank" class="fw-bold text-decoration-none">${newMaterial.label}</a>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button class="dropdown-item text-success" type="button" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil me-2"></i>Edit</button></li>
+                                        <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-trash me-2"></i>Delete</button></li>
+                                    </ul>
+                                </div>
+                            </li>`;
                         materialList.insertAdjacentHTML('beforeend', newMaterialHTML);
                     }
 
-                    // Reset and hide the form
                     uploadForm.reset();
                     document.getElementById('typeFile').dispatchEvent(new Event('change'));
                     bootstrap.Collapse.getInstance(uploadFormContainer)?.hide();
-
                 } else {
-                    // The error message from the server will now be shown
                     alert('Error: ' + (result.error || 'An unknown error occurred.'));
                 }
-
             } catch (error) {
                 console.error("Upload failed:", error);
                 alert("A critical error occurred during upload. Please check the console.");
             } finally {
-                // Always re-enable the button
                 submitButton.disabled = false;
                 submitButton.textContent = 'Upload';
             }
