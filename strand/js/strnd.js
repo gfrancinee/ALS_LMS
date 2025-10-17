@@ -908,24 +908,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     const categoryId = formData.get('category_id');
                     const newMaterial = result.data;
 
-                    // Find the <ul> for the correct category.
-                    const materialList = document.querySelector(`#material-collapse-cat-${categoryId} .material-list-group`);
+                    // 1. Find the reliable container that is always present for each category.
+                    const listContainer = document.querySelector(`#material-list-container-cat-${categoryId}`);
 
-                    if (materialList) {
-                        // Find and remove the "No materials..." message if it exists.
-                        const noMaterialsMessage = materialList.querySelector('.no-materials-message');
+                    if (listContainer) {
+                        // 2. Find the "No materials..." message.
+                        const noMaterialsMessage = listContainer.querySelector('.no-materials-message');
+
+                        // 3. Find the <ul>. It might not exist yet.
+                        let materialList = listContainer.querySelector('.material-list-group');
+
+                        // 4. THIS IS THE FIX: If the <ul> doesn't exist, create it.
+                        if (!materialList) {
+                            materialList = document.createElement('ul');
+                            materialList.className = 'list-unstyled mb-0 material-list-group';
+                            listContainer.appendChild(materialList);
+                        }
+
+                        // 5. If the "No materials" message was there, remove it.
                         if (noMaterialsMessage) {
                             noMaterialsMessage.remove();
                         }
 
-                        // Determine icon based on new material data
-                        let iconClass = 'bi-file-earmark-text';
+                        // 6. Now that we are GUARANTEED that the list exists, add the new material.
+                        let iconClass = 'bi-file-earmark-text'; // Default icon
                         if (newMaterial.type === 'file' && newMaterial.file_path) {
                             const ext = newMaterial.file_path.split('.').pop().toLowerCase();
                             if (ext === 'pdf') iconClass = 'bi-file-earmark-pdf-fill text-danger';
                             else if (['ppt', 'pptx'].includes(ext)) iconClass = 'bi-file-earmark-slides-fill text-warning';
                         } else if (newMaterial.type === 'link') {
                             iconClass = 'bi-link-45deg text-primary';
+                        } else if (newMaterial.type === 'image') {
+                            iconClass = 'bi-card-image text-success'; // ADDED
+                        } else if (newMaterial.type === 'video') {
+                            iconClass = 'bi-play-circle-fill text-info'; // ADDED
+                        } else if (newMaterial.type === 'audio') {
+                            $icon = 'bi-volume-up-fill';    // Set the icon class
+                            $color = 'text-purple';         // Set the color class
                         }
 
                         const materialLink = newMaterial.link_url ? newMaterial.link_url : `/ALS_LMS/strand/view_material.php?id=${newMaterial.id}`;
@@ -933,7 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const newMaterialHTML = `
             <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-${newMaterial.id}">
                 <div class="d-flex justify-content-between align-items-center w-100">
-                     <a href="${materialLink}" target="_blank" class="material-item-link">
+                    <a href="${materialLink}" target="_blank" class="material-item-link">
                         <div class="d-flex align-items-center">
                             <i class="bi ${iconClass} fs-2 me-3"></i>
                             <div>
@@ -942,11 +961,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </a>
-
-                <div class="dropdown">
+                    <div class="dropdown">
                         <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
+                            <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                             <li><button type="button" class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                         </ul>
                     </div>
@@ -959,7 +977,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadForm.reset();
                     const uploadFormContainer = document.getElementById('uploadMaterialContainer');
                     if (uploadFormContainer) {
-                        bootstrap.Collapse.getInstance(uploadFormContainer)?.hide();
+                        const collapseInstance = bootstrap.Collapse.getInstance(uploadFormContainer);
+                        if (collapseInstance) {
+                            collapseInstance.hide();
+                        }
                     }
 
                 } else {

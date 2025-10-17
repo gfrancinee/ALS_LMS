@@ -238,38 +238,53 @@ if ($user_role === 'teacher') {
                             <div id="material-collapse-cat-<?= $category['id'] ?>" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
                                 <div class="accordion-body">
                                     <div id="material-list-container-cat-<?= $category['id'] ?>">
-                                        <ul class="list-unstyled mb-0 material-list-group">
+                                        <ul class="list-unstyled mb-0">
                                             <?php if (!empty($category['materials'])): ?>
                                                 <?php foreach ($category['materials'] as $mat): ?>
                                                     <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-<?= $mat['id'] ?>">
-                                                        <div class="d-flex justify-content-between align-items-center w-100">
-                                                            <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="material-item-link">
-                                                                <div class="d-flex align-items-center">
-                                                                    <?php
-                                                                    $icon = 'bi-file-earmark-text';
-                                                                    if ($mat['type'] === 'file') {
-                                                                        $ext = strtolower(pathinfo($mat['file_path'], PATHINFO_EXTENSION));
-                                                                        if ($ext === 'pdf') $icon = 'bi-file-earmark-pdf-fill text-danger';
-                                                                        elseif (in_array($ext, ['ppt', 'pptx'])) $icon = 'bi-file-earmark-slides-fill text-warning';
-                                                                    } elseif ($mat['type'] === 'link') $icon = 'bi-link-45deg text-primary';
-                                                                    ?>
-                                                                    <i class="bi <?= $icon ?> fs-2 me-3"></i>
-                                                                    <div>
-                                                                        <span class="fw-bold"><?= htmlspecialchars($mat['label']) ?></span>
-                                                                        <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($mat['type']) ?></span>
-                                                                    </div>
+
+                                                        <!-- ITEM 1: The main clickable link on the left -->
+                                                        <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="material-item-link">
+                                                            <div class="d-flex align-items-center">
+                                                                <?php
+                                                                // --- AFTER (All types included) ---
+                                                                $icon = 'bi-file-earmark-text'; // Default icon
+                                                                if ($mat['type'] === 'file') {
+                                                                    $ext = strtolower(pathinfo($mat['file_path'], PATHINFO_EXTENSION));
+                                                                    if ($ext === 'pdf') $icon = 'bi-file-earmark-pdf-fill text-danger';
+                                                                    elseif (in_array($ext, ['ppt', 'pptx'])) $icon = 'bi-file-earmark-slides-fill text-warning';
+                                                                } elseif ($mat['type'] === 'link') {
+                                                                    $icon = 'bi-link-45deg text-primary';
+                                                                } elseif ($mat['type'] === 'image') {
+                                                                    $icon = 'bi-card-image text-success'; // Added for Image
+                                                                } elseif ($mat['type'] === 'video') {
+                                                                    $icon = 'bi-play-circle-fill text-info'; // Added for Video
+                                                                } elseif ($mat['type'] === 'audio') {
+                                                                    $icon = 'bi-volume-up-fill';    // Set the icon class
+                                                                    $color = 'text-purple';         // Set the color class
+                                                                }
+                                                                ?>
+                                                                <i class="bi <?= $icon ?> fs-2 me-3"></i>
+                                                                <div>
+                                                                    <span class="fw-bold"><?= htmlspecialchars($mat['label']) ?></span>
+                                                                    <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($mat['type']) ?></span>
                                                                 </div>
-                                                            </a>
-                                                            <?php if ($is_teacher): ?>
-                                                                <div class="dropdown">
-                                                                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                                        <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-pencil-square me-2 text-success"></i> Edit</button></li>
-                                                                        <li><button type="button" class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                                                                    </ul>
-                                                                </div>
-                                                            <?php endif; ?>
-                                                        </div>
+                                                            </div>
+                                                        </a>
+
+                                                        <!-- ITEM 2: The dropdown button, now correctly positioned on the right -->
+                                                        <?php if ($is_teacher): ?>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                                    <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                                    <li><button type="button" class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="<?= $mat['id'] ?>"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                                </ul>
+                                                            </div>
+                                                        <?php endif; ?>
+
                                                     </li>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
@@ -278,7 +293,7 @@ if ($user_role === 'teacher') {
                                         </ul>
                                     </div>
 
-                                    <?php if ($is_teacher): ?>
+                                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                                         <hr class="my-3">
                                         <div class="text-center">
                                             <button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="<?= $category['id'] ?>">
@@ -456,7 +471,6 @@ if ($user_role === 'teacher') {
                                                         </div>
                                                     <?php else: // This is the Student View 
                                                     ?>
-
                                                         <div class="assessment-item">
                                                             <?php
                                                             $attempts_left = $assessment['max_attempts'] - $assessment['attempts_taken'];

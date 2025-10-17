@@ -433,7 +433,6 @@ a.dropdown-item:active {
     /* Keeps text black */
 }
 
-/* Main container for each material list item */
 .material-item {
     padding: 1rem 1.25rem;
     border-top: 1px solid #e9ecef;
@@ -442,42 +441,35 @@ a.dropdown-item:active {
 
 .material-list-group li:first-child .material-item {
     border-top: none;
-    /* Remove top border for the first item */
 }
 
-/* Hover effect for each material item */
 .material-item:hover {
     background-color: #f8f9fa;
-    /* Light grey background on hover */
 }
 
-/* The main clickable link that contains the icon and text */
 .material-item-link {
     text-decoration: none;
     color: #212529;
-    /* Default dark text color */
+    flex-grow: 1;
+    /* Allow link to take up space */
+    min-width: 0;
+    /* Crucial for allowing text to be truncated */
 }
 
-/* Styling for the file-type icon */
-.material-item-link .bi {
-    transition: transform 0.2s ease;
+/* Target the div that holds the text to handle overflow */
+.material-item-link>div>div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.material-item-link:hover .bi {
-    transform: scale(1.05);
-    /* Slightly enlarge icon on hover */
-}
-
-/* Styling for the "No materials" message */
 .no-materials-message {
     padding: 1.5rem;
     font-style: italic;
     color: #6c757d;
 }
 
-/* Ensure icons in the dropdown menu are aligned */
 .dropdown-item i {
     width: 24px;
-    /* Gives a consistent space for the icon */
     text-align: center;
 }
