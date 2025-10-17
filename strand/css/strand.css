@@ -443,9 +443,7 @@ a.dropdown-item:active {
     border-top: none;
 }
 
-.material-item:hover {
-    background-color: #f8f9fa;
-}
+
 
 .material-item-link {
     text-decoration: none;
@@ -454,6 +452,11 @@ a.dropdown-item:active {
     /* Allow link to take up space */
     min-width: 0;
     /* Crucial for allowing text to be truncated */
+}
+
+.material-item-link:hover {
+    background-color: #f8f9fa;
+
 }
 
 /* Target the div that holds the text to handle overflow */
