@@ -1,0 +1,95 @@
+body {
+    background-color: #f0f2f5;
+    /* Light gray background */
+    font-family: 'Segoe UI', sans-serif;
+    /* Add padding to the top of the body to prevent content from being hidden behind the sticky navbar */
+    padding-top: 0;
+}
+
+.navbar {
+    border-bottom: 1px solid #dee2e6;
+    height: 70px;
+}
+
+.navbar-text {
+    /* Allow the title to take up space but not push other items away */
+    flex-grow: 1;
+    text-align: center;
+    /* Prevent the title from getting too long on small screens */
+    max-width: 60%;
+}
+
+.back-link {
+    margin-left: 1rem;
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.back-link:hover {
+    color: green;
+}
+
+.download {
+    margin-right: 1rem;
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.download:hover {
+    color: blue;
+}
+
+.viewer-content {
+    /* Center the content vertically and horizontally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    min-height: calc(100vh - 80px) !important;
+    /* Full height minus the navbar */
+    box-sizing: border-box;
+}
+
+/* Base styles for all viewable media */
+.viewer-content img {
+    max-width: 100% !important;
+    max-height: calc(100vh - 100px) !important;
+    background-color: #fff;
+    margin: 10px !important;
+}
+
+.viewer-content video {
+    max-width: 100% !important;
+    max-height: calc(100vh - 100px) !important;
+    background-color: #000000;
+
+}
+
+/* Specific style for PDF iframe */
+.viewer-content .pdf-viewer {
+    width: 100% !important;
+    height: calc(100vh - 80px) !important;
+    /* Make PDF viewer taller */
+    border: none;
+}
+
+/* Audio player styling */
+.viewer-content audio {
+    width: 100% !important;
+    max-width: 700px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 50px;
+}
+
+/* Fallback style for unsupported files */
+.unsupported-file {
+    text-align: center;
+    padding: 4rem;
+    background-color: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}

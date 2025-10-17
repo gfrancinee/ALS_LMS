@@ -182,11 +182,6 @@ h2 {
     border: 1px solid #eee;
 }
 
-.assessment-item:hover {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
-}
-
 /* This is the clickable link part */
 .assessment-item-link {
     border: none;
@@ -197,7 +192,7 @@ h2 {
     color: #212529;
 }
 
-.assessment-item:hover {
+.assessment-item-link:hover {
     background-color: #f8f9fa;
     border-color: #ced4da;
 }
@@ -213,12 +208,6 @@ h2 {
     text-decoration: none;
     color: #212529;
     transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-}
-
-/* Hover effect */
-.assessment-accordion .list-unstyled li a:hover {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
 }
 
 /* --- Custom Dropdown Menu Style (to match picture) --- */
@@ -434,7 +423,6 @@ a.dropdown-item:active {
 }
 
 .material-item {
-
     border-top: 1px solid #e9ecef;
     transition: background-color 0.2s ease-in-out;
 }
@@ -442,8 +430,6 @@ a.dropdown-item:active {
 .material-list-group li:first-child .material-item {
     border-top: none;
 }
-
-
 
 .material-item-link {
     text-decoration: none;
@@ -475,4 +461,9 @@ a.dropdown-item:active {
 .dropdown-item i {
     width: 24px;
     text-align: center;
+}
+
+.material-list-group>.material-item:first-child {
+    /* This removes the unwanted line at the top of the list. */
+    border-top: none;
 }

@@ -288,7 +288,7 @@ if ($user_role === 'teacher') {
                                                     </li>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
-                                                <li class="text-muted fst-italic p-3 text-center no-materials-message">No materials in this category yet.</li>
+                                                <li class="text-muted fst-italic p-3 no-materials-message">No materials in this category yet.</li>
                                             <?php endif; ?>
                                         </ul>
                                     </div>
@@ -297,7 +297,7 @@ if ($user_role === 'teacher') {
                                         <hr class="my-3">
                                         <div class="text-center">
                                             <button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="<?= $category['id'] ?>">
-                                                <i class="bi bi-plus-circle"></i> Upload Material
+                                                <i class="bi-file-earmark-plus-fill"></i> Upload Material
                                             </button>
                                         </div>
                                     <?php endif; ?>

@@ -136,7 +136,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- AJAX Refresh Functions ---
     window.refreshMaterialList = function () {
-        location.reload();
+        if (!strandId) return;
+        const materialListContainer = document.getElementById('materialListContainer'); // Ensure this ID exists in your HTML
+        if (!materialListContainer) return;
+
+        // Fetch the updated list of materials from a new PHP script
+        fetch(`../ajax/get_materials.php?strand_id=${strandId}`)
+            .then(response => response.text())
+            .then(html => {
+                // Replace the contents of the container with the new list
+                materialListContainer.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Failed to refresh materials:', err);
+                materialListContainer.innerHTML = '<div class="alert alert-danger">Could not load materials.</div>';
+            });
     };
 
     // --- Question Builder (Final Corrected Version) ---
@@ -778,7 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </h2>
                         <div id="material-collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
-                            <div class="accordion-body"><ul class="list-unstyled mb-0 material-list-group"><li class="text-muted fst-italic p-3 text-center no-materials-message">No materials yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="${newCategory.id}"><i class="bi bi-plus-circle"></i> Upload Material</button></div></div>
+                            <div class="accordion-body"><ul class="list-unstyled mb-0 material-list-group"><li class="text-muted fst-italic p-3 no-materials-message">No materials in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="${newCategory.id}"><i class="bi-file-earmark-plus-fill"></i> Upload Material</button></div></div>
                         </div>
                     </div>`;
                 accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
@@ -851,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- END: MATERIAL CATEGORY LOGIC ---
 
 
-    // --- START: UPLOAD MATERIAL LOGIC (UPDATED AND CORRECTED) ---
+    // --- START: UPLOAD MATERIAL LOGIC ---
     const uploadFormContainer = document.getElementById('uploadMaterialContainer');
     if (uploadFormContainer) {
         const uploadForm = document.getElementById('uploadMaterialForm');
@@ -908,30 +922,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     const categoryId = formData.get('category_id');
                     const newMaterial = result.data;
 
-                    // 1. Find the reliable container that is always present for each category.
+                    // 1. Find the reliable container, which is always present for each category.
                     const listContainer = document.querySelector(`#material-list-container-cat-${categoryId}`);
 
                     if (listContainer) {
                         // 2. Find the "No materials..." message.
                         const noMaterialsMessage = listContainer.querySelector('.no-materials-message');
 
-                        // 3. Find the <ul>. It might not exist yet.
+                        // 3. Find the <ul>. It might not exist in an empty category.
                         let materialList = listContainer.querySelector('.material-list-group');
 
                         // 4. THIS IS THE FIX: If the <ul> doesn't exist, create it.
                         if (!materialList) {
                             materialList = document.createElement('ul');
                             materialList.className = 'list-unstyled mb-0 material-list-group';
+                            listContainer.innerHTML = ''; // Clear the container (removes the "No materials" message)
                             listContainer.appendChild(materialList);
-                        }
-
-                        // 5. If the "No materials" message was there, remove it.
-                        if (noMaterialsMessage) {
+                        } else if (noMaterialsMessage) {
+                            // If the list already exists but contains the message, remove the message.
                             noMaterialsMessage.remove();
                         }
 
-                        // 6. Now that we are GUARANTEED that the list exists, add the new material.
-                        let iconClass = 'bi-file-earmark-text'; // Default icon
+                        // 5. Now that the list is guaranteed to exist, build and add the new item.
+                        let iconClass = 'bi-file-earmark-text';
                         if (newMaterial.type === 'file' && newMaterial.file_path) {
                             const ext = newMaterial.file_path.split('.').pop().toLowerCase();
                             if (ext === 'pdf') iconClass = 'bi-file-earmark-pdf-fill text-danger';
@@ -939,37 +952,35 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (newMaterial.type === 'link') {
                             iconClass = 'bi-link-45deg text-primary';
                         } else if (newMaterial.type === 'image') {
-                            iconClass = 'bi-card-image text-success'; // ADDED
+                            iconClass = 'bi-card-image text-success';
                         } else if (newMaterial.type === 'video') {
-                            iconClass = 'bi-play-circle-fill text-info'; // ADDED
+                            iconClass = 'bi-play-circle-fill text-info';
                         } else if (newMaterial.type === 'audio') {
-                            $icon = 'bi-volume-up-fill';    // Set the icon class
-                            $color = 'text-purple';         // Set the color class
+                            iconClass = 'bi-volume-up-fill text-purple';
                         }
 
                         const materialLink = newMaterial.link_url ? newMaterial.link_url : `/ALS_LMS/strand/view_material.php?id=${newMaterial.id}`;
 
                         const newMaterialHTML = `
             <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-${newMaterial.id}">
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <a href="${materialLink}" target="_blank" class="material-item-link">
-                        <div class="d-flex align-items-center">
-                            <i class="bi ${iconClass} fs-2 me-3"></i>
-                            <div>
-                                <span class="fw-bold">${newMaterial.label}</span>
-                                <span class="badge bg-light text-dark fw-normal ms-2">${newMaterial.type.charAt(0).toUpperCase() + newMaterial.type.slice(1)}</span>
-                            </div>
+                <a href="${materialLink}" target="_blank" class="material-item-link">
+                    <div class="d-flex align-items-center">
+                        <i class="bi ${iconClass} fs-2 me-3"></i>
+                        <div>
+                            <span class="fw-bold">${newMaterial.label}</span>
+                            <span class="badge bg-light text-dark fw-normal ms-2">${newMaterial.type.charAt(0).toUpperCase() + newMaterial.type.slice(1)}</span>
                         </div>
-                    </a>
-                    <div class="dropdown">
-                        <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                            <li><button type="button" class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
-                        </ul>
                     </div>
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button class="dropdown-item edit-material-btn text-success" data-bs-toggle="modal" data-bs-target="#editMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                        <li><button class="dropdown-item delete-material-btn text-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal" data-id="${newMaterial.id}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                    </ul>
                 </div>
             </li>`;
+
                         materialList.insertAdjacentHTML('beforeend', newMaterialHTML);
                     }
 
