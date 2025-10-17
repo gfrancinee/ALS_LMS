@@ -236,12 +236,12 @@ if ($currentUser) {
                         <!-- Removed hidden creator_id field -->
 
                         <div class="mb-3">
-                            <label for="strandTitle" class="form-label">Strand Title</label>
+                            <label for="strandTitle" class="form-label">Learning Strand Title</label>
                             <input type="text" class="form-control" name="strand_title" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="strandCode" class="form-label">Strand Code</label>
+                            <label for="strandCode" class="form-label">Learning Strand Code</label>
                             <input type="text" class="form-control" name="strand_code" required>
                         </div>
 
@@ -260,7 +260,7 @@ if ($currentUser) {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Create Strand</button>
+                        <button type="submit" class="btn btn-success">Create LS</button>
                     </div>
                 </form>
         </div>
@@ -277,11 +277,11 @@ if ($currentUser) {
                     <input type="hidden" name="id" id="edit-strand-id">
 
                     <div class="mb-3">
-                        <label for="edit-strand-title" class="form-label">Strand Title</label>
+                        <label for="edit-strand-title" class="form-label">Learning Strand Title</label>
                         <input type="text" class="form-control" id="edit-strand-title" name="strand_title" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-strand-code" class="form-label">Strand Code</label>
+                        <label for="edit-strand-code" class="form-label">Learning Strand Code</label>
                         <input type="text" class="form-control" id="edit-strand-code" name="strand_code" required>
                     </div>
                     <div class="mb-3">
