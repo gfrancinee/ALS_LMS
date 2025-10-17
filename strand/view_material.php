@@ -24,13 +24,30 @@ if (!$material) {
     die("Material not found.");
 }
 if ($user_role === 'student') {
-    $strand_id = $material['strand_id'];
+    // 1. Get the IDs and ensure they are integers.
+    $strand_id = (int) $material['strand_id'];
+    $student_id = (int) $_SESSION['user_id'];
+
+    // 2. Check if the IDs are valid (must be greater than 0).
+    if ($strand_id <= 0 || $student_id <= 0) {
+        // This provides a more specific error message.
+        die("Access Denied: Cannot verify enrollment because the course or user ID is invalid in the database.");
+    }
+
+    // 3. Prepare and execute the enrollment check query.
     $enroll_check = $conn->prepare("SELECT id FROM strand_participants WHERE strand_id = ? AND student_id = ?");
+    if ($enroll_check === false) {
+        die("Database error: Could not prepare the enrollment check statement.");
+    }
+
     $enroll_check->bind_param("ii", $strand_id, $student_id);
     $enroll_check->execute();
+
+    // 4. Check if a row was found.
     if ($enroll_check->get_result()->num_rows === 0) {
         die("Access Denied: You are not enrolled in this course.");
     }
+
     $enroll_check->close();
 }
 if ($material['type'] === 'link' && !empty($material['link_url'])) {

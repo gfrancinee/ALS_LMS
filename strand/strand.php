@@ -273,6 +273,7 @@ if ($user_role === 'teacher') {
                                                         </a>
 
                                                         <!-- ITEM 2: The dropdown button, now correctly positioned on the right -->
+
                                                         <?php if ($is_teacher): ?>
                                                             <div class="dropdown">
                                                                 <button class="btn btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -696,13 +697,10 @@ if ($user_role === 'teacher') {
                         <div class="modal-body">
                             <input type="hidden" id="editMaterialId" name="material_id">
                             <div class="mb-3">
-                                <label for="editMaterialLabel" class="form-label">Label / Title</label>
+                                <label for="editMaterialLabel" class="form-label">Label/Title</label>
                                 <input type="text" class="form-control" id="editMaterialLabel" name="label" required>
                             </div>
-                            <div class="mb-3">
-                                <label for="editMaterialDescription" class="form-label">Description (Optional)</label>
-                                <textarea class="form-control" id="editMaterialDescription" name="description" rows="3"></textarea>
-                            </div>
+
                             <!-- The rest of the form (type, file/link inputs) will be loaded by JavaScript -->
                             <div id="edit-material-type-specific-fields"></div>
                         </div>
@@ -729,7 +727,7 @@ if ($user_role === 'teacher') {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteMaterialBtn">Yes, Delete</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteMaterialBtn">Delete</button>
                     </div>
                 </div>
             </div>
@@ -966,7 +964,7 @@ if ($user_role === 'teacher') {
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="participantModalLabel">Add Participants to Strand</h5>
+                        <h5 class="modal-title" id="participantModalLabel">Add Participants to Learning Strand</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">

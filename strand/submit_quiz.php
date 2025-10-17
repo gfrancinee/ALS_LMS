@@ -44,9 +44,9 @@ while ($row = $result_correct->fetch_assoc()) {
 }
 $stmt_correct->close();
 
-// Prepare a statement to save each answer
+// --- THIS IS THE FIX (PART 1): The INSERT query now includes the student_id column ---
 $save_answer_stmt = $conn->prepare(
-    "INSERT INTO student_answers (quiz_attempt_id, question_id, selected_option_id, answer_text, is_correct) VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO student_answers (student_id, quiz_attempt_id, question_id, selected_option_id, answer_text, is_correct) VALUES (?, ?, ?, ?, ?, ?)"
 );
 
 // Process each answer submitted by the student
@@ -66,8 +66,8 @@ foreach ($student_answers as $question_id => $answer) {
         $is_correct = 0; // Text answers require manual grading
     }
 
-    // Bind and execute the save query for this answer
-    $save_answer_stmt->bind_param("iiisi", $quiz_attempt_id, $question_id, $selected_option_id, $answer_text, $is_correct);
+    // --- THIS IS THE FIX (PART 2): The bind_param now includes the integer 'i' for student_id ---
+    $save_answer_stmt->bind_param("iiiisi", $student_id, $quiz_attempt_id, $question_id, $selected_option_id, $answer_text, $is_correct);
     $save_answer_stmt->execute();
 }
 $save_answer_stmt->close();

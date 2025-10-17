@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../includes/db.php';
+require_once '../includes/functions.php'; // This is where our recommendMaterialForQuestion() function lives
 require_once '../includes/header.php';
 
 // --- SECURITY CHECK ---
@@ -31,8 +32,7 @@ $sql = "
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $attempt_id, $student_id);
 $stmt->execute();
-$result = $stmt->get_result();
-$attempt_details = $result->fetch_assoc();
+$attempt_details = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$attempt_details) {
@@ -47,34 +47,34 @@ $percentage = ($total_items > 0) ? round(($score / $total_items) * 100) : 0;
 $back_link = 'strand.php?id=' . $attempt_details['strand_id'] . '#assessments';
 
 
-// --- RECOMMENDATION ENGINE LOGIC ---
+// --- AUTOMATIC RECOMMENDATION ENGINE LOGIC ---
 $recommendations = [];
-// Only show recommendations if the student passed (e.g., scored 50% or higher)
-if ($percentage >= 50) {
-    $sql_rec = "
-        SELECT 
-            lm.id, lm.label, lm.type
-        FROM material_views mv
-        JOIN learning_materials lm ON mv.material_id = lm.id
-        WHERE mv.student_id IN (
-            -- Find other students who also passed this quiz
-            SELECT student_id 
-            FROM quiz_attempts 
-            WHERE assessment_id = ? AND (score / total_items) >= 0.5 AND student_id != ?
-        )
-        AND lm.strand_id = ?
-        AND lm.id NOT IN (
-             -- Exclude materials the current student has already seen
-            SELECT material_id FROM material_views WHERE student_id = ?
-        )
-        GROUP BY lm.id
-        LIMIT 3
-    ";
-    $stmt_rec = $conn->prepare($sql_rec);
-    $stmt_rec->bind_param("iiii", $attempt_details['assessment_id'], $student_id, $attempt_details['strand_id'], $student_id);
-    $stmt_rec->execute();
-    $recommendations = $stmt_rec->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt_rec->close();
+$wrong_question_ids = [];
+
+// 1. Find all questions the student got wrong in this specific attempt.
+// THIS IS THE FIX: Changed 'attempt_id' to 'quiz_attempt_id' to match your database.
+$wrong_q_stmt = $conn->prepare("SELECT question_id FROM student_answers WHERE quiz_attempt_id = ? AND is_correct = 0");
+$wrong_q_stmt->bind_param("i", $attempt_id);
+$wrong_q_stmt->execute();
+$wrong_q_result = $wrong_q_stmt->get_result();
+while ($row = $wrong_q_result->fetch_assoc()) {
+    $wrong_question_ids[] = $row['question_id'];
+}
+$wrong_q_stmt->close();
+
+// 2. For each wrong question, get a material recommendation.
+if (!empty($wrong_question_ids)) {
+    $recommended_ids = []; // To prevent duplicate recommendations
+    foreach ($wrong_question_ids as $q_id) {
+        // Call the function from functions.php that does the keyword matching
+        $rec = recommendMaterialForQuestion($conn, $q_id, $attempt_details['strand_id']);
+
+        // If a good match was found and we haven't already recommended it, add it.
+        if ($rec !== null && !in_array($rec['id'], $recommended_ids)) {
+            $recommendations[] = $rec;
+            $recommended_ids[] = $rec['id'];
+        }
+    }
 }
 ?>
 
@@ -101,14 +101,14 @@ if ($percentage >= 50) {
 
             <?php if (!empty($recommendations)): ?>
                 <div class="mt-5">
-                    <h3 class="text-center mb-4">Recommended For You</h3>
+                    <h3 class="text-center mb-4">Recommended Materials to Review</h3>
                     <div class="list-group">
                         <?php foreach ($recommendations as $rec): ?>
-                            <a href="/ALS_LMS/view_material.php?id=<?= $rec['id'] ?>" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <a href="/ALS_LMS/strand/view_material.php?id=<?= $rec['id'] ?>" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="bi bi-file-earmark-text fs-4 me-3 text-primary"></i>
                                 <div>
                                     <strong class="d-block"><?= htmlspecialchars($rec['label']) ?></strong>
-                                    <small class="text-muted">Type: <?= ucfirst(str_replace('_', ' ', $rec['type'])) ?></small>
+                                    <small class="text-muted">Type: <?= ucfirst(htmlspecialchars($rec['type'])) ?></small>
                                 </div>
                             </a>
                         <?php endforeach; ?>

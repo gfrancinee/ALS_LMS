@@ -148,6 +148,15 @@ if ($currentUser) {
     <main class="content ms-5 pt-4 px-4">
         <div class="section-title h4 fw-semibold ms-3 mb-4">My Learning Strands</div>
 
+        <div class="row" id="recommendation-section" style="display: none;">
+            <div class="col-12">
+                <h4 class="mb-3">Recommended For You</h4>
+                <div class="list-group" id="recommendation-list">
+                </div>
+                <hr class="my-4">
+            </div>
+        </div>
+
         <!-- Strand Cards -->
         <div class="row mt-4">
             <?php if ($strands && $strands->num_rows > 0): ?>

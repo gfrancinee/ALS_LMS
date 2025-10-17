@@ -284,4 +284,49 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(checkForNotifications, 20000);
     }
 
+    // --- Logic to Fetch and Display Recommendations on Student Dashboard ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        const recommendationSection = document.getElementById('recommendation-section');
+        const recommendationList = document.getElementById('recommendation-list');
+
+        try {
+            const response = await fetch('../ajax/get_recommendations.php');
+            const result = await response.json();
+
+            if (result.success && result.data.length > 0) {
+                recommendationList.innerHTML = ''; // Clear any placeholders
+
+                result.data.forEach(rec => {
+                    const icons = {
+                        file: 'bi-file-earmark-text',
+                        link: 'bi-link-45deg',
+                        image: 'bi-file-earmark-image',
+                        video: 'bi-file-earmark-play',
+                        audio: 'bi-file-earmark-music'
+                    };
+                    const iconClass = icons[rec.type] || 'bi-file-earmark';
+                    const link = rec.link_url ? rec.link_url : '../' + rec.file_path;
+
+                    const recommendationHTML = `
+                    <a href="${link}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <i class="bi ${iconClass} fs-4 me-3 text-primary"></i>
+                        <div>
+                            <strong class="d-block">${rec.label}</strong>
+                            <small class="text-muted">Type: ${rec.type.charAt(0).toUpperCase() + rec.type.slice(1)}</small>
+                        </div>
+                    </a>
+                `;
+                    recommendationList.insertAdjacentHTML('beforeend', recommendationHTML);
+                });
+
+                recommendationSection.style.display = 'block'; // Show the section
+            } else {
+                // If there are no recommendations, the section remains hidden.
+                console.log("No recommendations found for this student.");
+            }
+        } catch (error) {
+            console.error("Failed to fetch recommendations:", error);
+        }
+    });
+
 });
