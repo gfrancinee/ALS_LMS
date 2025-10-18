@@ -280,8 +280,8 @@ h2 {
 }
 
 /* Hover/Focus style for the regular "Edit" item */
-.dropdown-item:not(.text-danger):focus,
-.dropdown-item:not(.text-danger):hover {
+.dropdown-item:not(.text-success):focus,
+.dropdown-item:not(.text-success):hover {
     background-color: #f8f9fa;
     /* Light grey background */
     color: #198754;

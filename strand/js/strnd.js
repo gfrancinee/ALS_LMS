@@ -515,7 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="dropdown">
                     <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                       <li><a class="dropdown-item no-border-button" href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
+                       <li><a class="dropdown-item text-center" href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
+                       <li><a class="dropdown-item text-center" href="view_submissions.php?assessment_id=<?= $assessment['id'] ?>"><i class="bi bi-person-check-fill me-2"></i> View Submissions</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                         <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>

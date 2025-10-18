@@ -42,11 +42,12 @@ if (!$assessment) {
 
 // --- Fetch Student Submissions (Quiz Attempts) ---
 $stmt_submissions = $conn->prepare(
-    "SELECT qa.id as attempt_id, qa.student_id, qa.score, qa.total_items, qa.submitted_at, u.first_name, u.last_name
+    "SELECT qa.id as attempt_id, qa.student_id, qa.score, qa.total_items, qa.submitted_at,
+            u.fname, u.lname  -- Use correct column names from users table
      FROM quiz_attempts qa
      JOIN users u ON qa.student_id = u.id
      WHERE qa.assessment_id = ?
-     ORDER BY u.last_name, u.first_name, qa.submitted_at DESC" // Order by name, then latest attempt
+     ORDER BY u.lname, u.fname, qa.submitted_at DESC" // Use correct ORDER BY
 );
 if ($stmt_submissions === false) {
     die("Prepare failed (submissions): " . $conn->error);
@@ -60,14 +61,15 @@ $stmt_submissions->close();
 // --- Include Header ---
 $page_title = "Submissions for " . htmlspecialchars($assessment['title']);
 require_once '../includes/header.php'; // Adjust path if needed
+$back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) . '#assessments';
 ?>
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Submissions: <?= htmlspecialchars($assessment['title']) ?></h2>
-        <a href="strand.php?id=<?= $assessment['strand_id'] ?>" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Strand
-        </a>
+        <<a href="<?= htmlspecialchars($back_link) ?>" class="back-link <?= $back_link_class ?>">
+            <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
     </div>
     <hr>
 

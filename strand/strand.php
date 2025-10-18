@@ -454,6 +454,11 @@ if ($user_role === 'teacher') {
                                                                         <ul class="dropdown-menu dropdown-menu-end">
                                                                             <li><a class="dropdown-item" href="/ALS_LMS/strand/manage_assessment.php?id=<?= $assessment['id'] ?>"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
                                                                             <li>
+                                                                                <a class="dropdown-item" href="/ALS_LMS/strand/view_submissions.php?assessment_id=<?= $assessment['id'] ?>">
+                                                                                    <i class="bi bi-person-check-fill me-2"></i> View Submissions
+                                                                                </a>
+                                                                            </li>
+                                                                            <li>
                                                                                 <hr class="dropdown-divider">
                                                                             </li>
                                                                             <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="<?= $assessment['id'] ?>"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>

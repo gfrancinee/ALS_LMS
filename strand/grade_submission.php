@@ -200,7 +200,84 @@ require_once '../includes/header.php'; // Adjust path if needed
             </div>
         </div>
     </div>
-</div> <?php
-        $conn->close();
-        require_once '../includes/footer.php'; // Adjust path if needed
-        ?>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const gradingForm = document.getElementById('grading-form');
+        const scoreDisplay = document.getElementById('current-score-display');
+        const manualGradeInputs = gradingForm.querySelectorAll('.manual-grade-input');
+        const totalPointsPossible = <?= $attempt_details['total_items'] ?? 0 ?>; // Get total from PHP
+
+        // Store initial scores for auto-graded items
+        const autoGradedScores = {};
+        gradingForm.querySelectorAll('.question-review-card').forEach(card => {
+            const pointsAwardedSpan = card.querySelector('.card-footer .badge'); // Badge for auto-graded
+            if (pointsAwardedSpan && !card.querySelector('.manual-grade-input')) {
+                // Extract points and question ID (assuming student_answer_id links uniquely)
+                const studentAnswerIdInput = card.querySelector('input[type="number"]'); // Check if manual input exists
+                if (!studentAnswerIdInput) { // Only process if truly auto-graded display
+                    const pointsText = pointsAwardedSpan.textContent.trim();
+                    const points = parseFloat(pointsText.split('/')[0].trim());
+                    // Need a unique identifier if multiple auto questions exist.
+                    // For now, let's assume we recalculate all auto based on stored correct status
+                }
+            }
+        });
+
+        function recalculateScorePreview() {
+            let currentTotal = 0;
+            // Loop through all question cards again for recalculation
+            gradingForm.querySelectorAll('.question-review-card').forEach(card => {
+                const manualInput = card.querySelector('.manual-grade-input');
+                const autoBadge = card.querySelector('.card-footer .badge'); // Auto-graded score badge
+                const maxPointsText = card.querySelector('.card-footer .text-muted')?.textContent || card.querySelector('.card-footer span:not(.badge)')?.textContent || '/ 1'; // Find max points text
+                const maxPoints = parseFloat(maxPointsText.replace(/[^0-9.]/g, '')) || 1; // Extract max points number
+                const isCorrectAuto = autoBadge ? autoBadge.classList.contains('bg-success') : false; // Check if auto was correct
+
+                if (manualInput) {
+                    // Manual: Add the current input value (or 0 if invalid)
+                    const points = parseFloat(manualInput.value);
+                    if (!isNaN(points) && points >= 0) {
+                        // Clamp value to max points visually
+                        currentTotal += Math.min(points, maxPoints);
+                    }
+                } else if (autoBadge) {
+                    // Automatic: Add max points if correct, 0 otherwise
+                    if (isCorrectAuto) {
+                        currentTotal += maxPoints;
+                    }
+                }
+            });
+
+            // Update the display
+            if (scoreDisplay) {
+                // Ensure score doesn't exceed total possible visually
+                scoreDisplay.textContent = Math.min(currentTotal, totalPointsPossible);
+            }
+        }
+
+        // Add event listeners to all manual input fields
+        manualGradeInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                // Optional: Basic validation to prevent negative or > max points input
+                const max = parseFloat(input.getAttribute('max'));
+                let value = parseFloat(input.value);
+                if (isNaN(value) || value < 0) {
+                    input.value = 0; // Reset invalid input
+                } else if (value > max) {
+                    input.value = max; // Cap at max points
+                }
+                recalculateScorePreview(); // Update score preview on any change
+            });
+        });
+
+        // Initial calculation on page load
+        recalculateScorePreview();
+    });
+</script>
+
+<?php
+$conn->close();
+require_once '../includes/footer.php'; // Adjust path if needed
+?>
