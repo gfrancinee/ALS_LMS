@@ -620,14 +620,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success && result.data.length > 0) {
                 result.data.forEach(q => {
                     const div = document.createElement('div');
-                    div.className = 'form-check border-bottom pb-2 mb-2';
+                    div.className = 'form-check border-bottom pb-2 mx-2';
                     // Added data-text attribute for potential future features
                     div.innerHTML = `
                     <input class="form-check-input question-bank-checkbox" type="checkbox" name="selected_questions[]" value="${q.id}" id="qbank_${q.id}" data-text="${q.question_text}">
                     <label class="form-check-label w-100" for="qbank_${q.id}">
                         <div class="d-flex justify-content-between">
                             <span class="question-text">${q.question_text.length > 150 ? q.question_text.substring(0, 150) + '...' : q.question_text}</span>
-                            <span class="badge bg-secondary ms-2">${q.question_type.replace('_', ' ')}</span>
+                            <span class="badge text-dark ms-2">${q.question_type.replace('_', ' ')}</span>
                         </div>
                     </label>
                 `;

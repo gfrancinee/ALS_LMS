@@ -86,31 +86,53 @@
     /* Green glow on focus */
 }
 
-/* Target the buttons specifically within that container if needed, or use a common class */
-/* Assuming you might want this style for both buttons */
-.btn.text-secondary {
-    background-color: transparent !important;
-    /* Ensure no default background */
+/* Target the buttons specifically */
+.btn.text-dark {
+    background-color: transparent;
+    /* No default background */
     border-color: transparent;
-    /* Remove border if you don't want it */
+    /* No default border */
     color: #6c757d;
-    /* Default secondary text color */
+    /* Default text color */
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-    /* Smooth transition */
+    /* Smooth hover */
 }
 
 /* Hover effect: Light gray background, white text */
-.btn.text-secondary:hover {
+.btn.text-dark:hover {
     background-color: #e9ecef !important;
     /* Light gray */
     color: #000000 !important;
     /* White text */
+    border-color: #e9ecef !important;
+    /* Match border to background on hover */
 }
 
-/* Remove the blue outline (box-shadow) on click/focus */
-.btn.text-secondary:focus {
+/* Remove the blue focus outline/border on click */
+.btn.text-dark:focus {
     box-shadow: none !important;
-    /* Removes the Bootstrap focus glow */
+    /* Removes Bootstrap focus glow */
+    outline: none !important;
+    /* Removes browser default outline */
+}
+
+/* Change background and border color when checked */
+.form-check-input[type="radio"]:checked {
+    background-color: #198754;
+    /* Bootstrap's standard green */
+    border-color: #198754;
+}
+
+/* Optional: Change focus ring color to match */
+.form-check-input[type="radio"]:focus {
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    /* Lighter green focus ring */
+}
+
+/* Remove focus glow from modal close buttons */
+.btn-close:focus {
+    box-shadow: none !important;
+    /* Removes Bootstrap focus shadow */
     outline: none !important;
     /* Removes browser default outline */
 }

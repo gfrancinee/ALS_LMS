@@ -90,12 +90,12 @@ $questions_stmt->close();
 
             <hr class="my-4">
 
-            <div class="mb-4 d-flex justify-content-start align-items-center border-bottom pb-3">
+            <div class="mb-4 d-flex justify-content-start align-items-center border-bottom pb-4">
                 <h5 class="me-3 mb-0">Add Questions:</h5>
-                <button type="button" class="btn text-secondary" data-bs-toggle="collapse" href="#addNewQuestionForm" role="button" aria-expanded="false" aria-controls="addNewQuestionForm">
+                <button type="button" class="btn text-dark" data-bs-toggle="collapse" href="#addNewQuestionForm" role="button" aria-expanded="false" aria-controls="addNewQuestionForm">
                     <i class="bi bi-plus-circle me-1"></i> Create New Question
                 </button>
-                <button type="button" class="btn text-secondary" data-bs-toggle="modal" data-bs-target="#questionBankModal">
+                <button type="button" class="btn text-dark" data-bs-toggle="modal" data-bs-target="#questionBankModal">
                     <i class="bi bi-journal-plus me-1"></i> Add from Question Bank
                 </button>
             </div>
@@ -116,7 +116,7 @@ $questions_stmt->close();
                                     <option value="multiple_choice" selected>Multiple Choice</option>
                                     <option value="true_false">True/False</option>
                                     <option value="identification">Identification</option>
-                                    <option value="short_answer">Short Answer / Enumeration</option>
+                                    <option value="short_answer">Short Answer/Enumeration</option>
                                     <option value="essay">Essay</option>
                                 </select>
                             </div>
@@ -189,10 +189,10 @@ $questions_stmt->close();
                                 <div>
                                     <p class="fw-bold mb-1">
                                         Question <?= $index + 1 ?>:
-                                        <span class="badge bg-secondary fw-normal ms-2">
+                                        <span class="badge text-secondary fw-normal ms-2">
                                             <?= str_replace('_', ' ', ucfirst($question['question_type'])) ?>
                                         </span>
-                                        <span class="badge bg-info fw-normal ms-1">
+                                        <span class="badge text-success fw-normal ms-1">
                                             <?= ucfirst($question['grading_type']) ?> Grading (<?= $question['max_points'] ?>pt<?= $question['max_points'] > 1 ? 's' : '' ?>)
                                         </span>
                                     </p>
