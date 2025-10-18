@@ -75,7 +75,18 @@ $file_type = $material['type'];
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container-fluid">
             <div class="back-container">
-                <a href="/ALS_LMS/strand/strand.php?id=<?= $material['strand_id'] ?>" class="back-link">
+                <?php
+                // Determine the CSS class based on the user's role
+                $role_class = '';
+                if (isset($_SESSION['role'])) {
+                    if ($_SESSION['role'] === 'teacher') {
+                        $role_class = 'teacher-back-link';
+                    } elseif ($_SESSION['role'] === 'student') {
+                        $role_class = 'student-back-link';
+                    }
+                }
+                ?>
+                <a href="/ALS_LMS/strand/strand.php?id=<?= $material['strand_id'] ?>" class="back-link <?= $role_class ?>">
                     <i class="bi bi-arrow-left me-1"></i>Back
                 </a>
             </div>

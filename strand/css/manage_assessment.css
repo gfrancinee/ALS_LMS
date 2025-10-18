@@ -46,12 +46,10 @@
     height: 34px;
     /* Sets a fixed size */
     border-radius: 50%;
-    /* Makes the button circular */
-    border: 1px solid #ffffff;
     /* A light grey border */
     color: #6c757d;
     /* A muted grey icon color */
-    background-color: #fff;
+
     transition: all 0.2s ease-in-out;
     /* Smooth transition for hover */
 }
@@ -86,4 +84,33 @@
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
     /* Green glow on focus */
+}
+
+/* Target the buttons specifically within that container if needed, or use a common class */
+/* Assuming you might want this style for both buttons */
+.btn.text-secondary {
+    background-color: transparent !important;
+    /* Ensure no default background */
+    border-color: transparent;
+    /* Remove border if you don't want it */
+    color: #6c757d;
+    /* Default secondary text color */
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    /* Smooth transition */
+}
+
+/* Hover effect: Light gray background, white text */
+.btn.text-secondary:hover {
+    background-color: #e9ecef !important;
+    /* Light gray */
+    color: #000000 !important;
+    /* White text */
+}
+
+/* Remove the blue outline (box-shadow) on click/focus */
+.btn.text-secondary:focus {
+    box-shadow: none !important;
+    /* Removes the Bootstrap focus glow */
+    outline: none !important;
+    /* Removes browser default outline */
 }

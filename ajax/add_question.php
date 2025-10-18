@@ -1,4 +1,5 @@
 <?php
+// ajax/add_question.php
 session_start();
 require_once '../includes/db.php';
 header('Content-Type: application/json');
@@ -9,103 +10,126 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
-
-// --- Get Data from Form ---
-$assessment_id = $_POST['assessment_id'] ?? 0;
-$question_text = trim($_POST['question_text'] ?? '');
-$question_type = $_POST['question_type'] ?? '';
 $teacher_id = $_SESSION['user_id'];
 
-// --- Validation ---
-if (empty($assessment_id) || empty($question_text) || empty($question_type)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Missing required fields.']);
+// --- Get & Validate Data ---
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['assessment_id']) || empty($_POST['question_text']) || empty($_POST['question_type'])) {
+    echo json_encode(['success' => false, 'error' => 'Invalid request data.']);
     exit;
 }
 
-// Use a transaction to ensure all database operations succeed or fail together
+$assessment_id = filter_input(INPUT_POST, 'assessment_id', FILTER_VALIDATE_INT);
+$question_text = $_POST['question_text']; // Will be bound as string, XSS handled on output
+$question_type = $_POST['question_type'];
+$grading_type = $_POST['grading_type'] ?? 'automatic';
+$max_points = filter_input(INPUT_POST, 'max_points', FILTER_VALIDATE_INT) ?? 1;
+
+// --- Database Transaction ---
 $conn->begin_transaction();
 
 try {
-    // --- Step 1: Add the question to the central question_bank ---
-    $stmt_question = $conn->prepare("INSERT INTO question_bank (teacher_id, question_text, question_type) VALUES (?, ?, ?)");
-    $stmt_question->bind_param("iss", $teacher_id, $question_text, $question_type);
-    $stmt_question->execute();
-    $new_question_id = $conn->insert_id;
-    $stmt_question->close();
+    // 1. Insert into question_bank
+    $sql_qb = "INSERT INTO question_bank (teacher_id, question_text, question_type, grading_type, max_points) VALUES (?, ?, ?, ?, ?)";
+    $stmt_qb = $conn->prepare($sql_qb);
+    if ($stmt_qb === false) throw new Exception("Prepare failed (question_bank): " . $conn->error);
 
-    // --- Step 2: Add the answer options based on question type ---
-    // CORRECTED TABLE NAME: 'question_options'
-    $stmt_options = $conn->prepare("INSERT INTO question_options (question_id, option_text, is_correct) VALUES (?, ?, ?)");
+    $stmt_qb->bind_param("isssi", $teacher_id, $question_text, $question_type, $grading_type, $max_points);
+    $stmt_qb->execute();
+    $new_question_id = $stmt_qb->insert_id; // Get the ID of the new question
+    $stmt_qb->close();
 
-    switch ($question_type) {
-        case 'multiple_choice':
-            $options = $_POST['options'] ?? [];
-            $correct_option_index = $_POST['correct_option'] ?? -1;
-            if (count($options) < 2 || $correct_option_index === -1) {
-                throw new Exception("Multiple choice requires at least two options and a correct answer.");
-            }
+    if ($new_question_id == 0) throw new Exception("Failed to create question in bank.");
 
-            foreach ($options as $index => $option_text) {
-                if (empty(trim($option_text))) continue; // Skip empty options
+    // 2. Insert into question_options (if applicable)
+    $sql_opt = "INSERT INTO question_options (question_id, option_text, is_correct) VALUES (?, ?, ?)";
+    $stmt_opt = $conn->prepare($sql_opt);
+    if ($stmt_opt === false) throw new Exception("Prepare failed (question_options): " . $conn->error);
+
+    if ($question_type == 'multiple_choice') {
+        $options = $_POST['options'] ?? [];
+        $correct_option_index = $_POST['correct_option'] ?? -1;
+        foreach ($options as $index => $option_text) {
+            if (!empty($option_text)) { // Only save non-empty options
                 $is_correct = ($index == $correct_option_index) ? 1 : 0;
-                $stmt_options->bind_param("isi", $new_question_id, $option_text, $is_correct);
-                $stmt_options->execute();
+                $stmt_opt->bind_param("isi", $new_question_id, $option_text, $is_correct);
+                $stmt_opt->execute();
             }
-            break;
-
-        case 'true_false':
-            // CORRECTED VARIABLE NAME
-            $correct_option_index = $_POST['tf_correct_option'] ?? -1;
-            if ($correct_option_index === -1) {
-                throw new Exception("True/False answer selection is missing.");
-            }
-
-            $options = ['True', 'False'];
-            foreach ($options as $index => $option_text) {
-                $is_correct = ($index == $correct_option_index) ? 1 : 0;
-                $stmt_options->bind_param("isi", $new_question_id, $option_text, $is_correct);
-                $stmt_options->execute();
-            }
-            break;
-
-        case 'identification':
-        case 'short_answer':
-            // CORRECTED VARIABLE NAME
-            $answer_text = trim($_POST['single_answer_text'] ?? '');
-
-            // For 'identification', the answer is required.
-            if ($question_type === 'identification' && empty($answer_text)) {
-                throw new Exception("Identification questions require an answer.");
-            }
-
-            if (!empty($answer_text)) {
-                $is_correct = 1;
-                $stmt_options->bind_param("isi", $new_question_id, $answer_text, $is_correct);
-                $stmt_options->execute();
-            }
-            break;
-
-        case 'essay':
-            // No options to save for essay type
-            break;
+        }
+    } elseif ($question_type == 'true_false') {
+        $options = $_POST['tf_options'] ?? ['True', 'False'];
+        $correct_option_index = $_POST['tf_correct_option'] ?? -1;
+        foreach ($options as $index => $option_text) {
+            $is_correct = ($index == $correct_option_index) ? 1 : 0;
+            $stmt_opt->bind_param("isi", $new_question_id, $option_text, $is_correct);
+            $stmt_opt->execute();
+        }
+    } elseif ($question_type == 'identification' || $question_type == 'short_answer') {
+        $answer_text = $_POST['single_answer_text'] ?? '';
+        if ($grading_type == 'automatic' && !empty($answer_text)) {
+            $is_correct = 1;
+            $stmt_opt->bind_param("isi", $new_question_id, $answer_text, $is_correct);
+            $stmt_opt->execute();
+        }
     }
-    $stmt_options->close();
+    // 'essay' types have no options saved by default
+    $stmt_opt->close();
 
-    // --- Step 3: Link the question to this specific assessment ---
-    $stmt_link = $conn->prepare("INSERT INTO assessment_questions (assessment_id, question_id) VALUES (?, ?)");
+
+    // 3. Link question to the assessment
+    $sql_link = "INSERT INTO assessment_questions (assessment_id, question_id) VALUES (?, ?)";
+    $stmt_link = $conn->prepare($sql_link);
+    if ($stmt_link === false) throw new Exception("Prepare failed (assessment_questions): " . $conn->error);
+
     $stmt_link->bind_param("ii", $assessment_id, $new_question_id);
     $stmt_link->execute();
     $stmt_link->close();
 
-    // If everything was successful, commit the changes
+    // 4. Commit transaction
     $conn->commit();
-    echo json_encode(['success' => true]);
+
+    // 5. Get count of existing questions to set the new question number
+    $stmt_count = $conn->prepare("SELECT COUNT(*) as count FROM assessment_questions WHERE assessment_id = ?");
+    $stmt_count->bind_param("i", $assessment_id);
+    $stmt_count->execute();
+    $q_num = $stmt_count->get_result()->fetch_assoc()['count']; // This will be the number for the new question
+    $stmt_count->close();
+
+    // 6. Build the HTML response
+    $question_text_html = nl2br(htmlspecialchars($question_text));
+    $question_type_html = str_replace('_', ' ', ucfirst($question_type));
+    $grading_type_html = ucfirst($grading_type);
+    $points_html = $max_points . 'pt' . ($max_points > 1 ? 's' : '');
+
+    $new_questions_html = <<<HTML
+        <div class="bg-light rounded p-3 mb-2 question-card" data-question-id="{$new_question_id}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="fw-bold mb-1">
+                        Question {$q_num}:
+                        <span class="badge bg-secondary fw-normal ms-2">{$question_type_html}</span>
+                        <span class="badge bg-info fw-normal ms-1">{$grading_type_html} Grading ({$points_html})</span>
+                    </p>
+                    <p class="mb-0 question-text-display">{$question_text_html}</p>
+                </div>
+                <div class="actions-container flex-shrink-0 ms-3 d-flex">
+                    <button class="btn btn-action-icon edit edit-question-btn me-1" title="Edit Question" data-bs-toggle="modal" data-bs-target="#editQuestionModal" data-question-id="{$new_question_id}">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-action-icon delete delete-question-btn" title="Remove Question" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal" data-question-id="{$new_question_id}" data-assessment-id="{$assessment_id}">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+HTML;
+
+    // 7. Send the correct JSON response
+    echo json_encode(['success' => true, 'newQuestionHtml' => $new_questions_html]);
 } catch (Exception $e) {
-    // If any step failed, roll back all changes
+    // If anything fails, roll back
     $conn->rollback();
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 
 $conn->close();

@@ -22,13 +22,22 @@ body {
 .back-link {
     margin-left: 1rem;
     color: #6c757d;
+    /* Default grey color */
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.2s ease-in-out;
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+    /* Added background-color transition */
+    display: inline-block;
 }
 
-.back-link:hover {
+/* Teacher Hover: Green */
+.back-link.teacher-back-link:hover {
     color: green;
+}
+
+/* Student Hover: Blue */
+.back-link.student-back-link:hover {
+    color: blue;
 }
 
 .download {
