@@ -202,81 +202,98 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!questionListContainer) console.error("Question list container not found.");
     }
 
-    // --- LOGIC FOR EDITING A QUESTION ---
-    const editQuestionModalEl = document.getElementById('editQuestionModal'); // Declared FIRST
+    // --- LOGIC FOR EDITING A QUESTION (Complete Fetch & Submit) ---
+    const editQuestionModalEl = document.getElementById('editQuestionModal');
     const editForm = document.getElementById('edit-question-form');
     const editLoader = document.getElementById('edit-question-loader');
     const editAnswerContainer = document.getElementById('edit-answer-fields-container');
+    // Ensure questionListContainer is defined earlier in the script and is correct
 
-    // Event listener: When the edit modal is about to be shown
-    editQuestionModalEl.addEventListener('show.bs.modal', async (event) => {
-        // Initial state: Show loader, hide form, clear old options
-        editLoader.style.display = 'block';
-        editLoader.innerHTML = '<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>'; // Reset loader
-        editForm.style.display = 'none';
-        editAnswerContainer.innerHTML = ''; // Clear previous content
+    if (editQuestionModalEl && editForm && editLoader && editAnswerContainer && questionListContainer) {
 
-        const button = event.relatedTarget; // The edit button clicked
-        if (!button) {
-            console.error("Could not find button that triggered edit modal.");
-            editLoader.innerHTML = '<p class="text-danger">Error: Could not identify question.</p>';
-            return;
-        }
-        const questionId = button.getAttribute('data-question-id');
-        // Ensure the hidden input field exists and set its value
-        const hiddenInput = document.getElementById('edit_question_id');
-        if (hiddenInput) {
-            hiddenInput.value = questionId;
-        } else {
-            console.error("Hidden input #edit_question_id not found in modal.");
-            editLoader.innerHTML = '<p class="text-danger">Internal error: Form setup incorrect.</p>';
-            return; // Stop if form is broken
-        }
-
-
-        try {
-            // --- Fetch existing question details ---
-            // CORRECTED: Use '?id=' to match the PHP script provided earlier
-            const response = await fetch(`/ALS_LMS/ajax/get_question_details.php?id=${questionId}`);
-
-            // --- Response Validation ---
-            if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const text = await response.text();
-                throw new TypeError(`Expected JSON, got ${contentType}. Content: ${text}`);
+        // Helper function to toggle points input visibility in EDIT modal
+        function toggleEditPointsInput() {
+            const editPointsGroup = document.getElementById('editPointsGroup');
+            const editGradingManualRadio = document.getElementById('editGradingManual');
+            if (editGradingManualRadio && editPointsGroup) {
+                editPointsGroup.style.display = editGradingManualRadio.checked ? 'block' : 'none';
             }
-            const result = await response.json();
-            // --- End Response Validation ---
+        }
 
-            // --- Check Response Structure ---
-            // Expecting {"success": true, "data": {"question": {...}, "options": [...]}}
-            if (result.success && result.data && result.data.question) {
-                const q = result.data.question;
-                const options = result.data.options || [];
+        // Helper function to safely encode HTML entities for input values
+        function htmlspecialchars(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
-                // --- Populate Form Fields ---
-                document.getElementById('edit_question_text').value = q.question_text;
-                document.getElementById('edit_question_type').value = q.question_type;
 
-                // Populate grading info (with checks for existence)
-                if (q.grading_type !== undefined && q.max_points !== undefined) {
-                    document.getElementById(q.grading_type === 'manual' ? 'editGradingManual' : 'editGradingAuto').checked = true;
-                    document.getElementById('editMaxPoints').value = q.max_points;
-                } else {
-                    console.warn("Grading type/max points missing for question ID:", q.id);
-                    document.getElementById('editGradingAuto').checked = true; // Default if missing
-                    document.getElementById('editMaxPoints').value = 1;
+        // Event listener: When the edit modal is about to be shown (Your Provided Code, Verified)
+        editQuestionModalEl.addEventListener('show.bs.modal', async (event) => {
+            // Initial state: Show loader, hide form, clear old options
+            editLoader.style.display = 'block';
+            editLoader.innerHTML = '<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>';
+            editForm.style.display = 'none';
+            editAnswerContainer.innerHTML = '';
+
+            const button = event.relatedTarget; // The edit button clicked
+            if (!button) {
+                console.error("Could not find button that triggered edit modal.");
+                editLoader.innerHTML = '<p class="text-danger">Error: Could not identify question.</p>';
+                return;
+            }
+            const questionId = button.getAttribute('data-question-id');
+            const hiddenInput = document.getElementById('edit_question_id');
+            if (hiddenInput) {
+                hiddenInput.value = questionId;
+            } else {
+                console.error("Hidden input #edit_question_id not found in modal.");
+                editLoader.innerHTML = '<p class="text-danger">Internal error: Form setup incorrect.</p>';
+                return;
+            }
+
+            try {
+                // Fetch existing question details using '?id='
+                const response = await fetch(`/ALS_LMS/ajax/get_question_details.php?id=${questionId}`);
+
+                // Response Validation
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    throw new TypeError(`Expected JSON, got ${contentType}. Content: ${text}`);
                 }
-                toggleEditPointsInput(); // Adjust points field visibility based on loaded data
+                const result = await response.json();
 
-                // --- Build Dynamic Answer Fields ---
-                let html = '';
-                if (q.question_type === 'multiple_choice') {
-                    html += '<label class="form-label fw-bold">Options (Select the correct answer):</label>';
-                    options.forEach((opt) => {
-                        const isChecked = opt.is_correct == 1 ? 'checked' : '';
-                        html += `
+                // Check Response Structure - Expecting {"success": true, "data": {"question": {...}, "options": [...]}}
+                if (result.success && result.data && result.data.question) {
+                    const q = result.data.question;
+                    const options = result.data.options || [];
+
+                    // Populate Form Fields
+                    document.getElementById('edit_question_text').value = q.question_text;
+                    document.getElementById('edit_question_type').value = q.question_type;
+
+                    // Populate grading info
+                    if (q.grading_type !== undefined && q.max_points !== undefined) {
+                        document.getElementById(q.grading_type === 'manual' ? 'editGradingManual' : 'editGradingAuto').checked = true;
+                        document.getElementById('editMaxPoints').value = q.max_points;
+                    } else {
+                        document.getElementById('editGradingAuto').checked = true;
+                        document.getElementById('editMaxPoints').value = 1;
+                    }
+                    toggleEditPointsInput(); // Adjust points field visibility
+
+                    // Build Dynamic Answer Fields
+                    let html = '';
+                    if (q.question_type === 'multiple_choice') {
+                        html += '<label class="form-label fw-bold">Options (Select the correct answer):</label>';
+                        options.forEach((opt) => {
+                            const isChecked = opt.is_correct == 1 ? 'checked' : '';
+                            html += `
                             <div class="input-group mb-2">
                                 <div class="input-group-text">
                                     <input class="form-check-input mt-0 form-check-input-success" type="radio" name="edit_correct_option" value="${opt.id}" ${isChecked} required>
@@ -284,12 +301,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <input type="text" class="form-control" name="edit_options[${opt.id}]" value="${htmlspecialchars(opt.option_text)}" required>
                                 <input type="hidden" name="edit_option_ids[]" value="${opt.id}">
                             </div>`;
-                    });
-                } else if (q.question_type === 'true_false') {
-                    html += '<label class="form-label fw-bold">Options (Select the correct answer):</label>';
-                    options.forEach((opt) => {
-                        const isChecked = opt.is_correct == 1 ? 'checked' : '';
-                        html += `
+                        });
+                    } else if (q.question_type === 'true_false') {
+                        html += '<label class="form-label fw-bold">Options (Select the correct answer):</label>';
+                        options.forEach((opt) => {
+                            const isChecked = opt.is_correct == 1 ? 'checked' : '';
+                            html += `
                             <div class="input-group mb-2">
                                 <div class="input-group-text">
                                     <input class="form-check-input mt-0 form-check-input-success" type="radio" name="edit_tf_correct_option" value="${opt.id}" ${isChecked} required>
@@ -297,64 +314,112 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <input type="text" class="form-control" name="edit_options[${opt.id}]" value="${htmlspecialchars(opt.option_text)}" readonly>
                                 <input type="hidden" name="edit_option_ids[]" value="${opt.id}">
                             </div>`;
-                    });
-                } else if (q.question_type === 'identification' || q.question_type === 'short_answer') {
-                    const correctAnswer = options.find(opt => opt.is_correct == 1);
-                    // Use 'edit_single_answer_text' for the name attribute to match potential save logic
-                    html += `
+                        });
+                    } else if (q.question_type === 'identification' || q.question_type === 'short_answer') {
+                        const correctAnswer = options.find(opt => opt.is_correct == 1);
+                        html += `
                         <label for="edit_single_answer_text" class="form-label fw-bold">Correct Answer:</label>
                         <input type="text" class="form-control" id="edit_single_answer_text" name="edit_single_answer_text" value="${correctAnswer ? htmlspecialchars(correctAnswer.option_text) : ''}">
                         <div class="form-text">Used for automatic grading (case-insensitive).</div>`;
-                    if (correctAnswer) {
-                        html += `<input type="hidden" name="edit_option_ids[]" value="${correctAnswer.id}">`;
-                    } else {
-                        html += `<input type="hidden" name="edit_option_ids[]" value="new">`;
+                        if (correctAnswer) {
+                            html += `<input type="hidden" name="edit_option_ids[]" value="${correctAnswer.id}">`;
+                        } else {
+                            html += `<input type="hidden" name="edit_option_ids[]" value="new">`;
+                        }
+                    } else if (q.question_type === 'essay') {
+                        html += '<p class="text-muted fst-italic">Essay questions require manual grading.</p>';
                     }
-                } else if (q.question_type === 'essay') {
-                    html += '<p class="text-muted fst-italic">Essay questions require manual grading.</p>';
+                    editAnswerContainer.innerHTML = html;
+
+                    // Final State: Hide loader, show form
+                    editLoader.style.display = 'none';
+                    editForm.style.display = 'block';
+
+                } else {
+                    throw new Error(result.error || 'Invalid data structure received from server.');
                 }
-                editAnswerContainer.innerHTML = html;
-                // --- End Build Dynamic Fields ---
-
-                // --- Final State: Hide loader, show form ---
-                editLoader.style.display = 'none';
-                editForm.style.display = 'block';
-
-            } else {
-                // Handle case where PHP returned success: false or unexpected structure
-                throw new Error(result.error || 'Invalid data structure received from server.');
+            } catch (error) {
+                // Error Handling
+                console.error('Failed to fetch question details:', error);
+                editLoader.innerHTML = `<p class="text-danger">Error loading question data: ${error.message}. Please close and try again.</p>`;
+                editForm.style.display = 'none';
             }
-        } catch (error) {
-            // --- Error Handling ---
-            console.error('Failed to fetch question details:', error);
-            // Display error message in the loader area
-            editLoader.innerHTML = `<p class="text-danger">Error loading question data: ${error.message}. Please close and try again.</p>`;
-            // Ensure form remains hidden on error
-            editForm.style.display = 'none';
-        }
-    });
+        });
 
-    // Add listeners for grading type change in EDIT modal (Keep this)
-    document.getElementById('editGradingAuto')?.addEventListener('change', toggleEditPointsInput);
-    document.getElementById('editGradingManual')?.addEventListener('change', toggleEditPointsInput);
+        // Add listeners for grading type change in EDIT modal
+        document.getElementById('editGradingAuto')?.addEventListener('change', toggleEditPointsInput);
+        document.getElementById('editGradingManual')?.addEventListener('change', toggleEditPointsInput);
 
-    // Function to toggle points input in EDIT modal (Keep this)
-    function toggleEditPointsInput() {
-        const editPointsGroup = document.getElementById('editPointsGroup');
-        const editGradingManualRadio = document.getElementById('editGradingManual');
-        if (editGradingManualRadio && editPointsGroup) {
-            editPointsGroup.style.display = editGradingManualRadio.checked ? 'block' : 'none';
-        }
-    }
 
-    // Simple helper function to prevent XSS issues (Keep this)
-    function htmlspecialchars(str) {
-        if (typeof str !== 'string') return '';
-        return str.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        // --- *** NEWLY ADDED/RESTORED *** ---
+        // Event listener: When the edit form is submitted
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Stop default submission
+            const formData = new FormData(editForm);
+            const submitButton = editQuestionModalEl.querySelector('.modal-footer button[type="submit"]');
+
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+            try {
+                // Send updated data to the server using the form's action URL
+                const response = await fetch(editForm.action, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Response Validation
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    throw new TypeError(`Expected JSON, got ${contentType}. Content: ${text}`);
+                }
+                const result = await response.json();
+
+                // Check Response Structure - Expecting {"success": true, "updatedQuestion": {...}}
+                if (result.success && result.updatedQuestion) {
+                    // Update Display on Main Page
+                    const questionId = result.updatedQuestion.id;
+                    const questionCard = questionListContainer.querySelector(`.question-card[data-question-id="${questionId}"]`);
+                    if (questionCard) {
+                        // Update text
+                        questionCard.querySelector('.question-text-display').innerHTML = result.updatedQuestion.question_text.replace(/\n/g, '<br>');
+                        // Update grading badge
+                        const gradingBadge = questionCard.querySelector('.badge.bg-info');
+                        if (gradingBadge) {
+                            gradingBadge.textContent = `${result.updatedQuestion.grading_type.charAt(0).toUpperCase() + result.updatedQuestion.grading_type.slice(1)} Grading (${result.updatedQuestion.max_points}pt${result.updatedQuestion.max_points > 1 ? 's' : ''})`;
+                        }
+                    } else {
+                        console.warn("Could not find question card to update on page for ID:", questionId);
+                        // Optionally reload if dynamic update fails
+                        // window.location.reload();
+                    }
+
+                    // Close Modal
+                    const modalInstance = bootstrap.Modal.getInstance(editQuestionModalEl);
+                    modalInstance.hide();
+                } else {
+                    alert('Error saving changes: ' + (result.error || 'Unknown error occurred. Please check server logs.'));
+                }
+            } catch (error) {
+                console.error('Save failed:', error);
+                alert(`An error occurred while saving: ${error.message}. Please try again.`);
+            } finally {
+                // Reset Button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Save Changes';
+            }
+        });
+        // --- *** END OF ADDED/RESTORED SUBMIT LOGIC *** ---
+
+    } else {
+        // Log errors if essential elements for editing are missing on page load
+        if (!editQuestionModalEl) console.error("Edit Question Modal element (#editQuestionModal) not found.");
+        if (!editForm) console.error("Edit Question Form element (#edit-question-form) not found.");
+        if (!editLoader) console.error("Edit Question Loader element (#edit-question-loader) not found.");
+        if (!editAnswerContainer) console.error("Edit Answer Container element (#edit-answer-fields-container) not found.");
+        if (!questionListContainer) console.error("Main Question List Container element (#question-list) not found for updates.");
     }
 
     // --- LOGIC FOR SAVING EDITED QUESTION ---
