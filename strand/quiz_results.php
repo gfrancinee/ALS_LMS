@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../includes/db.php';
-require_once '../includes/functions.php'; // This is where our recommendMaterialForQuestion() function lives
+require_once '../includes/functions.php'; // For recommendMaterialForQuestion()
 require_once '../includes/header.php';
 
 // --- SECURITY CHECK ---
@@ -47,13 +47,39 @@ $percentage = ($total_items > 0) ? round(($score / $total_items) * 100) : 0;
 $back_link = 'strand.php?id=' . $attempt_details['strand_id'] . '#assessments';
 
 
+// --- *** NEW: CHECK FOR MANUAL GRADED QUESTIONS *** ---
+$has_manual_questions = false;
+$stmt_check_manual = $conn->prepare(
+    "SELECT 1 
+     FROM question_bank qb
+     JOIN assessment_questions aq ON qb.id = aq.question_id
+     WHERE aq.assessment_id = ? AND qb.grading_type = 'manual'
+     LIMIT 1"
+);
+if ($stmt_check_manual === false) {
+    error_log("Prepare failed (check manual): " . $conn->error);
+} else {
+    $stmt_check_manual->bind_param("i", $attempt_details['assessment_id']);
+    $stmt_check_manual->execute();
+    $has_manual_questions = $stmt_check_manual->get_result()->num_rows > 0;
+    $stmt_check_manual->close();
+}
+// --- *** END NEW CHECK *** ---
+
+
 // --- AUTOMATIC RECOMMENDATION ENGINE LOGIC ---
 $recommendations = [];
 $wrong_question_ids = [];
 
-// 1. Find all questions the student got wrong in this specific attempt.
-// THIS IS THE FIX: Changed 'attempt_id' to 'quiz_attempt_id' to match your database.
-$wrong_q_stmt = $conn->prepare("SELECT question_id FROM student_answers WHERE quiz_attempt_id = ? AND is_correct = 0");
+// Find all questions the student got wrong (auto-graded only)
+$wrong_q_stmt = $conn->prepare(
+    "SELECT sa.question_id 
+     FROM student_answers sa
+     JOIN question_bank qb ON sa.question_id = qb.id
+     WHERE sa.quiz_attempt_id = ? 
+       AND sa.is_correct = 0 
+       AND qb.grading_type = 'automatic'" // Only recommend for auto-graded wrongs
+);
 $wrong_q_stmt->bind_param("i", $attempt_id);
 $wrong_q_stmt->execute();
 $wrong_q_result = $wrong_q_stmt->get_result();
@@ -62,14 +88,11 @@ while ($row = $wrong_q_result->fetch_assoc()) {
 }
 $wrong_q_stmt->close();
 
-// 2. For each wrong question, get a material recommendation.
+// For each wrong question, get a material recommendation.
 if (!empty($wrong_question_ids)) {
     $recommended_ids = []; // To prevent duplicate recommendations
     foreach ($wrong_question_ids as $q_id) {
-        // Call the function from functions.php that does the keyword matching
         $rec = recommendMaterialForQuestion($conn, $q_id, $attempt_details['strand_id']);
-
-        // If a good match was found and we haven't already recommended it, add it.
         if ($rec !== null && !in_array($rec['id'], $recommended_ids)) {
             $recommendations[] = $rec;
             $recommended_ids[] = $rec['id'];
@@ -87,8 +110,21 @@ if (!empty($wrong_question_ids)) {
                     <p class="lead">You have completed the quiz: <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
 
                     <div class="my-4">
-                        <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
-                        <p class="h4">(<?= $percentage ?>%)</p>
+
+                        <?php if ($has_manual_questions): ?>
+                            <h5 class="text-info">Score (Auto-Graded Portion):</h5>
+                            <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
+                            <p class="h4">(<?= $percentage ?>%)</p>
+                            <p class="lead mt-3 text-muted">
+                                Your final score is <strong>pending</strong>.
+                                <br>
+                                <small>This assessment includes questions that must be graded manually by your teacher.</small>
+                            </p>
+                        <?php else: ?>
+                            <h5 class="text-success">Your Final Score:</h5>
+                            <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
+                            <p class="h4">(<?= $percentage ?>%)</p>
+                        <?php endif; ?>
                     </div>
 
                     <p class="text-muted">Submitted on: <?= date("F j, Y, g:i a", strtotime($attempt_details['submitted_at'])) ?></p>

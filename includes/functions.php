@@ -28,16 +28,20 @@ function create_notification($conn, $user_id, $message, $link)
 
 /**
  * Recommends a learning material for a given question based on keyword matching.
- *
  * @param mysqli $conn The database connection.
- * @param int $question_id The ID of the question the student got wrong.
- * @param int $strand_id The ID of the course/strand.
+ * @param int $question_id The ID of the question (from question_bank) the student got wrong.
+ * @param int $strand_id The ID of the strand to limit the search.
  * @return array|null The best matching material, or null if no good match is found.
  */
 function recommendMaterialForQuestion($conn, $question_id, $strand_id)
 {
-    // 1. Get the text of the question the student got wrong.
-    $stmt_q = $conn->prepare("SELECT question_text FROM assessment_questions WHERE id = ?");
+    // 1. Get the text of the question.
+    // *** FIX: Fetches from 'question_bank', not 'assessment_questions' ***
+    $stmt_q = $conn->prepare("SELECT question_text FROM question_bank WHERE id = ?");
+    if (!$stmt_q) {
+        error_log("Prepare failed (recommend/q): " . $conn->error);
+        return null;
+    }
     $stmt_q->bind_param("i", $question_id);
     $stmt_q->execute();
     $result_q = $stmt_q->get_result();
@@ -47,49 +51,61 @@ function recommendMaterialForQuestion($conn, $question_id, $strand_id)
     if (!$question_row) {
         return null; // Question not found
     }
-    $question_text = $question_row['question_text'];
 
     // 2. Extract important keywords from the question text.
-    // This removes common words and symbols to find the core concepts.
-    $common_words = ['a', 'an', 'the', 'is', 'was', 'in', 'on', 'at', 'which', 'what', 'who', 'how', 'through', 'was', 'the', 'of', 'for', 'by', 'with'];
-    $question_keywords = array_diff(
-        str_word_count(strtolower(preg_replace('/[^a-z0-9\s]/i', '', $question_text)), 1),
-        $common_words
-    );
+    $question_text = strtolower($question_row['question_text']);
+    $words = preg_split('/[\s,.;:!?]+/', $question_text);
+    $stopwords = ['a', 'an', 'and', 'the', 'is', 'in', 'on', 'at', 'which', 'what', 'who', 'how', 'when', 'where', 'to', 'for', 'of', 'it', 'from', 'was', 'by', 'with', 'are', 'or'];
+    $keywords = [];
 
-    if (empty($question_keywords)) {
-        return null; // No useful keywords in the question
+    foreach ($words as $word) {
+        $word = preg_replace("/[^a-z0-9]/", "", $word);
+        if (strlen($word) > 3 && !in_array($word, $stopwords)) {
+            $keywords[] = $word;
+        }
     }
 
-    // 3. Get all materials uploaded by the teacher for this strand.
-    $stmt_m = $conn->prepare("SELECT id, label, type, file_path, link_url FROM learning_materials WHERE strand_id = ?");
-    $stmt_m->bind_param("i", $strand_id);
+    if (empty($keywords)) {
+        return null; // No useful keywords
+    }
+
+    // 3. Search materials in the same strand for these keywords.
+    $sql_search = "SELECT id, label, type, description 
+                   FROM learning_materials 
+                   WHERE strand_id = ? AND (";
+
+    $search_terms = [];
+    $bind_types = 'i';
+    $bind_params = [$strand_id];
+
+    foreach ($keywords as $keyword) {
+        $search_terms[] = "LOWER(label) LIKE ?";
+        $search_terms[] = "LOWER(description) LIKE ?";
+
+        $bind_types .= 'ss';
+        $bind_params[] = '%' . $keyword . '%';
+        $bind_params[] = '%' . $keyword . '%';
+    }
+
+    if (empty($search_terms)) {
+        return null; // Should not happen if keywords were found, but good to check.
+    }
+
+    $sql_search .= implode(' OR ', $search_terms) . ") LIMIT 1";
+
+    $stmt_m = $conn->prepare($sql_search);
+    if (!$stmt_m) {
+        error_log("Prepare failed (recommend/m): " . $conn->error);
+        return null;
+    }
+
+    $stmt_m->bind_param($bind_types, ...$bind_params);
+
     $stmt_m->execute();
-    $all_materials = $stmt_m->get_result()->fetch_all(MYSQLI_ASSOC);
+    $result_m = $stmt_m->get_result();
+    $material = $result_m->fetch_assoc();
     $stmt_m->close();
 
-    // 4. Find the best matching material.
-    $best_match = null;
-    $highest_score = 0;
-
-    foreach ($all_materials as $material) {
-        $score = 0;
-        $material_label_lower = strtolower($material['label']);
-        foreach ($question_keywords as $keyword) {
-            // If a keyword from the question is found in the material's title, increase the score.
-            // We check for length > 2 to avoid matching small, common words like 'it' or 'do'.
-            if (strlen($keyword) > 2 && strpos($material_label_lower, $keyword) !== false) {
-                $score++;
-            }
-        }
-
-        // If this material has more matching keywords, it becomes the new best match.
-        if ($score > $highest_score) {
-            $highest_score = $score;
-            $best_match = $material;
-        }
-    }
-
-    // Only return a recommendation if we found at least one matching keyword.
-    return ($highest_score > 0) ? $best_match : null;
+    // 4. Return the found material or null
+    return $material;
 }
