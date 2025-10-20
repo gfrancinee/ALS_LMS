@@ -204,7 +204,7 @@ if (!empty($wrong_question_ids_from_review)) {
             <div class="card shadow-sm border-0 text-center bg-light mt-0">
                 <div class="card-body p-5">
                     <h1 class="card-title">Quiz Completed!</h1>
-                    <p class="lead">You have completed the quiz: <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
+                    <p class="lead">You have completed the <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
 
                     <div class="my-4">
 
@@ -243,28 +243,28 @@ if (!empty($wrong_question_ids_from_review)) {
 
                     <p class="text-muted">Submitted on: <?= date("F j, Y, g:i a", strtotime($attempt_details['submitted_at'])) ?></p>
 
-                    <a href="<?= htmlspecialchars($back_link) ?>" class="btn text-primary mt-4">
+                    <a href="<?= htmlspecialchars($back_link) ?>" class="btn text-primary mt-4 shadow-none">
                         <i class="bi bi-arrow-left"></i> Back
                     </a>
                 </div>
             </div>
 
             <?php
-            if (!empty($recommendations) && isset($percentage) && $percentage < 60 && isset($grading_pending) && !$grading_pending):
+            if (!empty($recommendations) && isset($percentage) && $percentage < 74 && isset($grading_pending) && !$grading_pending):
             ?>
-                <div class="card shadow-sm border-0 mb-4 mt-5">
+                <div class="card shadow-sm border-0 mb-4 mt-4 bg-light">
                     <div class="card-body">
 
-                        <p class="lead text-center mb-3 text-info">
+                        <p class="text-center mb-3 text-info small">
                             <i class="bi bi-info-circle me-2"></i>Looks like you got a low score in this assessment. Here are some materials you might want to review:
                         </p>
 
-                        <div class="list-group list-group-flush">
+                        <div class="list-group list-group-flush rounded-3">
                             <?php foreach ($recommendations as $rec): ?>
                                 <a href="/ALS_LMS/strand/view_material.php?id=<?= $rec['id'] ?>" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
                                     <?php
                                     // Determine icon based on type (example, adjust as needed)
-                                    $rec_icon = 'bi-file-earmark-text'; // Default
+                                    $rec_icon = 'bi-file-earmark-pdf-fill text-danger'; // Default
                                     if ($rec['type'] === 'video') $rec_icon = 'bi-play-circle-fill text-info';
                                     else if ($rec['type'] === 'link') $rec_icon = 'bi-link-45deg text-primary';
                                     else if ($rec['type'] === 'file') {
@@ -359,7 +359,7 @@ if (!empty($wrong_question_ids_from_review)) {
                                             <?= ($item['points_awarded'] !== null) ? 'Graded' : 'Pending Review' ?>
                                         </span>
                                     <?php elseif ($is_correct): ?>
-                                        <span class="badge bg-success">Correct</span>
+                                        <span class="badge text-success">Correct</span>
                                     <?php else: ?>
                                         <span class="badge text-danger">Incorrect</span>
                                     <?php endif; ?>
@@ -374,6 +374,18 @@ if (!empty($wrong_question_ids_from_review)) {
 </div>
 
 <style>
+    /* Custom CSS to forcefully remove focus outline from buttons/links */
+    .btn:focus,
+    .btn:focus-visible,
+    a.btn:focus,
+    /* Target links styled as buttons specifically */
+    a.btn:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: transparent !important;
+        /* Added to remove potential border color change */
+    }
+
     .bg-success-light {
         background-color: #e6f7ec;
     }

@@ -955,7 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    // --- END: Upload Material Logic ---
 
     // --- LOGIC FOR EDIT/DELETE MATERIAL ---
     // --- Edit Material Logic ---
@@ -964,35 +963,67 @@ document.addEventListener('DOMContentLoaded', () => {
         const editMaterialForm = document.getElementById('editMaterialForm');
         let materialElementToUpdate = null;
 
+        // This part loads the data into the modal
         editMaterialModalEl.addEventListener('show.bs.modal', async function (event) {
             const button = event.relatedTarget;
             const materialId = button.dataset.id;
-            materialElementToUpdate = button.closest('.material-item');
+            materialElementToUpdate = button.closest('.material-item'); // Get the parent item
 
             // Populate the form
             document.getElementById('editMaterialId').value = materialId;
-            const response = await fetch(`../ajax/get_material_details.php?id=${materialId}`);
-            const result = await response.json();
-            if (result.success) {
-                document.getElementById('editMaterialLabel').value = result.data.label;
-                document.getElementById('editMaterialDescription').value = result.data.description;
+
+            try {
+                const response = await fetch(`../ajax/get_material_details.php?id=${materialId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    // This line is correct and should work
+                    document.getElementById('editMaterialLabel').value = result.data.label;
+
+                    // The error was caused by a line like this, which is now gone:
+                    // document.getElementById('editMaterialDescription').value = ...
+                } else {
+                    alert('Error: ' + (result.error || 'Could not load details.'));
+                }
+            } catch (error) {
+                console.error('Error fetching material details:', error);
+                alert('A network error occurred.');
             }
         });
 
+        // This part saves the data
         editMaterialForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(this);
-            const response = await fetch('../ajax/update_material.php', { method: 'POST', body: formData });
-            const result = await response.json();
-            if (result.success) {
-                bootstrap.Modal.getInstance(editMaterialModalEl).hide();
-                // Update on page without reload
-                if (materialElementToUpdate) {
-                    materialElementToUpdate.querySelector('.fw-bold').textContent = formData.get('label');
-                    materialElementToUpdate.querySelector('.text-muted.small').textContent = formData.get('description');
+
+            try {
+                const response = await fetch('../ajax/update_material.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // SUCCESS!
+                    bootstrap.Modal.getInstance(editMaterialModalEl).hide();
+
+                    // Live-update the title on the page
+                    if (materialElementToUpdate) {
+                        // Find the label text element by its class
+                        const labelElement = materialElementToUpdate.querySelector('.fw-bold');
+                        if (labelElement) {
+                            labelElement.textContent = formData.get('label');
+                        }
+                    }
+                } else {
+                    // The PHP script returned {"success":false, "error":"..."}
+                    alert('Update failed: ' + (result.error || 'Please try again.'));
                 }
-            } else {
-                alert('Error: ' + result.error);
+            } catch (error) {
+                // This catches network errors OR if the PHP script had a fatal error (not JSON)
+                console.error('Error submitting form:', error);
+                alert('An error occurred. The server response was not valid.');
             }
         });
     }
