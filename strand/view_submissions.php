@@ -78,14 +78,14 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
             No students have submitted this assessment yet.
         </div>
     <?php else: ?>
-        <div class="table-responsive">
+        <div class="table-responsive border-none">
             <table class="table table-striped table-hover">
                 <thead class="table-light">
                     <tr>
                         <th>Student Name</th>
                         <th>Score</th>
                         <th>Submitted At</th>
-                        <th>Actions</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -96,7 +96,7 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                             <td><?= date("M j, Y, g:i A", strtotime($submission['submitted_at'])) ?></td>
                             <td>
                                 <a href="grade_submission.php?attempt_id=<?= $submission['attempt_id'] ?>" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-eye-fill me-1"></i> View / Grade
+                                    <i class="bi bi-eye-fill me-1"></i> View
                                 </a>
                             </td>
                         </tr>

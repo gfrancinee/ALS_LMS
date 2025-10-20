@@ -123,7 +123,6 @@ try {
 
     // 5. Commit the transaction
     $conn->commit();
-    $_SESSION['success_message'] = "Grades saved successfully!";
 } catch (Exception $e) {
     $conn->rollback(); // Rollback changes on error
     $error_occurred = true;

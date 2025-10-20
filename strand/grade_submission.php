@@ -40,9 +40,6 @@ if (!$attempt_details || $attempt_details['teacher_id'] != $teacher_id) {
 }
 
 // --- Fetch Questions, Student Answers, and Correct Options for this Attempt ---
-// We need the question text, type, grading_type, max_points from question_bank
-// We need the student's answer_text and is_correct status from student_answers
-// We need the correct option_text from question_options where is_correct = 1
 $sql_answers = "
     SELECT
         qb.id as question_id,
@@ -175,7 +172,7 @@ require_once '../includes/header.php'; // Adjust path if needed
                                     step="0.5" value="<?= htmlspecialchars($points_value) ?>" required>
                                 <span class="ms-2 text-muted">/ <?= $qa['max_points'] ?></span>
                             <?php else: ?>
-                                <span class="fw-bold me-2">Points Awarded:</span>
+                                <span class="fw-bold me-2">Point/s:</span>
                                 <span class="badge <?= $qa['student_is_correct'] ? 'text-success' : 'text-danger' ?>">
                                     <?= $points_value ?> / <?= $qa['max_points'] ?>
                                 </span>

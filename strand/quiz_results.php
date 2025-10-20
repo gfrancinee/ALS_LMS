@@ -66,6 +66,31 @@ if ($stmt_check_manual === false) {
 }
 // --- *** END NEW CHECK *** ---
 
+// --- CHECK IF MANUAL GRADING IS PENDING ---
+$grading_pending = false;
+if ($has_manual_questions) {
+    $stmt_check_pending = $conn->prepare(
+        "SELECT 1 
+         FROM student_answers sa
+         JOIN question_bank qb ON sa.question_id = qb.id
+         WHERE sa.quiz_attempt_id = ? 
+           AND qb.grading_type = 'manual' 
+           AND sa.points_awarded IS NULL 
+         LIMIT 1"
+    );
+    if ($stmt_check_pending === false) {
+        error_log("Prepare failed (check pending): " . $conn->error);
+        // Decide how to handle this error - maybe assume pending?
+        $grading_pending = true;
+    } else {
+        $stmt_check_pending->bind_param("i", $attempt_id);
+        $stmt_check_pending->execute();
+        $grading_pending = $stmt_check_pending->get_result()->num_rows > 0;
+        $stmt_check_pending->close();
+    }
+}
+// --- END MANUAL GRADING CHECK ---
+
 
 // --- AUTOMATIC RECOMMENDATION ENGINE LOGIC ---
 $recommendations = [];
@@ -184,17 +209,36 @@ if (!empty($wrong_question_ids_from_review)) {
                     <div class="my-4">
 
                         <?php if ($has_manual_questions): ?>
-                            <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
-                            <p class="h4">(<?= $percentage ?>%)</p>
-                            <p class="lead mt-3 text-muted">
-                                Your final score is <strong>pending</strong>.
-                                <br>
-                            </p>
-                        <?php else: ?>
+
+                            <?php if ($grading_pending): // Manual questions exist AND grading is NOT complete 
+                            ?>
+                                <h5 class="text-info">Score (Auto-Graded Portion):</h5>
+                                <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
+                                <p class="h4">(<?= $percentage ?>%)</p>
+                                <p class="lead mt-3 text-muted">
+                                    Your final score is <strong>pending</strong>.
+                                    <br>
+                                    <small>This assessment includes questions that must be graded manually by your teacher.</small>
+                                </p>
+
+                            <?php else: // Manual questions exist BUT grading IS complete 
+                            ?>
+                                <h5 class="text-success">Your Final Score:</h5>
+                                <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
+                                <p class="h4">(<?= $percentage ?>%)</p>
+
+                            <?php endif; // End check for grading_pending 
+                            ?>
+
+                        <?php else: // NO manual questions in this assessment 
+                        ?>
+
                             <h5 class="text-success">Your Final Score:</h5>
                             <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
                             <p class="h4">(<?= $percentage ?>%)</p>
-                        <?php endif; ?>
+
+                        <?php endif;
+                        ?>
                     </div>
 
                     <p class="text-muted">Submitted on: <?= date("F j, Y, g:i a", strtotime($attempt_details['submitted_at'])) ?></p>
@@ -205,26 +249,44 @@ if (!empty($wrong_question_ids_from_review)) {
                 </div>
             </div>
 
-            <?php if (!empty($recommendations)): ?>
-                <div class="mt-5">
-                    <h3 class="text-center mb-4">Recommended Materials to Review</h3>
-                    <div class="list-group">
-                        <?php foreach ($recommendations as $rec): ?>
-                            <a href="/ALS_LMS/strand/view_material.php?id=<?= $rec['id'] ?>" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="bi bi-file-earmark-text fs-4 me-3 text-primary"></i>
-                                <div>
-                                    <strong class="d-block"><?= htmlspecialchars($rec['label']) ?></strong>
-                                    <small class="text-muted">Type: <?= ucfirst(htmlspecialchars($rec['type'])) ?></small>
-                                </div>
-                            </a>
-                        <?php endforeach; ?>
+            <?php
+            if (!empty($recommendations) && isset($percentage) && $percentage < 60 && isset($grading_pending) && !$grading_pending):
+            ?>
+                <div class="card shadow-sm border-0 mb-4 mt-5">
+                    <div class="card-body">
+
+                        <p class="lead text-center mb-3 text-info">
+                            <i class="bi bi-info-circle me-2"></i>Looks like you got a low score in this assessment. Here are some materials you might want to review:
+                        </p>
+
+                        <div class="list-group list-group-flush">
+                            <?php foreach ($recommendations as $rec): ?>
+                                <a href="/ALS_LMS/strand/view_material.php?id=<?= $rec['id'] ?>" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
+                                    <?php
+                                    // Determine icon based on type (example, adjust as needed)
+                                    $rec_icon = 'bi-file-earmark-text'; // Default
+                                    if ($rec['type'] === 'video') $rec_icon = 'bi-play-circle-fill text-info';
+                                    else if ($rec['type'] === 'link') $rec_icon = 'bi-link-45deg text-primary';
+                                    else if ($rec['type'] === 'file') {
+                                        // You might check extension here for PDF, PPT etc. if needed
+                                    }
+                                    ?>
+                                    <i class="bi <?= $rec_icon ?> fs-4 me-3"></i>
+                                    <div>
+                                        <strong class="d-block"><?= htmlspecialchars($rec['label']) ?></strong>
+                                        <small class="text-muted">Type: <?= ucfirst(htmlspecialchars($rec['type'])) ?></small>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
-            <?php endif; ?>
+            <?php endif;
+            ?>
 
             <?php if (!empty($review_items)): ?>
                 <div class="card shadow-sm border-0 mt-4">
-                    <div class="card-header bg-white">
+                    <div class="card-header bg-light">
                         <h4 class="mb-0">Question Review</h4>
                     </div>
                     <div class="card-body p-4">
@@ -282,7 +344,7 @@ if (!empty($wrong_question_ids_from_review)) {
                                         <label class="form-label fw-bold">Teacher Feedback:</label>
                                         <div class="p-3 border border-info bg-info-light rounded">
                                             <?php if ($item['points_awarded'] !== null): ?>
-                                                Points Awarded: <?= $item['points_awarded'] ?>
+                                                Point/s: <?= $item['points_awarded'] ?>
                                             <?php else: ?>
                                                 <em>Pending teacher review.</em>
                                             <?php endif; ?>
@@ -293,13 +355,13 @@ if (!empty($wrong_question_ids_from_review)) {
 
                                 <div class="text-end">
                                     <?php if ($item['grading_type'] == 'manual'): ?>
-                                        <span class="badge bg-info">
+                                        <span class="badge text-info">
                                             <?= ($item['points_awarded'] !== null) ? 'Graded' : 'Pending Review' ?>
                                         </span>
                                     <?php elseif ($is_correct): ?>
                                         <span class="badge bg-success">Correct</span>
                                     <?php else: ?>
-                                        <span class="badge bg-danger">Incorrect</span>
+                                        <span class="badge text-danger">Incorrect</span>
                                     <?php endif; ?>
                                 </div>
                             </div>
