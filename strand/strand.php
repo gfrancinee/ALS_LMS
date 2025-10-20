@@ -238,12 +238,11 @@ if ($user_role === 'teacher') {
                             <div id="material-collapse-cat-<?= $category['id'] ?>" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
                                 <div class="accordion-body">
                                     <div id="material-list-container-cat-<?= $category['id'] ?>">
-                                        <ul class="list-unstyled mb-0">
+                                        <ul class="list-unstyled mb-0 material-list-group">
                                             <?php if (!empty($category['materials'])): ?>
                                                 <?php foreach ($category['materials'] as $mat): ?>
                                                     <li class="list-group-item d-flex justify-content-between align-items-center material-item" id="material-item-<?= $mat['id'] ?>">
 
-                                                        <!-- ITEM 1: The main clickable link on the left -->
                                                         <a href="/ALS_LMS/strand/view_material.php?id=<?= $mat['id'] ?>" target="_blank" class="material-item-link">
                                                             <div class="d-flex align-items-center">
                                                                 <?php
@@ -260,8 +259,8 @@ if ($user_role === 'teacher') {
                                                                 } elseif ($mat['type'] === 'video') {
                                                                     $icon = 'bi-play-circle-fill text-info'; // Added for Video
                                                                 } elseif ($mat['type'] === 'audio') {
-                                                                    $icon = 'bi-volume-up-fill';    // Set the icon class
-                                                                    $color = 'text-purple';         // Set the color class
+                                                                    // --- FIX #2: Combined icon and color class here ---
+                                                                    $icon = 'bi-volume-up-fill text-purple';
                                                                 }
                                                                 ?>
                                                                 <i class="bi <?= $icon ?> fs-2 me-3"></i>
@@ -271,8 +270,6 @@ if ($user_role === 'teacher') {
                                                                 </div>
                                                             </div>
                                                         </a>
-
-                                                        <!-- ITEM 2: The dropdown button, now correctly positioned on the right -->
 
                                                         <?php if ($is_teacher): ?>
                                                             <div class="dropdown">

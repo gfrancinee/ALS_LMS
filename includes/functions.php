@@ -1,7 +1,7 @@
 <?php
 // includes/functions.php
 
-// Function to create a notification
+// Function to create a notification (Your existing, correct code)
 function create_notification($conn, $user_id, $message, $link)
 {
     // We use a prepared statement to prevent SQL injection
@@ -10,7 +10,7 @@ function create_notification($conn, $user_id, $message, $link)
     // Check if the statement was prepared successfully
     if ($stmt === false) {
         // Handle error, e.g., log it or show a generic message
-        // For debugging, you can use: error_log("Prepare failed: " . $conn->error);
+        error_log("Prepare failed (create_notification): " . $conn->error);
         return false;
     }
 
@@ -19,7 +19,9 @@ function create_notification($conn, $user_id, $message, $link)
 
     // Execute the statement and return true on success, false on failure
     $success = $stmt->execute();
-
+    if ($success === false) {
+        error_log("Execute failed (create_notification): " . $stmt->error);
+    }
     $stmt->close();
 
     return $success;
@@ -36,7 +38,6 @@ function create_notification($conn, $user_id, $message, $link)
 function recommendMaterialForQuestion($conn, $question_id, $strand_id)
 {
     // 1. Get the text of the question.
-    // *** FIX: Fetches from 'question_bank', not 'assessment_questions' ***
     $stmt_q = $conn->prepare("SELECT question_text FROM question_bank WHERE id = ?");
     if (!$stmt_q) {
         error_log("Prepare failed (recommend/q): " . $conn->error);
@@ -70,7 +71,8 @@ function recommendMaterialForQuestion($conn, $question_id, $strand_id)
     }
 
     // 3. Search materials in the same strand for these keywords.
-    $sql_search = "SELECT id, label, type, description 
+    // *** FIX: Removed 'description' from SELECT and WHERE clause ***
+    $sql_search = "SELECT id, label, type 
                    FROM learning_materials 
                    WHERE strand_id = ? AND (";
 
@@ -79,16 +81,15 @@ function recommendMaterialForQuestion($conn, $question_id, $strand_id)
     $bind_params = [$strand_id];
 
     foreach ($keywords as $keyword) {
+        // Only search in the 'label' column
         $search_terms[] = "LOWER(label) LIKE ?";
-        $search_terms[] = "LOWER(description) LIKE ?";
 
-        $bind_types .= 'ss';
-        $bind_params[] = '%' . $keyword . '%';
-        $bind_params[] = '%' . $keyword . '%';
+        $bind_types .= 's'; // Add one string type
+        $bind_params[] = '%' . $keyword . '%'; // Add keyword for label
     }
 
     if (empty($search_terms)) {
-        return null; // Should not happen if keywords were found, but good to check.
+        return null; // No search terms
     }
 
     $sql_search .= implode(' OR ', $search_terms) . ") LIMIT 1";

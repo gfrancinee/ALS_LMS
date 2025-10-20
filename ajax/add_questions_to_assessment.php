@@ -130,37 +130,46 @@ if (!$error_occurred && !empty($successfully_added_ids)) {
         $stmt_count->close();
 
 
+        // ... inside ajax/add_questions_to_assessment.php ...
+
         // --- Generate HTML for the newly added questions ---
         foreach ($added_questions_details as $index => $question) {
             $q_num = $q_num_start + $index;
             $question_text_html = nl2br(htmlspecialchars($question['question_text']));
             $question_type_html = str_replace('_', ' ', ucfirst($question['question_type']));
             $grading_type_html = ucfirst($question['grading_type']);
-            // Use max_points from bank as default display
             $points_html = $question['max_points'] . 'pt' . ($question['max_points'] > 1 ? 's' : '');
 
-            // Ensure this HTML structure matches exactly what's used on manage_assessment.php
+            // --- THIS IS THE FIX ---
+            // This HTML now MATCHES your manage_assessment.php loop
+            // It uses "text-secondary" and "text-success"
             $new_questions_html .= <<<HTML
-            <div class="bg-light rounded p-3 mb-2 question-card" data-question-id="{$question['id']}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="fw-bold mb-1">
-                            Question {$q_num}:
-                            <span class="badge bg-secondary fw-normal ms-2">{$question_type_html}</span>
-                            <span class="badge bg-info fw-normal ms-1">{$grading_type_html} Grading ({$points_html})</span>
-                        </p>
-                        <p class="mb-0 question-text-display">{$question_text_html}</p>
-                    </div>
-                    <div class="actions-container flex-shrink-0 ms-3 d-flex">
-                        <button class="btn btn-action-icon edit edit-question-btn me-1" title="Edit Question" data-bs-toggle="modal" data-bs-target="#editQuestionModal" data-question-id="{$question['id']}">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <button class="btn btn-action-icon delete delete-question-btn" title="Remove Question" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal" data-question-id="{$question['id']}" data-assessment-id="{$assessment_id}">
-                            <i class="bi bi-trash3"></i>
-                        </button>
-                    </div>
-                </div>
+    <div class="bg-light rounded p-3 mb-2 question-card" data-question-id="{$question['id']}">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <p class="fw-bold mb-1">
+                    Question {$q_num}:
+                    <span class="badge text-secondary fw-normal ms-2">
+                        {$question_type_html}
+                    </span>
+                    <span class="badge text-success fw-normal ms-1">
+                        {$grading_type_html} Grading ({$points_html})
+                    </span>
+                </p>
+                <p class="mb-0 question-text-display">{$question_text_html}</p>
             </div>
+            <div class="actions-container flex-shrink-0 mt-2 d-flex">
+                <button class="btn btn-action-icon edit edit-question-btn me-1" title="Edit Question" 
+                        data-bs-toggle="modal" data-bs-target="#editQuestionModal" data-question-id="{$question['id']}">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn btn-action-icon delete delete-question-btn" title="Remove Question" 
+                        data-bs-toggle="modal" data-bs-target="#deleteQuestionModal" data-question-id="{$question['id']}" data-assessment-id="{$assessment_id}">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 HTML;
         }
 

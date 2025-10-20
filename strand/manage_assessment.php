@@ -208,140 +208,136 @@ $questions_stmt->close();
                                 </div>
                             </div>
                         </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p id="no-questions-message" class="text-muted">No questions have been added to this assessment yet.</p>
+                <?php endif; ?>
             </div>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <p id="no-questions-message" class="text-muted">No questions have been added to this assessment yet.</p>
-    <?php endif; ?>
-        </div>
 
-    </div>
-</div>
-</div>
-<div class="modal fade" id="questionBankModal" tabindex="-1" aria-labelledby="questionBankModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="questionBankModalLabel">Add Questions from Bank</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-md-8">
-                        <input type="text" id="questionBankSearch" class="form-control" placeholder="Search questions by text...">
-                    </div>
-                    <div class="col-md-4">
-                        <select id="questionBankTypeFilter" class="form-select">
-                            <option value="">All Types</option>
-                            <option value="multiple_choice">Multiple Choice</option>
-                            <option value="true_false">True/False</option>
-                            <option value="identification">Identification</option>
-                            <option value="short_answer">Short Answer / Enumeration</option>
-                            <option value="essay">Essay</option>
-                        </select>
+            <div class="modal fade" id="questionBankModal" tabindex="-1" aria-labelledby="questionBankModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="questionBankModalLabel">Add Questions from Bank</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <input type="text" id="questionBankSearch" class="form-control" placeholder="Search questions by text...">
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="questionBankTypeFilter" class="form-select">
+                                        <option value="">All Types</option>
+                                        <option value="multiple_choice">Multiple Choice</option>
+                                        <option value="true_false">True/False</option>
+                                        <option value="identification">Identification</option>
+                                        <option value="short_answer">Short Answer / Enumeration</option>
+                                        <option value="essay">Essay</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <hr>
+                            <form id="questionBankForm">
+                                <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
+                                <div id="questionBankListContainer" style="max-height: 60vh; overflow-y: auto;">
+                                    <p class="text-center text-muted">Loading questions...</p>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="addSelectedQuestionsBtn">Add Selected Questions</button>
+                        </div>
                     </div>
                 </div>
-                <hr>
-                <form id="questionBankForm">
-                    <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
-                    <div id="questionBankListContainer" style="max-height: 60vh; overflow-y: auto;">
-                        <p class="text-center text-muted">Loading questions...</p>
+            </div>
+            <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editQuestionModalLabel">Edit Question</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="edit-question-loader" class="text-center">
+                                <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                            </div>
+                            <form id="edit-question-form" style="display:none;" action="../ajax/update_question.php" method="POST">
+                                <input type="hidden" name="question_id" id="edit_question_id">
+                                <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
+
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="edit_question_text" class="form-label fw-bold">Question:</label>
+                                        <textarea class="form-control" id="edit_question_text" name="question_text" rows="3" required></textarea>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="edit_question_type" class="form-label fw-bold">Question Type:</label>
+                                        <select class="form-select" id="edit_question_type" name="question_type" disabled>
+                                            <option value="multiple_choice">Multiple Choice</option>
+                                            <option value="true_false">True/False</option>
+                                            <option value="identification">Identification</option>
+                                            <option value="short_answer">Short Answer / Enumeration</option>
+                                            <option value="essay">Essay</option>
+                                        </select>
+                                        <div class="form-text">Type cannot be changed.</div>
+                                    </div>
+                                </div>
+
+                                <div id="edit-answer-fields-container" class="mt-3">
+                                </div>
+
+                                <div id="editGradingArea" class="mt-3">
+                                    <label class="form-label fw-bold">Grading:</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="grading_type" id="editGradingAuto" value="automatic">
+                                        <label class="form-check-label" for="editGradingAuto">Automatic</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="grading_type" id="editGradingManual" value="manual">
+                                        <label class="form-check-label" for="editGradingManual">Manual</label>
+                                    </div>
+                                    <div id="editPointsGroup" class="mt-2" style="display: none;">
+                                        <label for="editMaxPoints" class="form-label">Max Points:</label>
+                                        <input type="number" class="form-control w-25" id="editMaxPoints" name="max_points" value="1" min="1">
+                                    </div>
+                                    <div class="form-text" id="editGradingHelpText">Adjust grading type and points.</div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" form="edit-question-form" class="btn btn-primary">Save Changes</button>
+                        </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="addSelectedQuestionsBtn">Add Selected Questions</button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editQuestionModalLabel">Edit Question</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="edit-question-loader" class="text-center">
-                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
                 </div>
-                <form id="edit-question-form" style="display:none;" action="../ajax/update_question.php" method="POST">
-                    <input type="hidden" name="question_id" id="edit_question_id">
-                    <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
+            </div>
 
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label for="edit_question_text" class="form-label fw-bold">Question:</label>
-                            <textarea class="form-control" id="edit_question_text" name="question_text" rows="3" required></textarea>
+            <div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-labelledby="deleteQuestionModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteQuestionModalLabel">Confirm Removal</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="edit_question_type" class="form-label fw-bold">Question Type:</label>
-                            <select class="form-select" id="edit_question_type" name="question_type" disabled>
-                                <option value="multiple_choice">Multiple Choice</option>
-                                <option value="true_false">True/False</option>
-                                <option value="identification">Identification</option>
-                                <option value="short_answer">Short Answer / Enumeration</option>
-                                <option value="essay">Essay</option>
-                            </select>
-                            <div class="form-text">Type cannot be changed.</div>
+                        <div class="modal-body">
+                            Are you sure you want to remove this question from this assessment?
+                            <p class="small text-muted mt-2">The question will remain in the Question Bank.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <form id="remove-question-form" action="../ajax/delete_question.php" method="POST"> <input type="hidden" name="question_id" id="remove_question_id">
+                                <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Remove</button>
+                            </form>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div id="edit-answer-fields-container" class="mt-3">
-                    </div>
-
-                    <div id="editGradingArea" class="mt-3">
-                        <label class="form-label fw-bold">Grading:</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="grading_type" id="editGradingAuto" value="automatic">
-                            <label class="form-check-label" for="editGradingAuto">Automatic</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="grading_type" id="editGradingManual" value="manual">
-                            <label class="form-check-label" for="editGradingManual">Manual</label>
-                        </div>
-                        <div id="editPointsGroup" class="mt-2" style="display: none;">
-                            <label for="editMaxPoints" class="form-label">Max Points:</label>
-                            <input type="number" class="form-control w-25" id="editMaxPoints" name="max_points" value="1" min="1">
-                        </div>
-                        <div class="form-text" id="editGradingHelpText">Adjust grading type and points.</div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="edit-question-form" class="btn btn-primary">Save Changes</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-labelledby="deleteQuestionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteQuestionModalLabel">Confirm Removal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to remove this question from this assessment?
-                <p class="small text-muted mt-2">The question will remain in the Question Bank.</p>
-            </div>
-            <div class="modal-footer">
-                <form id="remove-question-form" action="../ajax/delete_question.php" method="POST"> <input type="hidden" name="question_id" id="remove_question_id">
-                    <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Remove</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<?php
-// Corrected footer path
-require_once '../includes/footer.php';
-$conn->close();
-?>
+            <?php
+            // Corrected footer path
+            require_once '../includes/footer.php';
+            $conn->close();
+            ?>

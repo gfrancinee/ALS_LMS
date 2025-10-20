@@ -104,7 +104,7 @@ if (!empty($wrong_question_ids)) {
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm border-0 text-center">
+            <div class="card shadow-sm border-0 text-center bg-light">
                 <div class="card-body p-5">
                     <h1 class="card-title">Quiz Completed!</h1>
                     <p class="lead">You have completed the quiz: <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
@@ -129,8 +129,8 @@ if (!empty($wrong_question_ids)) {
 
                     <p class="text-muted">Submitted on: <?= date("F j, Y, g:i a", strtotime($attempt_details['submitted_at'])) ?></p>
 
-                    <a href="<?= htmlspecialchars($back_link) ?>" class="btn btn-outline-secondary mt-4">
-                        <i class="bi bi-arrow-left"></i> Back to Strand
+                    <a href="<?= htmlspecialchars($back_link) ?>" class="btn btn-primary mt-4">
+                        <i class="bi bi-arrow-left"></i> Back
                     </a>
                 </div>
             </div>

@@ -81,58 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (materialType) materialType.addEventListener('change', injectMaterialInput);
     if (uploadModal) uploadModal.addEventListener('shown.bs.modal', injectMaterialInput);
 
-    if (uploadForm) {
-        uploadForm.addEventListener('submit', function (e) {
-            e.preventDefault(); // This is the most important line to prevent page refresh
-
-            const uploadAlertModal = document.getElementById('uploadAlertModal');
-            const submitButton = this.querySelector('button[type="submit"]');
-            const formData = new FormData(this);
-
-            submitButton.disabled = true;
-            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...`;
-            uploadAlertModal.style.display = 'none';
-
-            fetch('ajax/upload_material.php', {
-                method: 'POST',
-                body: formData
-            })
-                .then(res => {
-                    if (!res.ok) { throw new Error('Network response was not ok'); }
-                    return res.json();
-                })
-                .then(data => {
-                    let alertClass = data.status === 'success' ? 'alert-success' : 'alert-danger';
-                    uploadAlertModal.innerHTML = `<div class="alert ${alertClass} mb-0">${data.message}</div>`;
-                    uploadAlertModal.style.display = 'block';
-
-                    if (data.status === 'success') {
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Upload';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    uploadAlertModal.style.display = 'block';
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Upload';
-                });
-        });
-    }
-
-    function getAcceptType(type) {
-        switch (type) {
-            case 'file': return '.pdf,.doc,.docx,.ppt,.pptx';
-            case 'video': return 'video/*';
-            case 'image': return 'image/*';
-            case 'audio': return 'audio/*';
-            default: return '*/*';
-        }
-    }
 
     // --- AJAX Refresh Functions ---
     window.refreshMaterialList = function () {

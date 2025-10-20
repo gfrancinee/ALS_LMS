@@ -56,8 +56,9 @@ try {
             }
         }
     } elseif ($question_type == 'true_false') {
+        // Use the index value from the form (e.g., '0' for True, '1' for False)
         $options = $_POST['tf_options'] ?? ['True', 'False'];
-        $correct_option_index = $_POST['tf_correct_option'] ?? -1;
+        $correct_option_index = $_POST['tf_correct_option'] ?? -1; // This should be '0' or '1'
         foreach ($options as $index => $option_text) {
             $is_correct = ($index == $correct_option_index) ? 1 : 0;
             $stmt_opt->bind_param("isi", $new_question_id, $option_text, $is_correct);
@@ -76,11 +77,12 @@ try {
 
 
     // 3. Link question to the assessment
-    $sql_link = "INSERT INTO assessment_questions (assessment_id, question_id) VALUES (?, ?)";
+    $sql_link = "INSERT INTO assessment_questions (assessment_id, question_id, points) VALUES (?, ?, ?)";
     $stmt_link = $conn->prepare($sql_link);
     if ($stmt_link === false) throw new Exception("Prepare failed (assessment_questions): " . $conn->error);
 
-    $stmt_link->bind_param("ii", $assessment_id, $new_question_id);
+    // Use max_points when linking
+    $stmt_link->bind_param("iii", $assessment_id, $new_question_id, $max_points);
     $stmt_link->execute();
     $stmt_link->close();
 
@@ -100,14 +102,18 @@ try {
     $grading_type_html = ucfirst($grading_type);
     $points_html = $max_points . 'pt' . ($max_points > 1 ? 's' : '');
 
+    // --- THIS IS THE FIX ---
+    // The badge classes now match your manage_assessment.php loop
+    // (bg-secondary -> text-secondary)
+    // (bg-info -> text-success)
     $new_questions_html = <<<HTML
         <div class="bg-light rounded p-3 mb-2 question-card" data-question-id="{$new_question_id}">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <p class="fw-bold mb-1">
                         Question {$q_num}:
-                        <span class="badge bg-secondary fw-normal ms-2">{$question_type_html}</span>
-                        <span class="badge bg-info fw-normal ms-1">{$grading_type_html} Grading ({$points_html})</span>
+                        <span class="badge text-secondary fw-normal ms-2">{$question_type_html}</span>
+                        <span class="badge text-success fw-normal ms-1">{$grading_type_html} Grading ({$points_html})</span>
                     </p>
                     <p class="mb-0 question-text-display">{$question_text_html}</p>
                 </div>
@@ -122,6 +128,7 @@ try {
             </div>
         </div>
 HTML;
+    // --- END OF FIX ---
 
     // 7. Send the correct JSON response
     echo json_encode(['success' => true, 'newQuestionHtml' => $new_questions_html]);
