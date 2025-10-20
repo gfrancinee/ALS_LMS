@@ -977,11 +977,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    // This line is correct and should work
+                    // This is the only field we need to populate
                     document.getElementById('editMaterialLabel').value = result.data.label;
-
-                    // The error was caused by a line like this, which is now gone:
-                    // document.getElementById('editMaterialDescription').value = ...
                 } else {
                     alert('Error: ' + (result.error || 'Could not load details.'));
                 }
@@ -1021,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Update failed: ' + (result.error || 'Please try again.'));
                 }
             } catch (error) {
-                // This catches network errors OR if the PHP script had a fatal error (not JSON)
+                // This catches network errors OR if the PHP script had a fatal error
                 console.error('Error submitting form:', error);
                 alert('An error occurred. The server response was not valid.');
             }
