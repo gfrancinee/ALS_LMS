@@ -19,7 +19,7 @@ if (!$attempt_id) {
 // --- Fetch Attempt Details (Student, Assessment, Score) & Verify Teacher owns Assessment ---
 $stmt_attempt = $conn->prepare(
     "SELECT qa.id as attempt_id, qa.student_id, qa.assessment_id, qa.score, qa.total_items, qa.submitted_at,
-            u.first_name, u.last_name,
+            u.fname, u.lname,
             a.title as assessment_title, a.strand_id, a.teacher_id
      FROM quiz_attempts qa
      JOIN users u ON qa.student_id = u.id
@@ -103,13 +103,16 @@ require_once '../includes/header.php'; // Adjust path if needed
 <div class="container mt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
+            <div class="back-container">
+                <a href="view_submissions.php?assessment_id=<?= $attempt_details['assessment_id'] ?>" class="back-link">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
             <h2 class="mb-1">Grade Submission</h2>
             <p class="lead mb-0">Assessment: <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
-            <p class="text-muted">Student: <?= htmlspecialchars($attempt_details['first_name'] . ' ' . $attempt_details['last_name']) ?> | Submitted: <?= date("M j, Y, g:i A", strtotime($attempt_details['submitted_at'])) ?></p>
+            <p class="text-muted">Student: <?= htmlspecialchars($attempt_details['fname'] . ' ' . $attempt_details['lname']) ?> | Submitted: <?= date("M j, Y, g:i A", strtotime($attempt_details['submitted_at'])) ?></p>
         </div>
-        <a href="view_submissions.php?assessment_id=<?= $attempt_details['assessment_id'] ?>" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Submissions
-        </a>
+
     </div>
     <hr>
 
@@ -125,10 +128,13 @@ require_once '../includes/header.php'; // Adjust path if needed
                     $is_manual = ($qa['grading_type'] == 'manual' || $qa['question_type'] == 'essay'); // Determine if manual input needed
                     $points_value = ($qa['points_awarded'] !== null) ? $qa['points_awarded'] : ($qa['student_is_correct'] ? $qa['max_points'] : 0); // Pre-fill points
                     ?>
-                    <div class="card mb-4 shadow-sm question-review-card">
+                    <div class="card mt-4 border-light shadow-sm question-review-card"
+                        data-grading="<?= htmlspecialchars($qa['grading_type']) ?>"
+                        data-max-points="<?= htmlspecialchars($qa['max_points']) ?>"
+                        data-auto-points="<?= ($qa['grading_type'] == 'automatic' ? ($points_value ?? '0') : '0') ?>">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Question <?= $q_num ?></h5>
-                            <span class="badge <?= $is_manual ? 'bg-warning text-dark' : 'bg-info' ?>">
+                            <span class="badge <?= $is_manual ? 'text-warning' : 'text-info' ?>">
                                 <?= ucfirst($qa['grading_type']) ?> Grading (<?= $qa['max_points'] ?>pt<?= $qa['max_points'] > 1 ? 's' : '' ?>)
                             </span>
                         </div>
@@ -170,7 +176,7 @@ require_once '../includes/header.php'; // Adjust path if needed
                                 <span class="ms-2 text-muted">/ <?= $qa['max_points'] ?></span>
                             <?php else: ?>
                                 <span class="fw-bold me-2">Points Awarded:</span>
-                                <span class="badge <?= $qa['student_is_correct'] ? 'bg-success' : 'bg-danger' ?>">
+                                <span class="badge <?= $qa['student_is_correct'] ? 'text-success' : 'text-danger' ?>">
                                     <?= $points_value ?> / <?= $qa['max_points'] ?>
                                 </span>
                             <?php endif; ?>
@@ -179,20 +185,20 @@ require_once '../includes/header.php'; // Adjust path if needed
                 <?php endforeach; ?>
 
                 <div class="mt-4 text-end">
-                    <button type="submit" class="btn btn-success btn-lg">
+                    <button type="submit" class="btn btn-success btn-md">
                         <i class="bi bi-check-circle-fill me-2"></i> Save Grades & Update Total Score
                     </button>
                 </div>
             </form>
         </div>
         <div class="col-md-4">
-            <div class="card sticky-top" style="top: 20px;">
+            <div class="card sticky-top mt-5 border-light shadow-sm" style="top: 20px;">
                 <div class="card-header">
                     Summary
                 </div>
                 <div class="card-body text-center">
                     <h5 class="card-title">Current Score</h5>
-                    <p class="display-4 fw-bold" id="current-score-display"><?= $attempt_details['score'] ?></p>
+                    <p class="display-4 fw-light" id="current-score-display"><?= $attempt_details['score'] ?></p>
                     <p class="fs-5 text-muted">out of <?= $attempt_details['total_items'] ?> total points</p>
                     <hr>
                     <p class="small text-muted">Manually entered points will update the total score upon saving.</p>
@@ -206,76 +212,118 @@ require_once '../includes/header.php'; // Adjust path if needed
     document.addEventListener('DOMContentLoaded', () => {
         const gradingForm = document.getElementById('grading-form');
         const scoreDisplay = document.getElementById('current-score-display');
-        const manualGradeInputs = gradingForm.querySelectorAll('.manual-grade-input');
-        const totalPointsPossible = <?= $attempt_details['total_items'] ?? 0 ?>; // Get total from PHP
+        const manualGradeInputs = gradingForm.querySelectorAll('.manual-grade-input'); // Use the specific class for inputs
+        const totalPossiblePoints = <?= $attempt_details['total_items'] ?? 0 ?>; // Get total from PHP
 
-        // Store initial scores for auto-graded items
-        const autoGradedScores = {};
-        gradingForm.querySelectorAll('.question-review-card').forEach(card => {
-            const pointsAwardedSpan = card.querySelector('.card-footer .badge'); // Badge for auto-graded
-            if (pointsAwardedSpan && !card.querySelector('.manual-grade-input')) {
-                // Extract points and question ID (assuming student_answer_id links uniquely)
-                const studentAnswerIdInput = card.querySelector('input[type="number"]'); // Check if manual input exists
-                if (!studentAnswerIdInput) { // Only process if truly auto-graded display
-                    const pointsText = pointsAwardedSpan.textContent.trim();
-                    const points = parseFloat(pointsText.split('/')[0].trim());
-                    // Need a unique identifier if multiple auto questions exist.
-                    // For now, let's assume we recalculate all auto based on stored correct status
-                }
-            }
-        });
-
+        // Function to calculate and update the score preview
         function recalculateScorePreview() {
-            let currentTotal = 0;
-            // Loop through all question cards again for recalculation
-            gradingForm.querySelectorAll('.question-review-card').forEach(card => {
-                const manualInput = card.querySelector('.manual-grade-input');
-                const autoBadge = card.querySelector('.card-footer .badge'); // Auto-graded score badge
-                const maxPointsText = card.querySelector('.card-footer .text-muted')?.textContent || card.querySelector('.card-footer span:not(.badge)')?.textContent || '/ 1'; // Find max points text
-                const maxPoints = parseFloat(maxPointsText.replace(/[^0-9.]/g, '')) || 1; // Extract max points number
-                const isCorrectAuto = autoBadge ? autoBadge.classList.contains('bg-success') : false; // Check if auto was correct
+            let currentTotalScore = 0.0; // Use float for potential 0.5 points
+            console.log('--- Recalculating Score ---'); // Keep for debugging
 
-                if (manualInput) {
-                    // Manual: Add the current input value (or 0 if invalid)
-                    const points = parseFloat(manualInput.value);
-                    if (!isNaN(points) && points >= 0) {
-                        // Clamp value to max points visually
-                        currentTotal += Math.min(points, maxPoints);
+            // --- FIX: Use the correct class selector ---
+            // Ensure your PHP loop adds class="question-review-card" to the main div/card for each question
+            gradingForm.querySelectorAll('.question-review-card').forEach((block, index) => {
+                // --- END FIX ---
+
+                const gradingType = block.dataset.grading; // 'manual' or 'automatic'
+                const maxPoints = parseFloat(block.dataset.maxPoints || '0');
+                const autoPoints = parseFloat(block.dataset.autoPoints || '0'); // Get auto points
+
+                // --- Debugging Logs ---
+                console.log(`Question ${index + 1}: Type=${gradingType}, Max=${maxPoints}, AutoPts=${autoPoints}`);
+                // --- End Logs ---
+
+
+                if (gradingType === 'manual') {
+                    const input = block.querySelector('.manual-grade-input');
+                    if (input) {
+                        let points = parseFloat(input.value);
+                        // --- Debugging Log ---
+                        console.log(`  Manual Input Value: "${input.value}", Parsed: ${points}`);
+                        // --- End Log ---
+
+                        // Treat empty or invalid as 0 for calculation
+                        if (isNaN(points) || points < 0) {
+                            points = 0.0;
+                        }
+                        // Add the valid (or 0) score, capped at max points
+                        const scoreToAdd = Math.min(points, maxPoints);
+                        currentTotalScore += scoreToAdd;
+                        // --- Debugging Log ---
+                        console.log(`  Manual Score Added: ${scoreToAdd}`);
+                        // --- End Log ---
+                    } else {
+                        console.log('  Manual input not found!');
                     }
-                } else if (autoBadge) {
-                    // Automatic: Add max points if correct, 0 otherwise
-                    if (isCorrectAuto) {
-                        currentTotal += maxPoints;
-                    }
+                } else { // Assumed automatic
+                    // Get the pre-calculated auto points from the data attribute
+                    currentTotalScore += autoPoints;
+                    // --- Debugging Log ---
+                    console.log(`  Automatic Score Added: ${autoPoints}`);
+                    // --- End Log ---
                 }
             });
 
-            // Update the display
+            console.log('Final Calculated Score:', currentTotalScore); // Debug Final Score
+
+            // Update the display, ensuring it doesn't visually exceed total possible
             if (scoreDisplay) {
-                // Ensure score doesn't exceed total possible visually
-                scoreDisplay.textContent = Math.min(currentTotal, totalPointsPossible);
+                // Round to avoid potential floating point issues in display
+                const finalScore = Math.min(currentTotalScore, totalPossiblePoints);
+                // Format to potentially show one decimal place if needed (e.g., for 0.5)
+                scoreDisplay.textContent = Number.isInteger(finalScore) ? finalScore : finalScore.toFixed(1);
             }
         }
 
-        // Add event listeners to all manual input fields
+        // Add event listeners to manual input fields
         manualGradeInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                // Optional: Basic validation to prevent negative or > max points input
+            // Update preview dynamically as the teacher types
+            input.addEventListener('input', recalculateScorePreview);
+
+            // Add validation on blur (when clicking away)
+            input.addEventListener('blur', () => {
                 const max = parseFloat(input.getAttribute('max'));
                 let value = parseFloat(input.value);
+
                 if (isNaN(value) || value < 0) {
-                    input.value = 0; // Reset invalid input
+                    // Clear invalid negative input, recalculate score as 0 for this item
+                    input.value = ''; // Or set to '0' if you prefer
+                    recalculateScorePreview();
                 } else if (value > max) {
-                    input.value = max; // Cap at max points
+                    // Correct value if over max, then recalculate
+                    input.value = max;
+                    recalculateScorePreview();
                 }
-                recalculateScorePreview(); // Update score preview on any change
+                // No need for recalculateScorePreview() again if within limits, 'input' event handled it
             });
         });
 
-        // Initial calculation on page load
+        // Initial calculation on page load. 
+        // This should now correctly sum the initial values from PHP (auto points + saved manual points).
         recalculateScorePreview();
     });
 </script>
+
+<style>
+    .back-container {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        z-index: 1000;
+    }
+
+    /* --- Role-Based Hover Color for Back Link --- */
+    .back-link {
+        color: #6c757d;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .back-link-teacher:hover {
+        color: green;
+    }
+</style>
 
 <?php
 $conn->close();

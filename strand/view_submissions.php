@@ -91,7 +91,7 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                 <tbody>
                     <?php foreach ($submissions as $submission): ?>
                         <tr>
-                            <td><?= htmlspecialchars($submission['last_name'] . ', ' . $submission['first_name']) ?></td>
+                            <td><?= htmlspecialchars($submission['lname'] . ', ' . $submission['fname']) ?></td>
                             <td><?= $submission['score'] ?> / <?= $submission['total_items'] ?></td>
                             <td><?= date("M j, Y, g:i A", strtotime($submission['submitted_at'])) ?></td>
                             <td>

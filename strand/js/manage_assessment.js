@@ -427,6 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(editForm);
+            const questionId = formData.get('question_id'); // Get ID early
             const submitButton = document.querySelector('#editQuestionModal button[type="submit"]');
             submitButton.disabled = true;
             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
@@ -438,20 +439,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const result = await response.json();
 
-                if (result.success) {
-                    const questionId = formData.get('question_id');
+                if (result.success && result.updatedQuestion) {
+                    const updatedData = result.updatedQuestion;
 
-                    // Find the question card on the main page
-                    const questionCard = document.querySelector(`button[data-question-id="${questionId}"]`).closest('.card');
+                    // --- START FIX ---
+
+                    // 1. Find the correct question card on the main page using data-attribute
+                    const questionCard = document.querySelector(`.question-card[data-question-id="${questionId}"]`);
+
                     if (questionCard) {
-                        // Update the question text directly on the page
-                        const questionTextElement = questionCard.querySelector('.card-body p:nth-of-type(2)');
-                        questionTextElement.textContent = result.updated_text;
+                        // 2. Update the question text display
+                        const questionTextElement = questionCard.querySelector('.question-text-display');
+                        if (questionTextElement && updatedData.question_text) {
+                            // Use innerHTML to render line breaks correctly
+                            questionTextElement.innerHTML = updatedData.question_text.replace(/\n/g, '<br>');
+                        }
+
+                        // 3. Update the grading info badge
+                        const gradingBadge = questionCard.querySelector('.badge-grading-info');
+                        if (gradingBadge && updatedData.grading_type && updatedData.max_points) {
+                            const gradingTypeDisplay = updatedData.grading_type.charAt(0).toUpperCase() + updatedData.grading_type.slice(1);
+                            const pointsDisplay = `${updatedData.max_points}pt${updatedData.max_points > 1 ? 's' : ''}`;
+                            gradingBadge.textContent = `${gradingTypeDisplay} Grading (${pointsDisplay})`;
+                        }
+
+                        // Optional: Update question type badge if needed (though usually type doesn't change)
+                        // const typeBadge = questionCard.querySelector('.badge-question-type');
+                        // if(typeBadge && updatedData.question_type) { ... }
                     }
+                    // --- END FIX ---
 
                     // Hide the modal
-                    const modal = bootstrap.Modal.getInstance(editQuestionModal);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editQuestionModal')); // Use element, not variable name
                     modal.hide();
+
                 } else {
                     alert('Error: ' + (result.error || 'Could not save changes.'));
                 }

@@ -99,12 +99,84 @@ if (!empty($wrong_question_ids)) {
         }
     }
 }
+
+// --- FETCH FULL REVIEW DATA (Questions, Answers, Correct Answers) ---
+$sql_review = "
+    SELECT
+        qb.id as question_id,
+        qb.question_text,
+        qb.question_type,
+        qb.grading_type,
+        sa.answer_text as student_answer_text,
+        sa.is_correct as student_is_correct,
+        sa.points_awarded
+    FROM question_bank qb
+    JOIN student_answers sa ON qb.id = sa.question_id
+    WHERE sa.quiz_attempt_id = ?
+    ORDER BY sa.id
+";
+$stmt_review = $conn->prepare($sql_review);
+$stmt_review->bind_param("i", $attempt_id);
+$stmt_review->execute();
+$result_review = $stmt_review->get_result();
+$review_items = [];
+// Re-check wrong questions based on fetched review data for consistency
+$wrong_question_ids_from_review = [];
+while ($row = $result_review->fetch_assoc()) {
+    $review_items[$row['question_id']] = $row;
+    // If this was an auto-graded, incorrect answer, add it for recommendation
+    if ($row['grading_type'] == 'automatic' && $row['student_is_correct'] == 0) {
+        $wrong_question_ids_from_review[] = $row['question_id'];
+    }
+}
+$stmt_review->close();
+
+// Fetch correct options separately for all questions
+$question_ids = array_keys($review_items);
+$correct_options = [];
+$all_options = []; // To display all choices for MC/TF
+
+if (!empty($question_ids)) {
+    $placeholders = implode(',', array_fill(0, count($question_ids), '?'));
+    $types = str_repeat('i', count($question_ids));
+
+    // Get ALL options for these questions
+    $sql_all_opts = "SELECT id, question_id, option_text, is_correct 
+                     FROM question_options
+                     WHERE question_id IN ({$placeholders})";
+    $stmt_all_opts = $conn->prepare($sql_all_opts);
+    $stmt_all_opts->bind_param($types, ...$question_ids);
+    $stmt_all_opts->execute();
+    $result_all_opts = $stmt_all_opts->get_result();
+    while ($row = $result_all_opts->fetch_assoc()) {
+        $all_options[$row['question_id']][] = $row;
+        if ($row['is_correct'] == 1) {
+            $correct_options[$row['question_id']][] = $row['option_text'];
+        }
+    }
+    $stmt_all_opts->close();
+}
+
+// Ensure recommendations are based on the latest review check
+if (!empty($wrong_question_ids_from_review)) {
+    $recommendations = []; // Reset recommendations
+    $recommended_ids = []; // To prevent duplicate recommendations
+    foreach ($wrong_question_ids_from_review as $q_id) {
+        $rec = recommendMaterialForQuestion($conn, $q_id, $attempt_details['strand_id']);
+        if ($rec !== null && !in_array($rec['id'], $recommended_ids)) {
+            $recommendations[] = $rec;
+            $recommended_ids[] = $rec['id'];
+        }
+    }
+} else {
+    $recommendations = []; // Ensure recommendations are empty if no wrong answers
+}
 ?>
 
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm border-0 text-center bg-light">
+            <div class="card shadow-sm border-0 text-center bg-light mt-0">
                 <div class="card-body p-5">
                     <h1 class="card-title">Quiz Completed!</h1>
                     <p class="lead">You have completed the quiz: <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
@@ -112,13 +184,11 @@ if (!empty($wrong_question_ids)) {
                     <div class="my-4">
 
                         <?php if ($has_manual_questions): ?>
-                            <h5 class="text-info">Score (Auto-Graded Portion):</h5>
                             <h2 class="display-4 fw-bold text-primary"><?= $score ?> / <?= $total_items ?></h2>
                             <p class="h4">(<?= $percentage ?>%)</p>
                             <p class="lead mt-3 text-muted">
                                 Your final score is <strong>pending</strong>.
                                 <br>
-                                <small>This assessment includes questions that must be graded manually by your teacher.</small>
                             </p>
                         <?php else: ?>
                             <h5 class="text-success">Your Final Score:</h5>
@@ -129,7 +199,7 @@ if (!empty($wrong_question_ids)) {
 
                     <p class="text-muted">Submitted on: <?= date("F j, Y, g:i a", strtotime($attempt_details['submitted_at'])) ?></p>
 
-                    <a href="<?= htmlspecialchars($back_link) ?>" class="btn btn-primary mt-4">
+                    <a href="<?= htmlspecialchars($back_link) ?>" class="btn text-primary mt-4">
                         <i class="bi bi-arrow-left"></i> Back
                     </a>
                 </div>
@@ -152,9 +222,120 @@ if (!empty($wrong_question_ids)) {
                 </div>
             <?php endif; ?>
 
+            <?php if (!empty($review_items)): ?>
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0">Question Review</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <?php
+                        $q_num = 1; // Start question numbering
+                        foreach ($review_items as $item):
+                        ?>
+                            <div class="mb-4 pb-3 <?php if ($q_num < count($review_items)) echo 'border-bottom'; ?>">
+                                <p class="fw-bold fs-5">Question <?= $q_num++ ?>:</p>
+                                <p class="question-text mb-3 p-3 bg-light rounded"><?= nl2br(htmlspecialchars($item['question_text'])) ?></p>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Your Answer:</label>
+                                    <?php
+                                    $student_answer = $item['student_answer_text'];
+                                    $is_correct = $item['student_is_correct'];
+                                    $answer_class = $is_correct ? 'border-success bg-success-light' : 'border-danger bg-danger-light';
+                                    if ($item['grading_type'] == 'manual') {
+                                        $answer_class = 'border-info bg-info-light'; // Pending review
+                                    }
+
+                                    if (in_array($item['question_type'], ['multiple_choice', 'true_false'])) {
+                                        $student_answer_text = "<em>No answer provided</em>"; // Default if not found
+                                        if (isset($all_options[$item['question_id']])) {
+                                            foreach ($all_options[$item['question_id']] as $opt) {
+                                                // Ensure we compare the stored answer (option ID) correctly
+                                                if (isset($opt['id']) && $opt['id'] == $student_answer) {
+                                                    $student_answer_text = htmlspecialchars($opt['option_text']);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        $student_answer_text = !empty($student_answer) ? nl2br(htmlspecialchars($student_answer)) : "<em>No answer provided</em>";
+                                    }
+                                    ?>
+                                    <div class="p-3 border <?= $answer_class ?> rounded student-answer">
+                                        <?= $student_answer_text ?>
+                                    </div>
+                                </div>
+
+                                <?php if ($item['grading_type'] == 'automatic' && !$is_correct): ?>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold">Correct Answer:</label>
+                                        <div class="p-3 border border-success bg-success-light rounded correct-answer">
+                                            <?php
+                                            $correct_texts = $correct_options[$item['question_id']] ?? [];
+                                            echo !empty($correct_texts) ? nl2br(htmlspecialchars(implode('; ', $correct_texts))) : "<em>N/A</em>";
+                                            ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($item['grading_type'] == 'manual'): ?>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold">Teacher Feedback:</label>
+                                        <div class="p-3 border border-info bg-info-light rounded">
+                                            <?php if ($item['points_awarded'] !== null): ?>
+                                                Points Awarded: <?= $item['points_awarded'] ?>
+                                            <?php else: ?>
+                                                <em>Pending teacher review.</em>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+
+                                <div class="text-end">
+                                    <?php if ($item['grading_type'] == 'manual'): ?>
+                                        <span class="badge bg-info">
+                                            <?= ($item['points_awarded'] !== null) ? 'Graded' : 'Pending Review' ?>
+                                        </span>
+                                    <?php elseif ($is_correct): ?>
+                                        <span class="badge bg-success">Correct</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger">Incorrect</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div> <?php endif; ?>
+
         </div>
     </div>
 </div>
+
+<style>
+    .bg-success-light {
+        background-color: #e6f7ec;
+    }
+
+    .border-success {
+        border-color: #b7e1cd !important;
+    }
+
+    .bg-danger-light {
+        background-color: #fdecea;
+    }
+
+    .border-danger {
+        border-color: #f5c6cb !important;
+    }
+
+    .bg-info-light {
+        background-color: #e7f6f8;
+    }
+
+    .border-info {
+        border-color: #bde6ee !important;
+    }
+</style>
 
 <?php
 require_once '../includes/footer.php';

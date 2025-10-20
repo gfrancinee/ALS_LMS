@@ -189,10 +189,10 @@ $questions_stmt->close();
                                 <div>
                                     <p class="fw-bold mb-1">
                                         Question <?= $index + 1 ?>:
-                                        <span class="badge text-secondary fw-normal ms-2">
+                                        <span class="badge text-secondary fw-normal ms-2 badge-question-type">
                                             <?= str_replace('_', ' ', ucfirst($question['question_type'])) ?>
                                         </span>
-                                        <span class="badge text-success fw-normal ms-1">
+                                        <span class="badge text-success fw-normal ms-1 badge-grading-info">
                                             <?= ucfirst($question['grading_type']) ?> Grading (<?= $question['max_points'] ?>pt<?= $question['max_points'] > 1 ? 's' : '' ?>)
                                         </span>
                                     </p>

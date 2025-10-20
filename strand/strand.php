@@ -67,18 +67,23 @@ if ($user_role === 'teacher') {
     $cat_stmt->close();
 
     foreach ($categories as &$category) {
-        // THIS SQL IS NOW CORRECTED
+        // --- THIS SQL IS UPDATED to get the 'latest_attempt_id' ---
         $assessment_sql = "
             SELECT 
                 a.id, a.title, a.type, a.description, a.duration_minutes, a.max_attempts, a.is_open,
                 (SELECT COUNT(*) FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ?) as attempts_taken,
-                (SELECT MAX(score) FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ?) as highest_score,
-                (SELECT total_items FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ? ORDER BY score DESC, submitted_at DESC LIMIT 1) as total_items
+                (SELECT score FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ? ORDER BY submitted_at DESC LIMIT 1) as latest_score,
+                (SELECT total_items FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ? ORDER BY submitted_at DESC LIMIT 1) as total_items,
+                
+                -- This is the NEW line we need for the link --
+                (SELECT id FROM quiz_attempts qa WHERE qa.assessment_id = a.id AND qa.student_id = ? AND qa.status = 'submitted' ORDER BY submitted_at DESC LIMIT 1) as latest_attempt_id
+
             FROM assessments a
             WHERE a.category_id = ? 
-        "; // THE BUG FIX: The "AND a.is_open = 1" has been REMOVED.
+        ";
         $assess_stmt = $conn->prepare($assessment_sql);
-        $assess_stmt->bind_param("iiii", $user_id, $user_id, $user_id, $category['id']);
+        // We added one more '?' so we need one more 'i' and $user_id
+        $assess_stmt->bind_param("iiiii", $user_id, $user_id, $user_id, $user_id, $category['id']);
         $assess_stmt->execute();
         $category['assessments'] = $assess_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $assess_stmt->close();
@@ -472,33 +477,47 @@ if ($user_role === 'teacher') {
                                                                 </div>
                                                             <?php endif; ?>
                                                         </div>
-                                                    <?php else: // This is the Student View 
-                                                    ?>
+                                                    <?php else: ?>
                                                         <div class="assessment-item">
                                                             <?php
                                                             $attempts_left = $assessment['max_attempts'] - $assessment['attempts_taken'];
-                                                            $is_available = !empty($assessment['is_open']) && $attempts_left > 0;
+                                                            // Check if they have a completed attempt to view
+                                                            $has_completed_attempt = isset($assessment['latest_attempt_id']) && $assessment['latest_attempt_id'] > 0;
+                                                            // Check if they can take the quiz
+                                                            $can_take_quiz = !empty($assessment['is_open']) && $attempts_left > 0;
                                                             ?>
 
-                                                            <a href="<?= $is_available ? 'take_assessment.php?id=' . $assessment['id'] : '#' ?>" class="assessment-item-link <?= !$is_available ? 'disabled' : '' ?>">
+                                                            <a href="<?php
+                                                                        if ($has_completed_attempt) {
+                                                                            echo 'quiz_results.php?attempt_id=' . $assessment['latest_attempt_id'];
+                                                                        } elseif ($can_take_quiz) {
+                                                                            echo 'take_assessment.php?id=' . $assessment['id'];
+                                                                        } else {
+                                                                            echo '#';
+                                                                        }
+                                                                        ?>"
+                                                                class="assessment-item-link <?= !$can_take_quiz && !$has_completed_attempt ? 'disabled' : '' ?>">
+
                                                                 <div class="d-flex justify-content-between align-items-center">
                                                                     <div>
                                                                         <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
                                                                         <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
 
-                                                                        <?php if (empty($assessment['is_open'])): ?>
-                                                                            <span class="badge text-danger ms-2">Closed</span>
+                                                                        <?php if ($has_completed_attempt): ?>
+                                                                            <span class="badge text-primary ms-2">
+                                                                                View Results (Score: <?= $assessment['latest_score'] ?> / <?= $assessment['total_items'] ?>)
+                                                                            </span>
+
+                                                                        <?php elseif ($can_take_quiz): ?>
+                                                                            <span class="badge text-success ms-2">Open</span>
+
                                                                         <?php elseif ($attempts_left <= 0): ?>
                                                                             <span class="badge text-dark ms-2">Completed</span>
-                                                                        <?php else: ?>
-                                                                            <span class="badge text-success ms-2">Open</span>
+
+                                                                        <?php elseif (empty($assessment['is_open'])): ?>
+                                                                            <span class="badge text-danger ms-2">Closed</span>
                                                                         <?php endif; ?>
 
-                                                                        <?php if (isset($assessment['highest_score']) && $assessment['highest_score'] !== null): ?>
-                                                                            <span class="badge bg-primary ms-2">
-                                                                                Score: <?= $assessment['highest_score'] ?> / <?= $assessment['total_items'] ?>
-                                                                            </span>
-                                                                        <?php endif; ?>
                                                                     </div>
                                                                     <div class="text-muted small">
                                                                         <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
@@ -507,15 +526,20 @@ if ($user_role === 'teacher') {
                                                                 </div>
                                                             </a>
 
+                                                            <?php if ($has_completed_attempt && $can_take_quiz): ?>
+                                                                <div class="mt-2">
+                                                                    <a href="take_assessment.php?id=<?= $assessment['id'] ?>" class="btn btn-sm btn-outline-secondary py-0">
+                                                                        Retake (<?= $attempts_left ?> left)
+                                                                    </a>
+                                                                </div>
+                                                            <?php endif; ?>
+
                                                             <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
                                                                 <div class="mt-2">
                                                                     <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-student-<?= $assessment['id'] ?>">
                                                                         Show/Hide Description
                                                                     </button>
                                                                 </div>
-                                                            <?php endif; ?>
-
-                                                            <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
                                                                 <div class="collapse" id="desc-student-<?= $assessment['id'] ?>">
                                                                     <div class="small text-muted mt-2 p-3 bg-light rounded">
                                                                         <?= $assessment['description'] ?>

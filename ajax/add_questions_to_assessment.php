@@ -149,10 +149,10 @@ if (!$error_occurred && !empty($successfully_added_ids)) {
             <div>
                 <p class="fw-bold mb-1">
                     Question {$q_num}:
-                    <span class="badge text-secondary fw-normal ms-2">
+                    <span class="badge text-secondary fw-normal ms-2 badge-question-type">
                         {$question_type_html}
                     </span>
-                    <span class="badge text-success fw-normal ms-1">
+                    <span class="badge text-success fw-normal ms-1 badge-grading-info">
                         {$grading_type_html} Grading ({$points_html})
                     </span>
                 </p>
