@@ -38,8 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const participantModal = document.getElementById('participantModal');
     const mediaModal = document.getElementById('mediaModal');
 
-    // Forms, Containers & Alerts
-    const editForm = document.querySelector('#editMaterialModal form');
+    // Forms, Containers & AlertsA
     const assessmentForm = document.getElementById('assessmentForm');
     const assessmentListContainer = document.getElementById('assessmentList');
     const participantListContainer = document.getElementById('participantList');
@@ -322,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // SECTION 3: EVENT LISTENERS
 
-
     if (materialType) {
         materialType.addEventListener('change', injectMaterialInput);
     }
@@ -347,20 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 container.innerHTML = `<label class="form-label">Replace File</label><input type="file" class="form-control" name="file">${filePath ? `<small class="text-muted">Current: <a href="${filePath}" target="_blank">View</a></small>` : ''}`;
             }
-        });
-    }
-
-    if (editForm) {
-        editForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const fd = new FormData(this);
-            fetch('../ajax/update_material.php', { method: 'POST', body: fd })
-                .then(res => res.json()).then(data => {
-                    if (data.status === 'success') {
-                        bootstrap.Modal.getInstance(editModal).hide();
-                        refreshMaterialList();
-                    } else { alert(data.message); }
-                }).catch(err => alert("Update failed. Please try again."));
         });
     }
 

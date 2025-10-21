@@ -217,8 +217,6 @@ if (!empty($wrong_question_ids_from_review)) {
                                 <p class="h4">(<?= $percentage ?>%)</p>
                                 <p class="lead mt-3 text-muted">
                                     Your final score is <strong>pending</strong>.
-                                    <br>
-                                    <small>This assessment includes questions that must be graded manually by your teacher.</small>
                                 </p>
 
                             <?php else: // Manual questions exist BUT grading IS complete 

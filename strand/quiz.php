@@ -53,7 +53,7 @@ $q_sql = "SELECT qb.id, qb.question_text, qb.question_type
           FROM question_bank qb
           JOIN assessment_questions aq ON qb.id = aq.question_id
           WHERE aq.assessment_id = ? 
-          ORDER BY RAND()"; // Randomize question order
+          ORDER BY aq.id ASC"; // Order questions by add-order
 $q_stmt = $conn->prepare($q_sql);
 if ($q_stmt === false) die("Prepare failed (questions): " . $conn->error);
 $q_stmt->bind_param("i", $assessment_id);
@@ -70,9 +70,9 @@ if (!empty($question_ids)) {
 
     // Alias 'id' to 'option_id' to prevent confusion
     $sql_options = "SELECT id as option_id, question_id, option_text 
-                    FROM question_options 
-                    WHERE question_id IN ({$placeholders})
-                    ORDER BY RAND()"; // Randomize option order
+                FROM question_options 
+                WHERE question_id IN ({$placeholders})
+                ORDER BY id ASC"; // Order options by their creation order
     $stmt_options = $conn->prepare($sql_options);
     if ($stmt_options === false) die("Prepare failed (options): " . $conn->error);
 
