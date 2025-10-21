@@ -1,6 +1,16 @@
 // FINAL COMPLETE CODE for js/teacher.js
 document.addEventListener('DOMContentLoaded', () => {
 
+    if (document.querySelector('textarea#description-editor')) {
+        tinymce.init({
+            selector: 'textarea#description-editor',
+            plugins: 'lists link image emoticons table code wordcount',
+            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code',
+            height: 300,
+            menubar: false
+        });
+    }
+
     //==================================================//
     // START: SIDEBAR LOGIC
     //==================================================//
