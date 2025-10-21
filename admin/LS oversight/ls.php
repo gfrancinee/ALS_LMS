@@ -113,11 +113,11 @@ if (!isset($conn) || $conn->connect_error) {
                 <div class="col-lg-8 mx-auto">
                     <div class="card shadow-lg">
                         <div class="card-header bg-light">
-                            <h4 class="mb-0"><i class="bi bi-list-columns-reverse me-2"></i> Course Management </h4>
+                            <h4 class="mb-0"><i class="bi bi-list-columns-reverse me-2"></i> Learning Strand Management </h4>
                         </div>
                         <ul class="list-group course-actions-list">
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Manage Strands & Materials
+                                Manage Learning Strands & Materials
                                 <a href="strand_materials_editor.php" class="btn btn-primary btn-sm">Go to Editor</a>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -129,7 +129,7 @@ if (!isset($conn) || $conn->connect_error) {
                                 <a href="student_answers_review.php" class="btn btn-secondary btn-sm">Start Review</a>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
-                                Latest Added Strand: <span class="fw-bold text-success"><?php echo $recently_added_course; ?></span>
+                                Latest Added Learning Strand: <span class="fw-bold text-success"><?php echo $recently_added_course; ?></span>
                                 <a href="strand_details.php?name=<?php echo urlencode($recently_added_course); ?>" class="btn btn-outline-success btn-sm">Details</a>
                             </li>
                         </ul>
