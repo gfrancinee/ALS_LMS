@@ -7,7 +7,6 @@
     <title>ALS Registration</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/register.css" />
-    <!-- Defer script loading to after the body is parsed -->
     <script src="js/register.js" defer></script>
 </head>
 
@@ -20,60 +19,53 @@
                         <h1 class="text-center">Registration Form</h1>
                     </header>
 
-                    <!-- The novalidate attribute prevents default browser validation, letting our JS handle it -->
                     <form id="registerForm" novalidate>
-                        <!-- A new div for general server errors (e.g., "Registration failed") -->
-                        <div id="general-error" class="text-danger mt-2 text-center mb-3"></div>
+
+                        <!-- This is for general errors (e.g., "Server error") -->
+                        <div id="general-error" class="alert alert-danger text-center" style="display: none;"></div>
 
                         <div class="mb-3">
                             <label for="fname" class="form-label">Firstname</label>
                             <input type="text" class="form-control" id="fname" name="fname" required>
-                            <!-- Placeholder for firstname errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="fname-error"></div>
                         </div>
-
                         <div class="mb-3">
                             <label for="lname" class="form-label">Lastname</label>
                             <input type="text" class="form-control" id="lname" name="lname" required>
-                            <!-- Placeholder for lastname errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="lname-error"></div>
                         </div>
-
                         <div class="mb-3">
                             <label for="address" class="form-label">Address</label>
                             <input type="text" class="form-control" id="address" name="address" required>
-                            <!-- Placeholder for address errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="address-error"></div>
                         </div>
-
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Address</label>
                             <input type="email" class="form-control" id="email" name="email" required>
-                            <!-- Placeholder for email errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="email-error"></div>
                         </div>
-
                         <div class="mb-3">
                             <label for="phone" class="form-label">Phone Number</label>
                             <input type="tel" class="form-control" id="phone" name="phone" required>
-                            <!-- Placeholder for phone errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="phone-error"></div>
                         </div>
-
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" required>
-                            <!-- Placeholder for password errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="password-error"></div>
                         </div>
-
                         <div class="mb-3">
                             <label for="confirmPassword" class="form-label">Confirm Password</label>
                             <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-                            <!-- Placeholder for confirm password errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="confirmPassword-error"></div>
                         </div>
-
                         <div class="mb-3">
                             <label for="role" class="form-label">Role</label>
                             <select class="form-select" id="role" name="role" required>
@@ -81,10 +73,9 @@
                                 <option value="student">Student</option>
                                 <option value="teacher">Teacher</option>
                             </select>
-                            <!-- Placeholder for role errors -->
+                            <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="role-error"></div>
                         </div>
-
                         <button id="registerBtn" type="submit" class="btn btn-primary w-100">
                             <span class="btn-text">Register</span>
                             <span class="spinner-border spinner-border-sm text-light ms-2 spinner" role="status" style="display:none;"></span>

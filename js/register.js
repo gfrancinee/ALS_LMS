@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("registerForm");
 
-    // Store references to fields and their corresponding error divs
+    // Store references to fields AND their corresponding error divs
     const fields = {
         fname: { input: document.getElementById("fname"), errorDiv: document.getElementById("fname-error") },
         lname: { input: document.getElementById("lname"), errorDiv: document.getElementById("lname-error") },
@@ -16,20 +16,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const registerBtn = document.getElementById("registerBtn");
     const spinner = registerBtn.querySelector(".spinner");
     const btnText = registerBtn.querySelector(".btn-text");
-    const successModal = document.getElementById("successModal");
+    const successModal = document.getElementById("successModal"); // This is the old modal
     const goHomeBtn = document.getElementById("goHomeBtn");
     const generalErrorDiv = document.getElementById("general-error");
 
-    // Helper function to show an error for a specific field
+    /**
+     * Shows an error message for a specific field.
+     */
     function showError(fieldKey, message) {
         const field = fields[fieldKey];
         if (field && field.input && field.errorDiv) {
-            field.input.classList.add('is-invalid'); // Add red border
-            field.errorDiv.textContent = message;    // Show error message
+            field.input.classList.add('is-invalid');
+            field.errorDiv.textContent = message;
         }
     }
 
-    // Helper function to clear all previous errors
+    /**
+     * Clears all error messages and red borders from the form.
+     */
     function clearErrors() {
         for (const key in fields) {
             const field = fields[key];
@@ -38,28 +42,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 field.errorDiv.textContent = '';
             }
         }
-        if (generalErrorDiv) generalErrorDiv.textContent = '';
+        if (generalErrorDiv) {
+            generalErrorDiv.textContent = '';
+            generalErrorDiv.style.display = 'none';
+        }
     }
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
         clearErrors();
 
-        const values = {};
         let hasError = false;
 
         // --- Client-Side Validation ---
-        // This loop now checks all fields before stopping
         for (const key in fields) {
             const input = fields[key].input;
-            // Check if input exists before trying to read its value
-            if (!input) {
-                console.error(`Missing input element for: ${key}`);
-                continue; // Skip this field
-            }
-            const value = input.value.trim();
-            values[key] = value;
+            if (!input) continue;
 
+            const value = input.value.trim();
             const label = input.previousElementSibling?.textContent || key;
 
             if (!value) {
@@ -68,28 +68,27 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Specific format validations
-        if (values.email && !/^\S+@\S+\.\S+$/.test(values.email)) {
+        if (fields.email.input.value.trim() && !/^\S+@\S+\.\S+$/.test(fields.email.input.value.trim())) {
             showError('email', "Please enter a valid email address.");
             hasError = true;
         }
 
-        if (values.phone && !/^(\+63|0)9\d{9}$/.test(values.phone.replace(/[\s-]/g, ""))) {
-            showError('phone', "Please enter a valid phone number.");
+        if (fields.phone.input.value.trim() && !/^(\+63|0)9\d{9}$/.test(fields.phone.input.value.trim().replace(/[\s-]/g, ""))) {
+            showError('phone', "Please enter a valid Philippine phone number.");
             hasError = true;
         }
 
-        if (values.password && values.password.length < 6) {
+        if (fields.password.input.value.trim() && fields.password.input.value.trim().length < 6) {
             showError('password', "Password must be at least 6 characters.");
             hasError = true;
         }
 
-        if (values.confirmPassword && values.confirmPassword !== values.password) {
+        if (fields.confirmPassword.input.value.trim() && fields.confirmPassword.input.value.trim() !== fields.password.input.value.trim()) {
             showError('confirmPassword', "Passwords do not match.");
             hasError = true;
         }
 
-        if (hasError) return; // Stop if there are any client-side errors
+        if (hasError) return;
 
         // --- Server-Side Submission ---
         spinner.style.display = "inline-block";
@@ -107,26 +106,44 @@ document.addEventListener("DOMContentLoaded", () => {
             let data;
             try {
                 data = await res.json();
-            } catch {
-                throw new Error("Invalid JSON response from server. Check register-handler.php for errors.");
+            } catch (err) {
+                console.error("Server returned non-JSON response:", await res.text());
+                throw new Error("Invalid response from server. Check register-handler.php.");
             }
 
-            if (data.status === "success") {
+            // --- THIS IS THE UPDATED SUCCESS LOGIC ---
+            if (data.status === "success_code_sent") {
+                // IT WORKED! Redirect to the verify page.
+                window.location.href = `verify.php?email=${encodeURIComponent(data.email)}`;
+            }
+            else if (data.status === "success") {
+                // This is the OLD logic that you are seeing.
+                // We leave it here as a fallback, but it shouldn't be used
+                // if your register-handler.php is correct.
                 const modal = new bootstrap.Modal(successModal);
                 modal.show();
-            } else {
+            }
+            // --- END UPDATED SUCCESS LOGIC ---
+
+            else {
                 // If the server sends back specific field errors
-                if (data.errors) {
+                if (data.errors && Object.keys(data.errors).length > 0) {
                     for (const fieldKey in data.errors) {
                         showError(fieldKey, data.errors[fieldKey]);
                     }
                 } else {
-                    // Otherwise, show a general message
-                    if (generalErrorDiv) generalErrorDiv.textContent = data.message || "Registration failed.";
+                    // Otherwise, show a general message at the top
+                    if (generalErrorDiv) {
+                        generalErrorDiv.textContent = data.message || "Registration failed.";
+                        generalErrorDiv.style.display = 'block'; // Show it
+                    }
                 }
             }
         } catch (err) {
-            if (generalErrorDiv) generalErrorDiv.textContent = "Server error. Please try again.";
+            if (generalErrorDiv) {
+                generalErrorDiv.textContent = "Server error. Please try again.";
+                generalErrorDiv.style.display = 'block'; // Show it
+            }
             console.error("Fetch error:", err);
         } finally {
             spinner.style.display = "none";
@@ -139,3 +156,4 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "login.php";
     });
 });
+

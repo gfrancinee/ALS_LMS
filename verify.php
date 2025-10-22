@@ -4,15 +4,16 @@ require_once 'includes/db.php';
 
 $error_message = '';
 $success_message = '';
-$user_email = $_GET['email'] ?? ''; // Get email from URL
+// Get the email from the URL (sent by register.js)
+$user_email = $_GET['email'] ?? '';
 
-// This block handles the form submission when the user enters the code
+// This block handles the form submission when the user enters the 6-digit code
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = $_POST['verification_code'] ?? '';
-    $email = $_POST['email'] ?? '';
+    $email = $_POST['email'] ?? ''; // Get email from the hidden field
 
     if (empty($code) || empty($email)) {
-        $error_message = "Please enter the verification code.";
+        $error_message = "Please enter the 6-digit code.";
     } else {
         // Find the user and check if the code is correct AND not expired
         $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > NOW()");
@@ -34,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success_message = "Verification Successful! You can now log in.";
         } else {
             // FAILED! Code is wrong or expired.
+            $stmt->close();
             $error_message = "Invalid or expired verification code. Please try again.";
         }
         $conn->close();
@@ -64,11 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </p>
                     </header>
 
-                    <form id="verifyForm" method="POST">
+                    <form id="verifyForm" method="POST" action="verify.php?email=<?= htmlspecialchars($user_email) ?>">
                         <!-- Send the email along with the form submission -->
                         <input type="hidden" name="email" value="<?= htmlspecialchars($user_email) ?>">
 
-                        <!-- Show error message here -->
+                        <!-- Show server error message here -->
                         <?php if ($error_message): ?>
                             <div class="alert alert-danger text-center"><?= $error_message ?></div>
                         <?php endif; ?>
@@ -76,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="mb-3">
                             <label for="verification_code" class="form-label">Verification Code</label>
                             <input type="text" class="form-control" id="verification_code" name="verification_code" required maxlength="6"
-                                style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+                                style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;" autofocus>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">
@@ -85,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </form>
 
                     <p class="text-center mt-3">
+                        <!-- Note: You will need to create 'resend-code.php' later -->
                         Didn't get a code? <a href="resend-code.php?email=<?= htmlspecialchars($user_email) ?>">Resend code</a>
                     </p>
                 </div>
