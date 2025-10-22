@@ -1,74 +1,133 @@
 <?php
-// FILE: verify.php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
+session_start();
 require_once 'includes/db.php';
 
-$token = $_GET['token'] ?? null;
-$message = '';
-$is_success = false;
+$error_message = '';
+$success_message = '';
+$user_email = $_GET['email'] ?? ''; // Get email from URL
 
-if (!$token) {
-    $message = "Verification token is missing. Please check your link.";
-} else {
-    $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE verification_token = ?");
-    $stmt->bind_param("s", $token);
-    $stmt->execute();
-    $result = $stmt->get_result();
+// This block handles the form submission when the user enters the code
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $code = $_POST['verification_code'] ?? '';
+    $email = $_POST['email'] ?? '';
 
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-        if ($user['is_verified']) {
-            $message = "This account has already been verified. You can now log in.";
-            $is_success = true;
-        } else {
-            $update_stmt = $conn->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?");
-            $update_stmt->bind_param("i", $user['id']);
-            if ($update_stmt->execute()) {
-                $message = "Thank you! Your account has been successfully verified.";
-                $is_success = true;
-            } else {
-                $message = "An error occurred while verifying your account. Please try again later.";
-            }
-            $update_stmt->close();
-        }
+    if (empty($code) || empty($email)) {
+        $error_message = "Please enter the verification code.";
     } else {
-        $message = "This verification link is invalid or has expired.";
+        // Find the user and check if the code is correct AND not expired
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > NOW()");
+        $stmt->bind_param("ss", $email, $code);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 1) {
+            // SUCCESS! Code is correct and valid.
+            $stmt->close();
+
+            // 1. Mark user as verified
+            $stmt_update = $conn->prepare("UPDATE users SET is_verified = 1, verification_code = NULL, code_expires_at = NULL WHERE email = ?");
+            $stmt_update->bind_param("s", $email);
+            $stmt_update->execute();
+            $stmt_update->close();
+
+            // 2. Set flag to show success modal
+            $success_message = "Verification Successful! You can now log in.";
+        } else {
+            // FAILED! Code is wrong or expired.
+            $error_message = "Invalid or expired verification code. Please try again.";
+        }
+        $conn->close();
     }
-    $stmt->close();
 }
-$conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Account Verification</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Verification</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/register.css" /> <!-- Reuse your register CSS -->
 </head>
 
 <body class="bg-light">
-    <div class="container">
+    <main class="container mt-5">
         <div class="row justify-content-center">
-            <div class="col-md-6 mt-5">
-                <div class="card text-center">
-                    <div class="card-header">
-                        <h2>Account Verification</h2>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title <?= $is_success ? 'text-success' : 'text-danger'; ?>">
-                            <?= htmlspecialchars($message) ?>
-                        </h5>
-                        <?php if ($is_success): ?>
-                            <a href="login.php" class="btn btn-primary mt-3">Proceed to Login</a>
+            <div class="col-md-6">
+                <div class="register-container">
+                    <header>
+                        <h1 class="text-center">Verify Your Account</h1>
+                        <p class="text-center text-muted">
+                            A 6-digit code was sent to <br><strong><?= htmlspecialchars($user_email) ?></strong>
+                        </p>
+                    </header>
+
+                    <form id="verifyForm" method="POST">
+                        <!-- Send the email along with the form submission -->
+                        <input type="hidden" name="email" value="<?= htmlspecialchars($user_email) ?>">
+
+                        <!-- Show error message here -->
+                        <?php if ($error_message): ?>
+                            <div class="alert alert-danger text-center"><?= $error_message ?></div>
                         <?php endif; ?>
-                    </div>
+
+                        <div class="mb-3">
+                            <label for="verification_code" class="form-label">Verification Code</label>
+                            <input type="text" class="form-control" id="verification_code" name="verification_code" required maxlength="6"
+                                style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Verify
+                        </button>
+                    </form>
+
+                    <p class="text-center mt-3">
+                        Didn't get a code? <a href="resend-code.php?email=<?= htmlspecialchars($user_email) ?>">Resend code</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- This is the Success Modal from your screenshot -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Verification Successful!</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Your account is now verified. You can log in.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="goLoginBtn">Log In</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Check if PHP set the success message
+            <?php if ($success_message): ?>
+                // If success, show the modal
+                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+            <?php endif; ?>
+
+            // Handle the "Log In" button click
+            const goLoginBtn = document.getElementById('goLoginBtn');
+            if (goLoginBtn) {
+                goLoginBtn.addEventListener('click', () => {
+                    window.location.href = 'login.php';
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

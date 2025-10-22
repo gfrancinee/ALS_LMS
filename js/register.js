@@ -1,14 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("registerForm");
+
+    // Store references to fields and their corresponding error divs
     const fields = {
-        fname: document.getElementById("fname"),
-        lname: document.getElementById("lname"),
-        address: document.getElementById("address"),
-        email: document.getElementById("email"),
-        phone: document.getElementById("phone"),
-        password: document.getElementById("password"),
-        confirmPassword: document.getElementById("confirmPassword"),
-        role: document.getElementById("role")
+        fname: { input: document.getElementById("fname"), errorDiv: document.getElementById("fname-error") },
+        lname: { input: document.getElementById("lname"), errorDiv: document.getElementById("lname-error") },
+        address: { input: document.getElementById("address"), errorDiv: document.getElementById("address-error") },
+        email: { input: document.getElementById("email"), errorDiv: document.getElementById("email-error") },
+        phone: { input: document.getElementById("phone"), errorDiv: document.getElementById("phone-error") },
+        password: { input: document.getElementById("password"), errorDiv: document.getElementById("password-error") },
+        confirmPassword: { input: document.getElementById("confirmPassword"), errorDiv: document.getElementById("confirmPassword-error") },
+        role: { input: document.getElementById("role"), errorDiv: document.getElementById("role-error") }
     };
 
     const registerBtn = document.getElementById("registerBtn");
@@ -16,77 +18,85 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnText = registerBtn.querySelector(".btn-text");
     const successModal = document.getElementById("successModal");
     const goHomeBtn = document.getElementById("goHomeBtn");
-    let lastRegisteredRole = '';
-    const messageBox = createMessageBox();
+    const generalErrorDiv = document.getElementById("general-error");
+
+    // Helper function to show an error for a specific field
+    function showError(fieldKey, message) {
+        const field = fields[fieldKey];
+        if (field && field.input && field.errorDiv) {
+            field.input.classList.add('is-invalid'); // Add red border
+            field.errorDiv.textContent = message;    // Show error message
+        }
+    }
+
+    // Helper function to clear all previous errors
+    function clearErrors() {
+        for (const key in fields) {
+            const field = fields[key];
+            if (field && field.input && field.errorDiv) {
+                field.input.classList.remove('is-invalid');
+                field.errorDiv.textContent = '';
+            }
+        }
+        if (generalErrorDiv) generalErrorDiv.textContent = '';
+    }
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        showMessage(""); // Clear previous messages
+        clearErrors();
 
         const values = {};
         let hasError = false;
 
+        // --- Client-Side Validation ---
+        // This loop now checks all fields before stopping
         for (const key in fields) {
-            const input = fields[key];
+            const input = fields[key].input;
+            // Check if input exists before trying to read its value
+            if (!input) {
+                console.error(`Missing input element for: ${key}`);
+                continue; // Skip this field
+            }
             const value = input.value.trim();
             values[key] = value;
 
             const label = input.previousElementSibling?.textContent || key;
 
             if (!value) {
-                showMessage(`${label} is required.`);
-                input.focus();
+                showError(key, `${label} is required.`);
                 hasError = true;
-                break;
-            }
-
-            if (key === "email" && !/^\S+@\S+\.\S+$/.test(value)) {
-                showMessage("Please enter a valid email address.");
-                input.focus();
-                hasError = true;
-                break;
-            }
-
-            if (key === "phone" && !/^(\+63|0)9\d{9}$/.test(value.replace(/[\s-]/g, ""))) {
-                showMessage("Please enter a valid Philippine phone number.");
-                input.focus();
-                hasError = true;
-                break;
-            }
-
-            if (key === "password" && value.length < 6) {
-                showMessage("Password must be at least 6 characters.");
-                input.focus();
-                hasError = true;
-                break;
-            }
-
-            if (key === "confirmPassword" && value !== fields.password.value.trim()) {
-                showMessage("Passwords do not match.");
-                input.focus();
-                hasError = true;
-                break;
-            }
-
-            if (key === "role" && value === "") {
-                showMessage("Please select a role.");
-                input.focus();
-                hasError = true;
-                break;
             }
         }
 
-        if (hasError) return;
+        // Specific format validations
+        if (values.email && !/^\S+@\S+\.\S+$/.test(values.email)) {
+            showError('email', "Please enter a valid email address.");
+            hasError = true;
+        }
 
-        // Show spinner
+        if (values.phone && !/^(\+63|0)9\d{9}$/.test(values.phone.replace(/[\s-]/g, ""))) {
+            showError('phone', "Please enter a valid phone number.");
+            hasError = true;
+        }
+
+        if (values.password && values.password.length < 6) {
+            showError('password', "Password must be at least 6 characters.");
+            hasError = true;
+        }
+
+        if (values.confirmPassword && values.confirmPassword !== values.password) {
+            showError('confirmPassword', "Passwords do not match.");
+            hasError = true;
+        }
+
+        if (hasError) return; // Stop if there are any client-side errors
+
+        // --- Server-Side Submission ---
         spinner.style.display = "inline-block";
         btnText.textContent = "Registering...";
         registerBtn.disabled = true;
 
-        const formData = new FormData();
-        for (const key in values) {
-            formData.append(key, values[key]);
-        }
+        const formData = new FormData(form);
 
         try {
             const res = await fetch('register-handler.php', {
@@ -98,47 +108,34 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 data = await res.json();
             } catch {
-                throw new Error("Invalid JSON response");
+                throw new Error("Invalid JSON response from server. Check register-handler.php for errors.");
             }
 
-            spinner.style.display = "none";
-            btnText.textContent = "Register";
-            registerBtn.disabled = false;
-
             if (data.status === "success") {
-                lastRegisteredRole = data.role;
                 const modal = new bootstrap.Modal(successModal);
                 modal.show();
             } else {
-                showMessage(data.message || "Registration failed.");
+                // If the server sends back specific field errors
+                if (data.errors) {
+                    for (const fieldKey in data.errors) {
+                        showError(fieldKey, data.errors[fieldKey]);
+                    }
+                } else {
+                    // Otherwise, show a general message
+                    if (generalErrorDiv) generalErrorDiv.textContent = data.message || "Registration failed.";
+                }
             }
         } catch (err) {
+            if (generalErrorDiv) generalErrorDiv.textContent = "Server error. Please try again.";
+            console.error("Fetch error:", err);
+        } finally {
             spinner.style.display = "none";
             btnText.textContent = "Register";
             registerBtn.disabled = false;
-            showMessage("Server error. Please try again.");
-            console.error("Fetch error:", err);
         }
     });
 
     goHomeBtn.addEventListener("click", () => {
-        // After registration, always send the user to the login page.
         window.location.href = "login.php";
     });
-
-    function showMessage(msg) {
-        messageBox.textContent = msg;
-        messageBox.className = msg ? "text-danger mt-2 text-center" : "";
-    }
-
-    function createMessageBox() {
-        let box = document.getElementById("message");
-        if (!box) {
-            box = document.createElement("div");
-            box.id = "message";
-            box.className = "text-danger mt-2 text-center";
-            form.insertBefore(box, form.firstChild);
-        }
-        return box;
-    }
 });
