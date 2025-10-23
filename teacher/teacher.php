@@ -178,7 +178,7 @@ if ($currentUser) {
             <?php while ($strand = $strands->fetch_assoc()): ?>
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 strand-card">
-                        <!-- Three-dots dropdown menu -->
+                        <!-- Three-dots dropdown menu (This part is correct) -->
                         <div class="dropdown card-options">
                             <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-three-dots-vertical"></i>
@@ -207,12 +207,18 @@ if ($currentUser) {
                         <!-- Card Content -->
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title mb-2">
-                                <!-- The stretched-link makes the whole card clickable -->
                                 <a href="../strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none text-dark stretched-link">
                                     <?= htmlspecialchars($strand['strand_title']) ?>
                                 </a>
                             </h5>
-                            <p class="card-text text-muted flex-grow-1"><?= htmlspecialchars($strand['description']) ?></p>
+
+                            <!-- === THIS IS THE FIX === -->
+                            <!-- htmlspecialchars() has been removed from this line -->
+                            <div class="card-text text-muted flex-grow-1">
+                                <?= $strand['description'] ?>
+                            </div>
+                            <!-- === END OF FIX === -->
+
                             <div>
                                 <span class="badge bg-secondary"><?= htmlspecialchars($strand['grade_level']) ?></span>
                                 <span class="badge bg-primary"><?= htmlspecialchars($strand['strand_code']) ?></span>
