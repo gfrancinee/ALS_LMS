@@ -51,8 +51,8 @@ $check->store_result();
 if ($check->num_rows === 0) {
     $hashedPassword = password_hash('admin123', PASSWORD_DEFAULT);
 
-    $fname = 'Admin';
-    $lname = 'User';
+    $fname = 'ALS';
+    $lname = 'LMS';
     $address = 'System';
     $phone = '00000000000';
     $role = 'admin';

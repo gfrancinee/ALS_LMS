@@ -1,5 +1,11 @@
 <?php
 // /ajax/resend_code.php
+
+// --- THIS IS THE FIX ---
+// Set the timezone to match your database (e.g., 'Asia/Manila')
+date_default_timezone_set('Asia/Manila');
+// --- END FIX ---
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -52,7 +58,7 @@ try {
 
     // --- Generate and save new code ---
     $new_code = random_int(100000, 999999);
-    $expiry_time = date('Y-m-d H:i:s', time() + 1800); // 30 minutes from now
+    $expiry_time = date('Y-m-d H:i:s', time() + 1800); // 30 minutes from now (using the correct timezone)
 
     $stmt_update = $conn->prepare("UPDATE users SET verification_code = ?, code_expires_at = ? WHERE id = ?");
     $stmt_update->bind_param("ssi", $new_code, $expiry_time, $user['id']);
