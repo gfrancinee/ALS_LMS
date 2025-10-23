@@ -1,10 +1,9 @@
 <?php
-// --- FIX #1: SET THE TIMEZONE ---
-// This ensures PHP's date() function uses the correct time.
+// Set PHP's timezone
 date_default_timezone_set('Asia/Manila');
 
 session_start();
-require_once 'includes/db.php';
+require_once 'includes/db.php'; // This now sets the DB connection timezone too
 
 $error_message = '';
 $success_message = '';
@@ -17,20 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($code) || empty($email)) {
         $error_message = "Please enter the 6-digit code.";
     } else {
-        // --- FIX #2: GET CURRENT TIME FROM PHP (NOT MYSQL) ---
-        // This variable now holds the correct 'Asia/Manila' current time.
-        $current_time = date('Y-m-d H:i:s');
-
-        // Use a placeholder '?' instead of the 'NOW()' function.
-        $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > ?");
+        // This query now works correctly because NOW() uses the connection timezone
+        $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > NOW()");
 
         if ($stmt === false) {
             $error_message = "Database error. Please try again later.";
             error_log("Prepare failed (stmt): " . $conn->error);
         } else {
-            // --- FIX #3: BIND THE NEW TIME PARAMETER ---
-            // Bind 3 parameters (sss): email, code, and the current_time string.
-            $stmt->bind_param("sss", $email, $code, $current_time);
+            $stmt->bind_param("ss", $email, $code);
             $stmt->execute();
             $result = $stmt->get_result();
 
@@ -43,26 +36,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error_message = "This account is already verified. You can log in.";
                 } else {
                     $stmt_update = $conn->prepare("UPDATE users SET is_verified = 1, verification_code = NULL, code_expires_at = NULL WHERE email = ?");
-                    $stmt_update->bind_param("s", $email);
-                    $stmt_update->execute();
-                    $stmt_update->close();
-                    $success_message = "Verification Successful! You can now log in.";
+                    if ($stmt_update) { // Check if prepare succeeded
+                        $stmt_update->bind_param("s", $email);
+                        $stmt_update->execute();
+                        $stmt_update->close();
+                        $success_message = "Verification Successful! You can now log in.";
+                    } else {
+                        $error_message = "Database error updating account.";
+                        error_log("Prepare failed (stmt_update): " . $conn->error);
+                    }
                 }
             } else {
                 // FAILED! Code is wrong or expired.
                 $stmt->close();
 
-                // (Your existing logic to check if user exists is good)
                 $stmt_check_user = $conn->prepare("SELECT id FROM users WHERE email = ?");
 
                 if ($stmt_check_user === false) {
-                    $error_message = "Database error. Please try again.";
+                    $error_message = "Database error checking user.";
                     error_log("Prepare failed (stmt_check_user): " . $conn->error);
                 } else {
                     $stmt_check_user->bind_param("s", $email);
                     $stmt_check_user->execute();
+                    $check_result = $stmt_check_user->get_result(); // Store result before closing
 
-                    if ($stmt_check_user->get_result()->num_rows > 0) {
+                    if ($check_result->num_rows > 0) {
                         $error_message = "Invalid or expired verification code. Please try again or resend.";
                     } else {
                         $error_message = "Invalid email address.";
@@ -72,10 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    // Close the connection only if the request is POST
-    if ($conn) {
-        $conn->close();
-    }
+} // End of POST request handling
+
+// Close connection if it's still open (moved outside POST block)
+if (isset($conn) && $conn instanceof mysqli) {
+    $conn->close();
 }
 ?>
 
@@ -171,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             }
 
-            // --- Resend Code Logic (This looks great) ---
+            // --- Resend Code Logic ---
             const resendLink = document.getElementById('resendLink');
             const resendFeedback = document.getElementById('resendFeedback');
             let cooldownTimer = null;

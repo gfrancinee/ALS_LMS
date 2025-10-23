@@ -22,6 +22,12 @@ if ($conn->connect_error) {
     exit;
 }
 
+// --- ADDED TIMEZONE FIX for MySQLi ---
+// Set the connection timezone to match PHP's timezone (Asia/Manila)
+$conn->query("SET time_zone = '+8:00'");
+// --- END FIX ---
+
+
 // ==========================================================
 // 2. PDO Connection (ADDED for the Course Oversight Dashboard)
 // ==========================================================
@@ -31,6 +37,12 @@ try {
     $db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+    // --- ADDED TIMEZONE FIX for PDO ---
+    // Set the connection timezone to match PHP's timezone (Asia/Manila)
+    $db->exec("SET time_zone = '+8:00'");
+    // --- END FIX ---
+
 } catch (PDOException $e) {
     // If PDO connection fails, set $db to null so ls.php handles the error gracefully
     $db = null;
@@ -58,7 +70,17 @@ if ($check->num_rows === 0) {
     $role = 'admin';
 
     $stmt = $conn->prepare("INSERT INTO users (fname, lname, address, email, phone, password, role)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)");
+                             VALUES (?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("sssssss", $fname, $lname, $address, $adminEmail, $phone, $hashedPassword, $role);
     $stmt->execute();
+    // No need to close $stmt here if $check is closed later
 }
+$check->close(); // Close the $check statement
+
+// Note: If the $stmt for INSERT was run, it should also be closed if it's not null.
+if (isset($stmt) && $stmt instanceof mysqli_stmt) {
+    $stmt->close();
+}
+
+// Do not close $conn here, as other scripts include this file to *use* the connection.
+// $conn->close();

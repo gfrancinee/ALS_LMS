@@ -1,10 +1,11 @@
 <?php
 // /ajax/resend_code.php
 
-// Set the timezone to match your other scripts
+// --- THIS IS THE FIX ---
+// This forces PHP to use the same timezone as your database.
 date_default_timezone_set('Asia/Manila');
+// --- END FIX ---
 
-// For debugging (can be removed in production)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -14,9 +15,9 @@ header('Content-Type: application/json');
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Use relative paths, which are more reliable
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../includes/db.php';
+// Load all our required files
+require_once $_SERVER['DOCUMENT_ROOT'] . '/ALS_LMS/vendor/autoload.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/ALS_LMS/includes/db.php';
 
 $response = [
     "success" => false,
@@ -57,8 +58,8 @@ try {
 
     // --- Generate and save new code ---
     $new_code = random_int(100000, 999999);
-    // **CHANGE:** Set to 5 minutes for consistency
-    $expiry_time = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+    // This time will now be in 'Asia/Manila' timezone
+    $expiry_time = date('Y-m-d H:i:s', time() + 1800); // 30 minutes from now
 
     $stmt_update = $conn->prepare("UPDATE users SET verification_code = ?, code_expires_at = ? WHERE id = ?");
     $stmt_update->bind_param("ssi", $new_code, $expiry_time, $user['id']);
@@ -81,8 +82,7 @@ try {
     $mail->isHTML(true);
 
     $mail->Subject = 'Your New Verification Code - ALS LMS';
-    // **CHANGE:** Updated text to say 5 minutes
-    $mail->Body    = "Hi " . htmlspecialchars($user['fname']) . ",<br><br>Your new 6-digit verification code is:<br><br><h1 style='text-align:center; letter-spacing: 5px;'>" . $new_code . "</h1><br>This code will expire in 5 minutes.";
+    $mail->Body    = "Hi " . htmlspecialchars($user['fname']) . ",<br><br>Your new 6-digit verification code is:<br><br><h1 style='text-align:center; letter-spacing: 5px;'>" . $new_code . "</h1><br>This code will expire in 30 minutes.";
     $mail->AltBody = "Your new 6-digit verification code is: " . $new_code;
 
     $mail->send();
