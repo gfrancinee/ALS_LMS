@@ -1,6 +1,6 @@
 <?php
 // --- FIX #1: SET THE TIMEZONE ---
-// This ensures PHP and the database NOW() function are in sync.
+// This ensures PHP's date() function uses the correct time.
 date_default_timezone_set('Asia/Manila');
 
 session_start();
@@ -17,13 +17,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($code) || empty($email)) {
         $error_message = "Please enter the 6-digit code.";
     } else {
-        $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > NOW()");
+        // --- FIX #2: GET CURRENT TIME FROM PHP (NOT MYSQL) ---
+        // This variable now holds the correct 'Asia/Manila' current time.
+        $current_time = date('Y-m-d H:i:s');
+
+        // Use a placeholder '?' instead of the 'NOW()' function.
+        $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > ?");
 
         if ($stmt === false) {
             $error_message = "Database error. Please try again later.";
             error_log("Prepare failed (stmt): " . $conn->error);
         } else {
-            $stmt->bind_param("ss", $email, $code);
+            // --- FIX #3: BIND THE NEW TIME PARAMETER ---
+            // Bind 3 parameters (sss): email, code, and the current_time string.
+            $stmt->bind_param("sss", $email, $code, $current_time);
             $stmt->execute();
             $result = $stmt->get_result();
 
@@ -45,11 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // FAILED! Code is wrong or expired.
                 $stmt->close();
 
-                // --- FIX #2: SAFELY CHECK FOR USER ---
+                // (Your existing logic to check if user exists is good)
                 $stmt_check_user = $conn->prepare("SELECT id FROM users WHERE email = ?");
 
                 if ($stmt_check_user === false) {
-                    // This was the cause of the crash
                     $error_message = "Database error. Please try again.";
                     error_log("Prepare failed (stmt_check_user): " . $conn->error);
                 } else {
@@ -66,8 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    // --- FIX #3: Close the connection ---
-    $conn->close();
+    // Close the connection only if the request is POST
+    if ($conn) {
+        $conn->close();
+    }
 }
 ?>
 
@@ -163,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             }
 
-            // --- Resend Code Logic ---
+            // --- Resend Code Logic (This looks great) ---
             const resendLink = document.getElementById('resendLink');
             const resendFeedback = document.getElementById('resendFeedback');
             let cooldownTimer = null;
@@ -233,4 +241,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 
 </html>
-```eof
