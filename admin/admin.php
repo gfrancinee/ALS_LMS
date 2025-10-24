@@ -1,6 +1,7 @@
 <?php
 $allowed_roles = ['admin'];
 require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,7 +43,7 @@ require_once '../includes/auth.php';
         </div>
     </div>
     <button id="logoutBtn" class="btn btn-danger mb-2" onclick="window.location.href='../logout.php'">
-        <i class="bi bi-box-arrow-left"></i> Logout
+        <i class="bi bi-box-arrow-left"></i>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
