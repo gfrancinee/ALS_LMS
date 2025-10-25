@@ -88,11 +88,81 @@ main.text-center {
     text-decoration: none;
 }
 
-#logoutBtn {
+/* Your existing styles */
+#messages-icon-float {
     position: fixed;
     bottom: 20px;
-    left: 20px;
-    z-index: 1000;
+    right: 20px;
+    z-index: 1050;
+    /* Ensure it's above other content */
+    background-color: var(--bs-primary);
+    /* Use theme primary color, or choose another */
+    color: white;
+    border-radius: 50%;
+    width: 55px;
+    /* Adjust size as needed */
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-decoration: none;
+    /* Remove underline from link */
+}
+
+#messages-icon-float:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+#messages-icon-float i {
+    font-size: 1.75rem;
+    /* Adjust icon size */
+}
+
+/* Adjust main content padding if needed to avoid overlap */
+body {
+    padding-bottom: 80px;
+    /* Add padding to prevent content hiding behind fixed buttons */
+}
+
+/* --- NEW STYLES FOR FLOATING BUTTONS --- */
+/* This style is for the new logout button */
+#logout-icon-float {
+    position: fixed;
+    right: 20px;
+    z-index: 1050;
+    background-color: var(--bs-danger);
+    /* Red for logout */
+    color: white;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-decoration: none;
+
+    /* This is the new position: ON TOP of the messages icon */
+    bottom: 85px;
+    /* (20px bottom + 55px icon height + 10px gap) */
+}
+
+#logout-icon-float:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    color: white;
+    /* Keep text white on hover */
+}
+
+#logout-icon-float i {
+    font-size: 1.75rem;
+    /* Match message icon size */
 }
 
 
