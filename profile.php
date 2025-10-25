@@ -26,10 +26,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $lname = $_POST['lname'];
     $address = $_POST['address'];
     $phone = $_POST['phone'];
+    $gradeLevel = isset($_POST['gradeLevel']) ? $_POST['gradeLevel'] : null; // Added: Get grade level
 
-    $stmt = $conn->prepare("UPDATE users SET fname = ?, lname = ?, address = ?, phone = ? WHERE id = ?");
+    // Added: Update query to include grade_level
+    $stmt = $conn->prepare("UPDATE users SET fname = ?, lname = ?, address = ?, phone = ?, grade_level = ? WHERE id = ?");
     // --- UPDATED: Use the generic $user_id variable ---
-    $stmt->bind_param("ssssi", $fname, $lname, $address, $phone, $user_id);
+    $stmt->bind_param("sssssi", $fname, $lname, $address, $phone, $gradeLevel, $user_id);
 
     if ($stmt->execute()) {
         $message = "Information updated successfully!";
@@ -70,7 +72,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // --- Part 2: Fetch Current User Data (GET Request) ---
-$stmt = $conn->prepare("SELECT fname, lname, email, address, phone, avatar_url FROM users WHERE id = ?");
+// Added: Include grade_level and role in SELECT query
+$stmt = $conn->prepare("SELECT fname, lname, email, address, phone, avatar_url, grade_level, role FROM users WHERE id = ?");
 // --- UPDATED: Use the generic $user_id variable ---
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -82,6 +85,21 @@ $user = $result->fetch_assoc();
 $avatar_path = '';
 if (!empty($user['avatar_url'])) {
     $avatar_path = htmlspecialchars($user['avatar_url']);
+}
+
+// Added: Function to get readable grade level text
+function getGradeLevelText($gradeLevel)
+{
+    switch ($gradeLevel) {
+        case 'elementary':
+            return 'Elementary (Grades 1-6)';
+        case 'junior_high':
+            return 'Junior High School (Grades 7-10)';
+        case 'senior_high':
+            return 'Senior High School (Grades 11-12)';
+        default:
+            return 'Not set';
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -146,6 +164,18 @@ if (!empty($user['avatar_url'])) {
                                         <label for="address" class="form-label">Address</label>
                                         <textarea class="form-control" name="address" id="address" rows="3"><?= htmlspecialchars($user['address']) ?></textarea>
                                     </div>
+
+                                    <!-- Added: Grade Level (only shown for students) -->
+                                    <?php if ($user['role'] === 'student'): ?>
+                                        <div class="mb-3">
+                                            <label for="gradeLevel" class="form-label">Grade Level</label>
+                                            <select class="form-select" name="gradeLevel" id="gradeLevel">
+                                                <option value="" <?= empty($user['grade_level']) ? 'selected' : '' ?>>Select your grade level</option>
+                                                <option value="grade_11" <?= ($user['grade_level'] === 'grade_11') ? 'selected' : '' ?>>Grade 11</option>
+                                                <option value="grade_12" <?= ($user['grade_level'] === 'grade_12') ? 'selected' : '' ?>>Grade 12</option>
+                                            </select>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 

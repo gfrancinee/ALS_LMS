@@ -76,6 +76,19 @@
                             <!-- Error placeholder for this field -->
                             <div class="invalid-feedback" id="role-error"></div>
                         </div>
+
+                        <!-- Grade Level Dropdown (shows only for students) -->
+                        <div class="mb-3" id="gradeLevelContainer" style="display: none;">
+                            <label for="gradeLevel" class="form-label">Grade Level</label>
+                            <select class="form-select" id="gradeLevel" name="gradeLevel">
+                                <option value="" disabled selected>Select your grade level</option>
+                                <option value="grade_11">Grade 11</option>
+                                <option value="grade_12">Grade 12</option>
+                            </select>
+                            <!-- Error placeholder for this field -->
+                            <div class="invalid-feedback" id="gradeLevel-error"></div>
+                        </div>
+
                         <button id="registerBtn" type="submit" class="btn btn-primary w-100">
                             <span class="btn-text">Register</span>
                             <span class="spinner-border spinner-border-sm text-light ms-2 spinner" role="status" style="display:none;"></span>
@@ -107,6 +120,23 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Show/hide grade level based on role selection
+        document.getElementById('role').addEventListener('change', function() {
+            const gradeLevelContainer = document.getElementById('gradeLevelContainer');
+            const gradeLevelSelect = document.getElementById('gradeLevel');
+
+            if (this.value === 'student') {
+                gradeLevelContainer.style.display = 'block';
+                gradeLevelSelect.setAttribute('required', 'required');
+            } else {
+                gradeLevelContainer.style.display = 'none';
+                gradeLevelSelect.removeAttribute('required');
+                gradeLevelSelect.value = ''; // Clear selection
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -31,6 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirmPassword'] ?? '';
     $role = $_POST['role'] ?? '';
+    $gradeLevel = trim($_POST['gradeLevel'] ?? ''); // Added: Get grade level
 
     // --- Start Validation ---
     if (empty($fname)) $response["errors"]["fname"] = "Firstname is required.";
@@ -40,6 +41,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($phone)) $response["errors"]["phone"] = "Phone is required.";
     if (empty($password)) $response["errors"]["password"] = "Password is required.";
     if (empty($role)) $response["errors"]["role"] = "Role is required.";
+
+    // Added: Validate grade level for students
+    if ($role === 'student' && empty($gradeLevel)) {
+        $response["errors"]["gradeLevel"] = "Grade level is required for students.";
+    }
 
     if ($password !== $confirmPassword) {
         $response["errors"]["confirmPassword"] = "Passwords do not match.";
@@ -75,12 +81,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $verification_code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expires_at = date('Y-m-d H:i:s', strtotime('+15 minutes')); // Code is valid for 15 minutes
 
-        // 2. Insert the user with the new code
+        // Added: Set grade level to NULL for teachers, or use the provided value for students
+        $gradeLevelValue = ($role === 'student') ? $gradeLevel : NULL;
+
+        // 2. Insert the user with the new code and grade level
         $insert_stmt = $conn->prepare(
-            "INSERT INTO users (fname, lname, address, email, phone, password, role, verification_code, code_expires_at, is_verified) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"
+            "INSERT INTO users (fname, lname, address, email, phone, password, role, grade_level, verification_code, code_expires_at, is_verified) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"
         );
-        $insert_stmt->bind_param("sssssssss", $fname, $lname, $address, $email, $phone, $hashedPassword, $role, $verification_code, $expires_at);
+        $insert_stmt->bind_param("ssssssssss", $fname, $lname, $address, $email, $phone, $hashedPassword, $role, $gradeLevelValue, $verification_code, $expires_at);
 
         if ($insert_stmt->execute()) {
             $mail = new PHPMailer(true);

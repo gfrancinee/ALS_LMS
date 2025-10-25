@@ -10,7 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
         phone: { input: document.getElementById("phone"), errorDiv: document.getElementById("phone-error") },
         password: { input: document.getElementById("password"), errorDiv: document.getElementById("password-error") },
         confirmPassword: { input: document.getElementById("confirmPassword"), errorDiv: document.getElementById("confirmPassword-error") },
-        role: { input: document.getElementById("role"), errorDiv: document.getElementById("role-error") }
+        role: { input: document.getElementById("role"), errorDiv: document.getElementById("role-error") },
+        gradeLevel: { input: document.getElementById("gradeLevel"), errorDiv: document.getElementById("gradeLevel-error") } // Added grade level
     };
 
     const registerBtn = document.getElementById("registerBtn");
@@ -62,6 +63,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const value = input.value.trim();
             const label = input.previousElementSibling?.textContent || key;
 
+            // Skip gradeLevel validation if role is not student
+            if (key === 'gradeLevel') {
+                const roleValue = fields.role.input.value;
+                if (roleValue === 'student' && !value) {
+                    showError(key, `${label} is required for students.`);
+                    hasError = true;
+                }
+                continue; // Skip the general required check for gradeLevel
+            }
+
             if (!value) {
                 showError(key, `${label} is required.`);
                 hasError = true;
@@ -74,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (fields.phone.input.value.trim() && !/^(\+63|0)9\d{9}$/.test(fields.phone.input.value.trim().replace(/[\s-]/g, ""))) {
-            showError('phone', "Please enter a valid Philippine phone number.");
+            showError('phone', "Please enter a valid phone number.");
             hasError = true;
         }
 
@@ -156,4 +167,3 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "login.php";
     });
 });
-
