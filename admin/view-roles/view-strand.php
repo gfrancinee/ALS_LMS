@@ -74,7 +74,6 @@ $participants_stmt->close();
 // Get grade level for back link
 $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12';
 
-$back_link = '/ALS_LMS/admin/view-roles/view-as-student.php';
 ?>
 
 <!DOCTYPE html>
