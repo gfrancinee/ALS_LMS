@@ -1,0 +1,190 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+}
+
+/* Topbar */
+.topbar {
+    position: sticky;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border: none;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: bold;
+}
+
+header h1 {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    ;
+    margin-bottom: 0.5rem;
+    color: rgb(0, 0, 0);
+
+    #font span:nth-child(1) {
+        color: red;
+    }
+
+    #font span:nth-child(2) {
+        color: green;
+    }
+
+    #font span:nth-child(3) {
+        color: blue;
+    }
+
+}
+
+/* Logos */
+.top-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+}
+
+.sidebar {
+    margin: 0;
+    top: 100px;
+    left: 0;
+    background: #fff;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.sidebar-link {
+    margin-top: 2.5rem;
+    width: 100%;
+    padding: 5px 0;
+    text-align: center;
+}
+
+.sidebar-link i {
+    padding: 3px;
+}
+
+.sidebar a {
+    color: black;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    color: green;
+}
+
+.sidebar-link.active-tab {
+    color: green;
+    border-left: 4px solid green;
+    padding-left: 4px;
+}
+
+/* Main Content */
+.content {
+    margin-left: 70px;
+    padding: 1rem;
+    flex: 1;
+}
+
+.section-title {
+    font-weight: bold;
+    margin-left: 5rem;
+}
+
+.strand-button {
+    background: rgb(239, 239, 239);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.10);
+    border-radius: 6px;
+    border: none;
+    padding: 10px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.strand-button:hover {
+    background-color: #eef2f5;
+}
+
+.strand-button i {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.strand-button i:hover {
+    color: black;
+}
+
+/* New styles for the Learning Strand cards */
+.strand-card {
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+}
+
+.strand-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+}
+
+.strand-card .card-title {
+    font-weight: 600;
+    color: #212529;
+}
+
+/* Ensure badges have some space */
+.strand-card .badge {
+    margin-right: 5px;
+}
+
+/* Position the three-dots menu on the card */
+.strand-card {
+    position: relative;
+}
+
+.card-options {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
+}
+
+.sidebar .dropdown {
+    width: 100%;
+}
+
+.strand-card .card-text {
+    font-size: 0.7rem;
+    line-height: 1.5;
+}
+
+.dropend .dropdown-menu {
+    width: auto;
+    min-width: 220px;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.btn-close:focus {
+    box-shadow: none;
+}

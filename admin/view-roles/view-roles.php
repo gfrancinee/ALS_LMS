@@ -75,7 +75,15 @@ require_once '../../includes/auth.php';
                         <div id="teacherCollapse" class="accordion-collapse collapse" aria-labelledby="teacherHeading" data-bs-parent="#userAccordion">
                             <div class="accordion-body">
                                 <p>View materials, courses, or simulate teacher experience for Teacher.</p>
-                                <a href="view-as-teacher.php?teacher" class="btn btn-outline-success">View as Teacher</a>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        View as Teacher
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="view-as-teacher.php?grade=grade_11">Grade 11</a></li>
+                                        <li><a class="dropdown-item" href="view-as-teacher.php?grade=grade_12">Grade 12</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
