@@ -30,6 +30,20 @@ $strand = $strand_result->fetch_assoc();
 $required_grade_level = $strand['grade_level'];
 $strand_check->close();
 
+// Added: Map learning strand grade levels to user grade levels
+// Learning strands use: 'Grade 11', 'Grade 12'
+// Users table uses: 'grade_11', 'grade_12'
+$user_grade_level = '';
+if ($required_grade_level === 'Grade 11') {
+    $user_grade_level = 'grade_11';
+} elseif ($required_grade_level === 'Grade 12') {
+    $user_grade_level = 'grade_12';
+} else {
+    // Invalid grade level
+    echo json_encode(['error' => 'Invalid grade level in learning strand.']);
+    exit;
+}
+
 // Updated: This query finds all users with the 'student' role
 // who match the strand's grade level AND are NOT already in this specific strand.
 $stmt = $conn->prepare("
@@ -42,7 +56,7 @@ $stmt = $conn->prepare("
     )
     ORDER BY lname, fname
 ");
-$stmt->bind_param("si", $required_grade_level, $strand_id);
+$stmt->bind_param("si", $user_grade_level, $strand_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $students = $result->fetch_all(MYSQLI_ASSOC);

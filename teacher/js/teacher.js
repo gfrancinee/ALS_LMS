@@ -251,7 +251,30 @@ document.addEventListener('DOMContentLoaded', () => {
             editStrandModal.querySelector('#edit-strand-title').value = button.getAttribute('data-title');
             editStrandModal.querySelector('#edit-strand-code').value = button.getAttribute('data-code');
             editStrandModal.querySelector('#edit-grade-level').value = button.getAttribute('data-grade');
-            editStrandModal.querySelector('#edit-description').value = button.getAttribute('data-desc');
+
+            // Get description directly
+            const description = button.getAttribute('data-desc') || '';
+
+            console.log('=== DEBUG INFO ===');
+            console.log('Description:', description);
+
+            // Get the TinyMCE editor instance (should already be initialized)
+            const editor = tinymce.get('description-editor');
+
+            if (editor) {
+                // Editor exists, just update the content
+                editor.setContent(description);
+                console.log('TinyMCE content updated');
+            } else {
+                // Fallback: set textarea value directly
+                const textarea = editStrandModal.querySelector('#description-editor');
+                if (textarea) {
+                    textarea.value = description;
+                }
+                console.log('TinyMCE not found, set textarea value');
+            }
+
+            console.log('==================');
         });
     }
 
@@ -259,6 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editStrandForm) {
         editStrandForm.addEventListener('submit', function (e) {
             e.preventDefault();
+
+            // Added: Sync TinyMCE content before submitting
+            if (tinymce.get('description-editor')) {
+                tinymce.get('description-editor').save();
+            }
+
             fetch('../ajax/edit-strand.php', {
                 method: 'POST',
                 body: new FormData(editStrandForm)

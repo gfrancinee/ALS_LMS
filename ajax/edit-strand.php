@@ -21,12 +21,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $desc = $_POST['description'] ?? null;
     $teacher_id = $_SESSION['user_id'];
 
+    // Added: Map form values to database ENUM values
+    // Form dropdown sends: 'grade_11', 'grade_12'
+    // Database expects: 'Grade 11', 'Grade 12'
+    if ($grade === 'grade_11') {
+        $grade = 'Grade 11';
+    } elseif ($grade === 'grade_12') {
+        $grade = 'Grade 12';
+    }
+    // If already 'Grade 11' or 'Grade 12', it stays as is
+
+    // Added: Clean the description from TinyMCE
+    // TinyMCE sends <p><br></p> or <p></p> when empty
+    $desc_clean = trim(strip_tags($desc ?? ''));
+
     // Validate that we have the necessary data
-    if (!$strand_id || !$title || !$code || !$grade || !$desc) {
-        // FIXED: This should be an 'error' status, not 'success'
+    if (!$strand_id || !$title || !$code || !$grade || empty($desc_clean)) {
+        // Added: Debug information to help identify which field is missing
+        $missing = [];
+        if (!$strand_id) $missing[] = 'strand_id';
+        if (!$title) $missing[] = 'title';
+        if (!$code) $missing[] = 'code';
+        if (!$grade) $missing[] = 'grade';
+        if (empty($desc_clean)) $missing[] = 'description (cannot be empty)';
+
         echo json_encode([
             'status' => 'error',
-            'message' => 'Missing required data for update.'
+            'message' => 'All fields are required. Description cannot be empty.',
+            'missing_fields' => $missing
         ]);
         exit;
     }
@@ -38,19 +60,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Execute the statement
     if ($stmt->execute()) {
-        // --- FIXED: Set session message and return JSON success status ---
-        $_SESSION['success_message'] = "Learning strand \"$title\" updated successfully!";
-
-        // Return JSON status, so JavaScript can reload the page
-        echo json_encode(['status' => 'success', 'message' => 'Update successful. Reloading page.']);
+        // Check if any rows were actually updated
+        if ($stmt->affected_rows > 0) {
+            $_SESSION['success_message'] = "Learning strand \"$title\" updated successfully!";
+            echo json_encode(['status' => 'success', 'message' => 'Update successful. Reloading page.']);
+        } else {
+            // No rows updated - either strand doesn't exist or you're not the creator
+            echo json_encode(['status' => 'error', 'message' => 'No changes were made. You may not have permission to edit this strand.']);
+        }
         exit;
     } else {
-        // --- FIXED: Set session message (error) and return JSON error status ---
-        // Using mysqli_error if needed for debugging, but keeping generic for production
         $_SESSION['error_message'] = 'Database error: Could not update the strand.';
-
-        // Return JSON error status
-        echo json_encode(['status' => 'error', 'message' => 'Could not update the strand.']);
+        echo json_encode(['status' => 'error', 'message' => 'Could not update the strand. Database error: ' . $stmt->error]);
         exit;
     }
 }
