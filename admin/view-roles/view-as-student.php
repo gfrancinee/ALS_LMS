@@ -1,63 +1,78 @@
 <?php
-$allowed_roles = ['student'];
-require_once '../includes/auth.php';
-require_once '../includes/db.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/db.php';
 
-$current_tab = 'courses';
-$student_id = $_SESSION['user_id'];
+// Only allow admin to access this page
+if ($_SESSION['role'] !== 'admin') {
+    header("Location: ../../login.php");
+    exit;
+}
 
-// Fetch strands the student is ENROLLED IN
+// Get the selected grade level from URL
+$selected_grade = $_GET['grade'] ?? '';
+
+// Validate grade level
+if (!in_array($selected_grade, ['grade_11', 'grade_12'])) {
+    header("Location: view-roles.php");
+    exit;
+}
+
+// Map grade_level to database format
+$db_grade = ($selected_grade === 'grade_11') ? 'Grade 11' : 'Grade 12';
+$display_grade = ($selected_grade === 'grade_11') ? 'Grade 11' : 'Grade 12';
+
+// Fetch all unique learning strands for the selected grade level
 $stmt = $conn->prepare("
-    SELECT ls.id, ls.strand_title, ls.description, ls.grade_level, ls.strand_code
+    SELECT DISTINCT ls.id, ls.strand_title, ls.strand_code, ls.grade_level, ls.description, ls.date_created,
+           u.fname, u.lname,
+           COUNT(DISTINCT sp.student_id) as student_count
     FROM learning_strands ls
-    JOIN strand_participants sp ON ls.id = sp.strand_id
-    WHERE sp.student_id = ?
-    ORDER BY ls.strand_title ASC
+    LEFT JOIN users u ON ls.creator_id = u.id
+    LEFT JOIN strand_participants sp ON ls.id = sp.strand_id
+    WHERE ls.grade_level = ?
+    GROUP BY ls.id
+    ORDER BY ls.date_created DESC
 ");
-$stmt->bind_param("i", $student_id);
+$stmt->bind_param("s", $db_grade);
 $stmt->execute();
-$strands = $stmt->get_result();
+$result = $stmt->get_result();
+$strands = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 
-// Fetch student details for the profile menu
+// Fetch admin user details for profile display
+$admin_id = $_SESSION['user_id'];
 $stmt_user = $conn->prepare("SELECT fname, lname, avatar_url FROM users WHERE id = ?");
-$stmt_user->bind_param("i", $student_id);
+$stmt_user->bind_param("i", $admin_id);
 $stmt_user->execute();
 $user_result = $stmt_user->get_result();
 $currentUser = $user_result->fetch_assoc();
 
-// Check if a user was found and set variables safely
 if ($currentUser) {
     $userName = htmlspecialchars($currentUser['fname'] . ' ' . $currentUser['lname']);
-
-    // This variable will ONLY be set if a custom avatar exists
     $avatar_path = '';
     if (!empty($currentUser['avatar_url'])) {
-        $avatar_path = '../' . htmlspecialchars($currentUser['avatar_url']);
+        $avatar_path = '../../' . htmlspecialchars($currentUser['avatar_url']);
     }
 } else {
-    $userName = 'Student';
-    // Make sure this variable exists even in the fallback case
+    $userName = 'Admin';
     $avatar_path = '';
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Homepage | ALS LMS</title>
+    <title>View as Student - <?= htmlspecialchars($display_grade) ?> | ALS LMS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
-    <link rel="stylesheet" href="css/student.css" />
-    <script src="js/student.js" defer></script>
+    <link rel="stylesheet" href="css/view-as-student.css" />
+
 </head>
 
 <body>
-    <script>
-        const currentUserId = <?= $_SESSION['user_id'] ?? 'null'; ?>;
-    </script>
-
     <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
         <div class="d-flex align-items-left">
             <h1 class="title m-0">
@@ -67,8 +82,9 @@ if ($currentUser) {
             </h1>
         </div>
         <div class="top-icons d-flex align-items-center gap-3">
-            <img src="../img/ALS.png" class="top-logo" alt="ALS Logo" />
-            <img src="../img/BNHS.jpg" class="top-logo" alt="BNHS Logo" />
+            <span class="badge badge-grade"><?= htmlspecialchars($display_grade) ?></span>
+            <img src="../../img/ALS.png" class="top-logo" alt="ALS Logo" />
+            <img src="../../img/BNHS.jpg" class="top-logo" alt="BNHS Logo" />
         </div>
     </header>
 
@@ -134,6 +150,7 @@ if ($currentUser) {
                             <i class="bi bi-person-circle mb-2" style="font-size: 50px; color: #6c757d;"></i>
                         <?php endif; ?>
                         <h6 class="mb-0"><?= $userName ?></h6>
+                        <small class="text-muted">Viewing as Student</small>
                     </div>
                 </li>
                 <li>
@@ -143,75 +160,67 @@ if ($currentUser) {
                 <li><a class="dropdown-item" href="../logout.php"><i class="bi bi-box-arrow-right me-2"></i>Log Out</a></li>
             </ul>
         </div>
+
+        <a href="view-roles.php" class="sidebar-link d-flex justify-content-center align-items-center" title="Back to View Roles">
+            <i class="bi bi-arrow-left fs-4"></i>
+        </a>
     </aside>
 
     <main class="content ms-5 pt-4 px-4">
-        <div class="section-title h4 fw-semibold ms-3 mb-4">My Learning Strands</div>
-
-        <div class="row" id="recommendation-section" style="display: none;">
-            <div class="col-12">
-                <h4 class="mb-3">Recommended For You</h4>
-                <div class="list-group" id="recommendation-list">
-                </div>
-                <hr class="my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div class="section-title h4 fw-semibold ms-3 mb-1">Learning Strands - <?= htmlspecialchars($display_grade) ?></div>
+                <p class="text-muted ms-3 mb-0">Viewing as a <?= htmlspecialchars($display_grade) ?> student</p>
             </div>
         </div>
 
-        <!-- Strand Cards -->
-        <div class="row mt-4">
-            <?php if ($strands && $strands->num_rows > 0): ?>
-                <?php while ($strand = $strands->fetch_assoc()): ?>
-                    <div class="col-md-4 mb-3">
-                        <a href="../strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none">
+        <?php if (empty($strands)): ?>
+            <div class="alert alert-info mx-3">
+                <i class="bi bi-info-circle me-2"></i>
+                No learning strands found for <?= htmlspecialchars($display_grade) ?>.
+            </div>
+        <?php else: ?>
+            <div class="row mt-4">
+                <?php foreach ($strands as $strand): ?>
+                    <div class="col-md-4 mb-4">
+                        <a href="view-strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none">
                             <div class="card h-100 strand-card">
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title mb-2"><?= htmlspecialchars($strand['strand_title']) ?></h5>
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title mb-0 flex-grow-1"><?= htmlspecialchars($strand['strand_title']) ?></h5>
+                                        <span class="badge bg-primary ms-2"><?= htmlspecialchars($strand['strand_code']) ?></span>
+                                    </div>
+
                                     <div class="card-text text-muted flex-grow-1 description-preview">
                                         <?= $strand['description'] ?>
                                     </div>
-                                    <div>
-                                        <span class="badge bg-secondary"><?= htmlspecialchars($strand['grade_level']) ?></span>
-                                        <span class="badge bg-primary"><?= htmlspecialchars($strand['strand_code']) ?></span>
+
+                                    <div class="mt-auto">
+                                        <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+                                            <div>
+                                                <i class="bi bi-person-fill me-1"></i>
+                                                <?= htmlspecialchars($strand['fname'] . ' ' . $strand['lname']) ?>
+                                            </div>
+                                            <div>
+                                                <i class="bi bi-people-fill me-1"></i>
+                                                <?= $strand['student_count'] ?> student<?= $strand['student_count'] != 1 ? 's' : '' ?>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            Created <?= date('M d, Y', strtotime($strand['date_created'])) ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </a>
                     </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="col-12">
-                    <div class="alert alert-info mx-3">You are not yet enrolled in any learning strands.</div>
-                </div>
-            <?php endif; ?>
-        </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </main>
 
-    <!-- Chat Modal -->
-    <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div id="chat-modal-header" class="d-flex align-items-center"></div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="chat-modal-body">
-                </div>
-                <div class="modal-footer">
-                    <form id="message-form" class="w-100 d-flex gap-2">
-                        <input type="hidden" id="chat-conversation-id" name="conversation_id">
-                        <input type="text" id="chat-message-input" name="message_text" class="form-control" placeholder="Type a message..." required>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-send-fill"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 
 </html>

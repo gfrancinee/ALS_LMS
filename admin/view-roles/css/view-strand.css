@@ -1,0 +1,464 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+h2 {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.badge {
+    margin-right: 5px;
+    font-size: 0.9rem;
+}
+
+.back-container {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 1000;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease-in-out;
+}
+
+.back-link:hover {
+    color: blue;
+}
+
+/* Teacher Tabs (Green) */
+.tabs-teacher .nav-link.active {
+    background-color: green;
+    color: white;
+}
+
+.tabs-teacher .nav-link:hover,
+.tabs-teacher .nav-link:focus {
+    border-color: rgb(65, 146, 65);
+}
+
+.tabs-teacher .nav-link {
+    font-weight: 500;
+    color: #495057;
+}
+
+
+/* Student Tabs (Blue) */
+.tabs-student .nav-link.active {
+    background-color: blue;
+    color: white;
+}
+
+.tabs-student .nav-link:hover,
+.tabs-student .nav-link:focus {
+    border-color: rgb(76, 76, 236);
+}
+
+.tabs-student .nav-link {
+    font-weight: 500;
+    color: #495057;
+}
+
+.tab-pane {
+    background-color: #fff;
+    border: none;
+    padding: 20px;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+}
+
+.tab-pane p {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.material-preview {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.material-preview img,
+.material-preview video {
+    max-width: 100%;
+    height: auto;
+    max-height: 500px;
+    /* Prevents videos/images from being too tall */
+    display: block;
+    margin: 0 auto;
+    /* Centers the content */
+}
+
+/* Custom class for buttons with a subtle hover effect */
+.btn-subtle-hover {
+    padding: 0.5rem 1rem;
+    /* Adds some space around the text */
+    border-radius: 0.375rem;
+    /* Adds rounded corners */
+    transition: background-color 0.2s ease-in-out;
+    /* Creates a smooth fade effect */
+}
+
+/* This is the background color that appears on hover */
+.btn-subtle-hover:hover {
+    background-color: rgb(12, 42, 12) (212, 212, 212);
+    /* A very light grey */
+    text-decoration: none;
+    /* Ensures no underline appears */
+}
+
+/* --- Custom Accordion Button Focus Style --- */
+
+.assessment-accordion .accordion-button:focus {
+    background-color: #fff;
+    /* Keeps the background white on click */
+    border-color: transparent;
+    /* Removes any default border */
+    box-shadow: inset 0 0 0 2px #198754;
+    /* Adds a 2px solid green 'border' on the inside */
+}
+
+/* --- Modern Custom Tab Styles --- */
+
+/* Style for all tab links */
+.nav-tabs .nav-link {
+    border: none;
+    /* Remove all default borders */
+    border-bottom: 3px solid transparent;
+    /* Add space for the underline */
+}
+
+/* Style for the ACTIVE tab link */
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+    background-color: transparent;
+    color: #198754;
+    border-color: #198754;
+    font-weight: 600;
+}
+
+/* Optional: Add a subtle hover effect for inactive tabs */
+.nav-tabs .nav-link:not(.active):hover {
+    border-color: #e9ecef;
+    /* A very light grey underline on hover */
+}
+
+.assessment-accordion .accordion-button:not(.collapsed),
+.assessment-accordion .accordion-button:focus {
+    color: #000000;
+    background-color: #fff;
+    box-shadow: none;
+}
+
+/* This is the NEW part. It adds the border to the main
+   rounded container, so it follows the corners perfectly. */
+.assessment-accordion .accordion-item:has(.accordion-button:not(.collapsed)),
+.assessment-accordion .accordion-item:has(.accordion-button:focus) {
+    box-shadow: 0 0 0 0.5px #198754, 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Styles for each assessment item in the list --- */
+
+.assessment-accordion .list-unstyled li {
+    margin-bottom: 0.5rem;
+}
+
+/* This is the new main container for each assessment */
+/* ADD THIS NEW RULE */
+.assessment-item {
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid #eee;
+}
+
+/* This is the clickable link part */
+.assessment-item-link {
+    border: none;
+    flex-grow: 1;
+    /* Allows the link to take up all available space */
+    padding: 0.1rem 1rem;
+    text-decoration: none;
+    color: #212529;
+}
+
+.assessment-item-link:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+}
+
+/* This is where the border is added */
+.assessment-accordion .list-unstyled li a {
+    display: block;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dee2e6;
+    /* Light grey border */
+    border-radius: 0.375rem;
+    /* Rounded corners */
+    text-decoration: none;
+    color: #212529;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+/* --- Custom Dropdown Menu Style (to match picture) --- */
+
+/* The main menu container */
+.assessment-accordion .dropdown-menu {
+    border-radius: 0.4rem;
+    /* Softer rounded corners */
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 0;
+    /* Add vertical padding */
+}
+
+/* The items inside the menu (Edit, Delete) */
+.assessment-accordion .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    /* Adjust padding for more space */
+    font-weight: 500;
+    color: #343a40;
+}
+
+/* Makes the icons look sharp */
+.assessment-accordion .dropdown-item i {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* 1. The Three-Dot Button Itself */
+.btn-options {
+    background-color: transparent;
+    border: none;
+    color: #000000;
+    /* A subtle grey for the icon */
+    padding: 0.5rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Remove the default blue focus ring */
+.btn-options:focus {
+    box-shadow: none;
+}
+
+
+/* 2. The Dropdown Menu Container */
+.dropdown-menu {
+    border-radius: 0.6rem;
+    /* Softer, modern rounded corners */
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* 3. The "Edit" and "Delete" Items Inside the Menu */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    /* Rounded corners for the hover effect */
+    border: none !important;
+}
+
+/* Style for the icons (pencil, trash) */
+.dropdown-item i {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* Hover/Focus style for the regular "Edit" item */
+.dropdown-item:not(.text-success):focus,
+.dropdown-item:not(.text-success):hover {
+    background-color: #f8f9fa;
+    /* Light grey background */
+    color: #198754;
+}
+
+/* Hover/Focus style specifically for the "Delete" item */
+.dropdown-item.text-danger:focus,
+.dropdown-item.text-danger:hover {
+    background-color: #fff5f5;
+    /* A very light red */
+    color: #dc3545;
+    /* Keep the text red */
+}
+
+/* Remove the default blue focus ring */
+.btn-options:focus {
+    box-shadow: none;
+}
+
+/* --- Custom Green Focus for Form Inputs (Thicker Border) --- */
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 1px #198754;
+}
+
+/* --- Remove Focus Glow from Modal Close Button --- */
+
+.btn-close:focus {
+    box-shadow: none;
+}
+
+/* --- Style for Accordion's Dropdown Menu --- */
+.assessment-accordion .dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    /* This adds a soft shadow */
+}
+
+/* --- Add space between accordion folder items --- */
+.assessment-accordion .accordion-item {
+    margin-bottom: 1rem;
+    /* This adds the space */
+    border: 1px solid #dee2e6 !important;
+    /* This ensures each item has its own border */
+    border-radius: 0.4rem;
+    /* This makes all corners rounded */
+}
+
+.accordion-header h2 {
+    border-radius: 5rem;
+}
+
+/* --- Custom Green for Radio Buttons --- */
+
+/* 1. Makes the button green when it's CHECKED */
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+/* 2. Adds the green glow when you CLICK or TAB to it */
+.form-check-input:focus {
+    border-color: #146c43;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.5);
+}
+
+/* This makes the button transparent by default */
+.btn-toggle-desc {
+    color: #6c757d;
+    background-color: transparent;
+    border: none;
+}
+
+/* This adds the background on hover */
+.btn-toggle-desc:hover {
+    background-color: #e9ecef;
+}
+
+/* This FORCES the blue outline to be removed on click */
+.btn-toggle-desc:focus,
+.btn-toggle-desc:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Removes the background highlight from links inside a dropdown menu */
+.dropdown-item:focus,
+.dropdown-item:active {
+    background-color: transparent;
+}
+
+/* Removes the background highlight from links inside a dropdown menu on click */
+a.dropdown-item:focus,
+a.dropdown-item:active {
+    background-color: transparent !important;
+}
+
+/* Removes border, outline, and shadow from specific dropdown items */
+.no-border-button,
+.no-border-button:focus,
+.no-border-button:active {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* 1. Makes the ACTIVE TAB BORDER blue */
+.student-view-theme .nav-tabs.tabs-student .nav-link.active {
+    color: #0d6efd !important;
+    border-color: #0d6efd #0d6efd #0d6efd !important;
+}
+
+/* 1. Sets the DEFAULT accordion border to the thin, neutral gray color */
+.student-view-theme .assessment-accordion .accordion-item {
+    border: 1px solid #eeeff1 !important;
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+    box-shadow: none !important;
+    /* Also remove any base shadow */
+    transition: border-color 0.15s ease-in-out;
+}
+
+/* 2. When the item is focused, change ONLY the border color to blue */
+.student-view-theme .assessment-accordion .accordion-item:focus-within {
+    border-color: #0d6efd !important;
+}
+
+/* 4. This is the FIX: It forcefully removes the box-shadow (the source of the thickness)
+      and background color from the accordion button itself. */
+.student-view-theme .assessment-accordion .accordion-button:focus,
+.student-view-theme .assessment-accordion .accordion-button:not(.collapsed) {
+    background-color: transparent !important;
+    box-shadow: #0d6efd;
+    /* This is the key to removing the "thick" look */
+    color: #212529 !important;
+    /* Keeps text black */
+}
+
+.material-item {
+    border-top: 1px solid #e9ecef;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.material-list-group li:first-child .material-item {
+    border-top: none;
+}
+
+.material-item-link {
+    text-decoration: none;
+    color: #212529;
+    flex-grow: 1;
+    /* Allow link to take up space */
+    min-width: 0;
+    /* Crucial for allowing text to be truncated */
+}
+
+.material-item-link:hover {
+    background-color: #f8f9fa;
+
+}
+
+/* Target the div that holds the text to handle overflow */
+.material-item-link>div>div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.no-materials-message {
+    padding: 1.5rem;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.dropdown-item i {
+    width: 24px;
+    text-align: center;
+}
+
+.material-list-group>.material-item:first-child {
+    /* This removes the unwanted line at the top of the list. */
+    border-top: none;
+}
