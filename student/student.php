@@ -158,7 +158,7 @@ if ($currentUser) {
         </div>
 
         <!-- Strand Cards -->
-        <div class="row mt-4">
+        <div class="row mt-4 mx-4">
             <?php if ($strands && $strands->num_rows > 0): ?>
                 <?php while ($strand = $strands->fetch_assoc()): ?>
                     <div class="col-md-4 mb-3">

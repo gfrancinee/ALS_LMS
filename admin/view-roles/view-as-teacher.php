@@ -183,7 +183,7 @@ $grade_param = ($db_grade === 'Grade 11') ? 'grade_11' : 'grade_12';
         </button>
 
         <!-- Strand Cards -->
-        <div class="row mt-4">
+        <div class="row mt-4 mx-4">
             <?php if (empty($strands)): ?>
                 <div class="col-12">
                     <div class="alert alert-info mx-3">
@@ -197,19 +197,13 @@ $grade_param = ($db_grade === 'Grade 11') ? 'grade_11' : 'grade_12';
                         <div class="card h-100 strand-card position-relative">
                             <!-- Three-dots dropdown menu -->
                             <div class="dropdown card-options position-absolute" style="top: 10px; right: 10px; z-index: 10;">
-                                <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="opacity: 0.7; cursor: not-allowed;">
+                                <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: not-allowed;">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                        <button type="button" class="dropdown-item" onclick="alert('This is a read-only view. You cannot edit learning strands.')" style="cursor: not-allowed;">
-                                            <i class="bi bi-pencil-square me-2 text-success"></i>Edit
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button type="button" class="dropdown-item text-danger" onclick="alert('This is a read-only view. You cannot delete learning strands.')" style="cursor: not-allowed;">
-                                            <i class="bi bi-trash3 me-2"></i>Delete
-                                        </button>
+                                    <li><button class="dropdown-item text-success read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                    <li><button class="dropdown-item text-danger read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                     </li>
                                 </ul>
                             </div>

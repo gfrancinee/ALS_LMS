@@ -462,3 +462,28 @@ a.dropdown-item:active {
     /* This removes the unwanted line at the top of the list. */
     border-top: none;
 }
+
+/* Make all interactive elements appear disabled */
+.read-only-overlay {
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+.read-only-overlay:hover {
+    opacity: 0.6;
+}
+
+/* Disable form inputs */
+.modal input,
+.modal textarea,
+.modal select,
+.modal button[type="submit"] {
+    pointer-events: none !important;
+    background-color: #f8f9fa !important;
+    cursor: not-allowed !important;
+}
+
+/* Show cursor not-allowed on buttons */
+button:not(.btn-close):not([data-bs-dismiss="modal"]) {
+    cursor: not-allowed !important;
+}

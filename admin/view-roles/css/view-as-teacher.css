@@ -188,3 +188,24 @@ header h1 {
 .btn-close:focus {
     box-shadow: none;
 }
+
+.dropdown-menu {
+    border-radius: 0.6rem;
+    /* Softer, modern rounded corners */
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* 1. The Three-Dot Button Itself */
+.btn-sm {
+    background-color: transparent;
+    border: none;
+    color: #000000;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Remove the default blue focus ring */
+.btn-sm:focus {
+    border: none;
+    box-shadow: none !important;
+}

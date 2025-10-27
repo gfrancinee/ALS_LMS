@@ -174,18 +174,18 @@ if ($currentUser) {
         </button>
 
         <!-- Strand Cards -->
-        <div class="row mt-4">
+        <div class="row mt-4 mx-4">
             <?php while ($strand = $strands->fetch_assoc()): ?>
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 strand-card">
                         <!-- Three-dots dropdown menu (This part is correct) -->
                         <div class="dropdown card-options">
-                            <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-three-dots-vertical"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <button type="button" class="dropdown-item edit-btn"
+                                    <button type="button" class="dropdown-item text-success edit-btn"
                                         data-bs-toggle="modal"
                                         data-bs-target="#editStrandModal"
                                         data-strand-id="<?= htmlspecialchars($strand['id']) ?>"

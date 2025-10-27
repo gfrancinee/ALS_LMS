@@ -92,32 +92,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/view-strand.css">
-    <style>
-        /* Make all interactive elements appear disabled */
-        .read-only-overlay {
-            cursor: not-allowed !important;
-            opacity: 0.7;
-        }
 
-        .read-only-overlay:hover {
-            opacity: 0.6;
-        }
-
-        /* Disable form inputs */
-        .modal input,
-        .modal textarea,
-        .modal select,
-        .modal button[type="submit"] {
-            pointer-events: none !important;
-            background-color: #f8f9fa !important;
-            cursor: not-allowed !important;
-        }
-
-        /* Show cursor not-allowed on buttons */
-        button:not(.btn-close):not([data-bs-dismiss="modal"]) {
-            cursor: not-allowed !important;
-        }
-    </style>
 </head>
 
 <body class="<?= $theme_class ?>">
