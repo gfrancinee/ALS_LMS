@@ -27,8 +27,14 @@ h2 {
     transition: color 0.2s ease-in-out;
 }
 
-.back-link:hover {
+/* Blue hover for student view */
+.back-link-student:hover {
     color: blue;
+}
+
+/* Green hover for teacher view */
+.back-link-teacher:hover {
+    color: green;
 }
 
 /* Teacher Tabs (Green) */

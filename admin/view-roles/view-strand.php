@@ -97,7 +97,8 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
 
 <body class="<?= $theme_class ?>">
     <div class="back-container">
-        <a href="view-as-student.php?grade=<?= $grade_param ?>" class="back-link <?= $back_link_class ?>">
+        <a href="<?= $is_teacher_view ? 'view-as-teacher.php' : 'view-as-student.php' ?>?grade=<?= $grade_param ?>"
+            class="back-link <?= $back_link_class ?>">
             <i class="bi bi-arrow-left me-1"></i>Back
         </a>
     </div>

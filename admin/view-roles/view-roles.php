@@ -40,21 +40,21 @@ require_once '../../includes/auth.php';
 
         <!-- Main Content -->
         <main class="d-flex justify-content-center align-items-start py-4">
-            <div class="accordion-container" style="width: 100%; max-width: 800px;">
+            <div class="accordion-container" style="width: 100%; max-width: 1000px;">
                 <div class="accordion" id="userAccordion">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="studentHeading">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#student" aria-expanded="true" aria-controls="student">
-                                Student
+                                STUDENT
                             </button>
                         </h2>
                         <div id="student" class="accordion-collapse collapse show" aria-labelledby="studentHeading" data-bs-parent="#userAccordion">
                             <div class="accordion-body">
                                 <p>View materials, courses, or simulate student experience for Student.</p>
-
+                                <hr>
                                 <!-- Updated: Dropdown for grade level selection -->
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                         View as Student
                                     </button>
                                     <ul class="dropdown-menu">
@@ -69,14 +69,15 @@ require_once '../../includes/auth.php';
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="teacherHeading">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#teacherCollapse" aria-expanded="false" aria-controls="teacherCollapse">
-                                Teacher
+                                TEACHER
                             </button>
                         </h2>
                         <div id="teacherCollapse" class="accordion-collapse collapse" aria-labelledby="teacherHeading" data-bs-parent="#userAccordion">
                             <div class="accordion-body">
                                 <p>View materials, courses, or simulate teacher experience for Teacher.</p>
+                                <hr>
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn text-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                         View as Teacher
                                     </button>
                                     <ul class="dropdown-menu">
