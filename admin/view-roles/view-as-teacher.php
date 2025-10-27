@@ -21,16 +21,17 @@ if (!in_array($selected_grade, ['grade_11', 'grade_12'])) {
 $db_grade = ($selected_grade === 'grade_11') ? 'Grade 11' : 'Grade 12';
 $display_grade = ($selected_grade === 'grade_11') ? 'Grade 11' : 'Grade 12';
 
-// Fetch all unique learning strands for the selected grade level
+// Fetch all unique learning strands for the selected grade level with correct student count
 $stmt = $conn->prepare("
-    SELECT DISTINCT ls.id, ls.strand_title, ls.strand_code, ls.grade_level, ls.description, ls.date_created,
+    SELECT ls.id, ls.strand_title, ls.strand_code, ls.grade_level, ls.description, ls.date_created,
            u.fname, u.lname,
-           COUNT(DISTINCT sp.student_id) as student_count
+           (SELECT COUNT(DISTINCT sp2.student_id) 
+            FROM strand_participants sp2 
+            JOIN users u2 ON sp2.student_id = u2.id
+            WHERE sp2.strand_id = ls.id AND u2.role = 'student') as student_count
     FROM learning_strands ls
     LEFT JOIN users u ON ls.creator_id = u.id
-    LEFT JOIN strand_participants sp ON ls.id = sp.strand_id
     WHERE ls.grade_level = ?
-    GROUP BY ls.id
     ORDER BY ls.date_created DESC
 ");
 $stmt->bind_param("s", $db_grade);
@@ -193,10 +194,10 @@ $grade_param = ($db_grade === 'Grade 11') ? 'grade_11' : 'grade_12';
             <?php else: ?>
                 <?php foreach ($strands as $strand): ?>
                     <div class="col-md-4 mb-4">
-                        <div class="card h-100 strand-card">
+                        <div class="card h-100 strand-card position-relative">
                             <!-- Three-dots dropdown menu -->
-                            <div class="dropdown card-options">
-                                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="opacity: 0.7; cursor: not-allowed;">
+                            <div class="dropdown card-options position-absolute" style="top: 10px; right: 10px; z-index: 10;">
+                                <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="opacity: 0.7; cursor: not-allowed;">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -213,23 +214,35 @@ $grade_param = ($db_grade === 'Grade 11') ? 'grade_11' : 'grade_12';
                                 </ul>
                             </div>
 
-                            <!-- Card Content -->
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title mb-2">
-                                    <a href="view-strand.php?id=<?= $strand['id'] ?>&view=teacher" class="text-decoration-none text-dark stretched-link">
-                                        <?= htmlspecialchars($strand['strand_title']) ?>
-                                    </a>
-                                </h5>
+                            <a href="view-strand.php?id=<?= $strand['id'] ?>&view=teacher" class="text-decoration-none">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title mb-0 flex-grow-1 text-dark"><?= htmlspecialchars($strand['strand_title']) ?></h5>
+                                        <span class="badge bg-primary ms-2 mx-4"><?= htmlspecialchars($strand['strand_code']) ?></span>
+                                    </div>
 
-                                <div class="card-text text-muted flex-grow-1">
-                                    <?= $strand['description'] ?>
-                                </div>
+                                    <div class="card-text text-muted flex-grow-1 description-preview">
+                                        <?= $strand['description'] ?>
+                                    </div>
 
-                                <div>
-                                    <span class="badge bg-secondary"><?= htmlspecialchars($strand['grade_level']) ?></span>
-                                    <span class="badge bg-primary"><?= htmlspecialchars($strand['strand_code']) ?></span>
+                                    <div class="mt-auto">
+                                        <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+                                            <div>
+                                                <i class="bi bi-person-fill me-1"></i>
+                                                <?= htmlspecialchars($strand['fname'] . ' ' . $strand['lname']) ?>
+                                            </div>
+                                            <div>
+                                                <i class="bi bi-people-fill me-1"></i>
+                                                <?= $strand['student_count'] ?> student<?= $strand['student_count'] != 1 ? 's' : '' ?>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            Created <?= date('M d, Y', strtotime($strand['date_created'])) ?>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                     </div>
                 <?php endforeach; ?>

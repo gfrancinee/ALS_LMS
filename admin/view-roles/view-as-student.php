@@ -21,16 +21,17 @@ if (!in_array($selected_grade, ['grade_11', 'grade_12'])) {
 $db_grade = ($selected_grade === 'grade_11') ? 'Grade 11' : 'Grade 12';
 $display_grade = ($selected_grade === 'grade_11') ? 'Grade 11' : 'Grade 12';
 
-// Fetch all unique learning strands for the selected grade level
+// Fetch all unique learning strands for the selected grade level with correct student count
 $stmt = $conn->prepare("
-    SELECT DISTINCT ls.id, ls.strand_title, ls.strand_code, ls.grade_level, ls.description, ls.date_created,
+    SELECT ls.id, ls.strand_title, ls.strand_code, ls.grade_level, ls.description, ls.date_created,
            u.fname, u.lname,
-           COUNT(DISTINCT sp.student_id) as student_count
+           (SELECT COUNT(DISTINCT sp2.student_id) 
+            FROM strand_participants sp2 
+            JOIN users u2 ON sp2.student_id = u2.id
+            WHERE sp2.strand_id = ls.id AND u2.role = 'student') as student_count
     FROM learning_strands ls
     LEFT JOIN users u ON ls.creator_id = u.id
-    LEFT JOIN strand_participants sp ON ls.id = sp.strand_id
     WHERE ls.grade_level = ?
-    GROUP BY ls.id
     ORDER BY ls.date_created DESC
 ");
 $stmt->bind_param("s", $db_grade);
@@ -167,12 +168,16 @@ if ($currentUser) {
     </aside>
 
     <main class="content ms-5 pt-4 px-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <div class="section-title h4 fw-semibold ms-3 mb-1">Learning Strands - <?= htmlspecialchars($display_grade) ?></div>
-                <p class="text-muted ms-3 mb-0">Viewing as a <?= htmlspecialchars($display_grade) ?> student</p>
-            </div>
+
+
+        <div class="section-title h4 fw-semibold ms-3 mb-4">Learning Strands - <?= htmlspecialchars($display_grade) ?></div>
+
+        <div class="alert" style="background-color: #fff3cd; color: #856404; border-color: #ffeeba; padding: 1rem; margin-bottom: 1.5rem; margin-left: 1rem; margin-right: 1rem; border-radius: 0.25rem;">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Read-Only Mode:</strong> You are viewing as a student for <?= htmlspecialchars($display_grade) ?>. All features are disabled.
         </div>
+
+
 
         <?php if (empty($strands)): ?>
             <div class="alert alert-info mx-3">
