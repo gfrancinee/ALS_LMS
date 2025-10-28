@@ -35,7 +35,7 @@ body {
 
 /* Login form container */
 .login-container {
-    background-color: #ffffff;
+    background-color: white;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

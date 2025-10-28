@@ -88,7 +88,6 @@ h2 {
     }
 }
 
-/* Remove default focus styles from accordion button */
 .accordion-button:focus {
     box-shadow: none !important;
     background-color: transparent !important;
@@ -101,18 +100,15 @@ h2 {
     box-shadow: none !important;
 }
 
-/* Add red border to the entire accordion item when button is focused */
 .accordion-item:focus-within {
     border: 1px solid #dc3545 !important;
     border-radius: 0.375rem;
 }
 
-/* Optional: Remove the default accordion item border to avoid double borders */
 .accordion-item {
     border: 1px solid #dee2e6;
 }
 
-/* Remove Bootstrap's default focus ring */
 .accordion-button:focus-visible {
     box-shadow: none !important;
     outline: none;
@@ -123,31 +119,24 @@ h2 {
     box-shadow: none !important;
 }
 
-/* Light hover effect for dropdown button */
 .btn.text-primary.dropdown-toggle:hover {
     background-color: #e7f1ff;
-    /* Light blue background on hover */
 }
 
-/* Remove focus outline border */
 .btn.text-primary.dropdown-toggle:focus {
     box-shadow: none !important;
     outline: none;
     border: none;
 }
 
-/* Optional: Add a subtle transition for smooth hover effect */
 .btn.text-primary.dropdown-toggle {
     transition: background-color 0.2s ease;
 }
 
-/* Light hover effect for teacher dropdown button */
 .btn.text-success.dropdown-toggle:hover {
     background-color: #def9ea;
-    /* Light green background on hover */
 }
 
-/* Remove focus outline border for teacher button */
 .btn.text-success.dropdown-toggle:focus {
     box-shadow: none !important;
     outline: none;
@@ -160,16 +149,12 @@ h2 {
 
 .dropdown-menu {
     border-radius: 0.6rem;
-    /* Softer, modern rounded corners */
     border: none;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-/* A custom focus style that's less intrusive but still visible */
-.btn:focus {
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    /* Default BS blue */
-    /* Or change it to another color, e.g., a subtle gray */
-    /* box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.5); */
+.dropdown-toggle:focus,
+.dropdown-toggle.active {
+    box-shadow: none !important;
+    outline: 0 !important;
 }

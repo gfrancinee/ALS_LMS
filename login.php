@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
 
         <!-- Login Form Column -->
-        <main class="login-container">
+        <main class="login-container bg-light">
             <header class="mb-4 text-center">
                 <h1 id="font">
                     <span>A</span><span>L</span><span>S</span> Learning Management System

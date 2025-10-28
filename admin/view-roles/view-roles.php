@@ -40,7 +40,7 @@ require_once '../../includes/auth.php';
 
         <!-- Main Content -->
         <main class="d-flex justify-content-center align-items-start py-4">
-            <div class="accordion-container" style="width: 100%; max-width: 1000px;">
+            <div class="accordion-container border-0" style="width: 100%; max-width: 1000px;">
                 <div class="accordion" id="userAccordion">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="studentHeading">
@@ -54,7 +54,7 @@ require_once '../../includes/auth.php';
                                 <hr>
                                 <!-- Updated: Dropdown for grade level selection -->
                                 <div class="btn-group">
-                                    <button type="button" class="btn text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn text-primary dropdown-toggle shadow-none" data-bs-toggle="dropdown" aria-expanded="false">
                                         View as Student
                                     </button>
                                     <ul class="dropdown-menu">
