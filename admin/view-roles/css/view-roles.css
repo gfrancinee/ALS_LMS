@@ -157,3 +157,19 @@ h2 {
 .btn.text-success.dropdown-toggle {
     transition: background-color 0.2s ease;
 }
+
+.dropdown-menu {
+    border-radius: 0.6rem;
+    /* Softer, modern rounded corners */
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* A custom focus style that's less intrusive but still visible */
+.btn:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    /* Default BS blue */
+    /* Or change it to another color, e.g., a subtle gray */
+    /* box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.5); */
+}
