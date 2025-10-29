@@ -56,36 +56,59 @@ header h1 {
     border: 1px solid #dee2e6;
 }
 
-/* Center the main content fluidly */
-main.text-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 50vh;
-    color: black;
-    margin-top: 50px;
+/* === ADMIN DASHBOARD STYLES === */
+
+/* Set a light background for the page */
+body {
+    background-color: #f8f9fa;
 }
 
-/* Style all dark outline buttons uniformly */
-.solid-btn {
-    background-color: #eaeaea;
-    /* Bootstrap dark */
-    color: #000000;
-    border: none;
-    transition: all 0.2s ease;
-    text-align: center;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Red hover effect */
-.solid-btn:hover,
-.solid-btn:focus {
-    background-color: #dc3545;
-    /* Bootstrap red */
-    border-color: #dc3545;
-    color: #fff;
+.action-card {
     text-decoration: none;
+    /* Remove underline from link */
+    color: #212529;
+    /* Set default text color */
+    display: block;
+    /* Make the whole card clickable */
+    transition: all 0.3s ease-out;
+}
+
+.action-card .card {
+    border: none;
+    border-radius: 0.75rem;
+    /* Softer corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    /* Subtle shadow */
+    transition: all 0.3s ease-out;
+}
+
+/* The "lift and shadow" hover effect */
+.action-card:hover .card {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.action-card .card-body {
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Style for the big icon */
+.action-card .action-icon {
+    font-size: 3rem;
+    /* Big icon */
+    margin-bottom: 1rem;
+    line-height: 1;
+}
+
+.action-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.action-card .card-text {
+    font-size: 0.9rem;
 }
 
 /* Your existing styles */

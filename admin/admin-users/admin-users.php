@@ -123,7 +123,7 @@ if ($unverified_result) {
                             <th>Role</th>
                             <th>Grade Level</th>
                             <th>Status</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -137,7 +137,7 @@ if ($unverified_result) {
 
                         if ($allResult->num_rows > 0) {
                             while ($row = $allResult->fetch_assoc()) {
-                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? 'Grade ' . htmlspecialchars($row['grade_level']) : 'N/A';
+                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level']))) : 'N/A';
                                 echo '<tr>
                                     <td>' . htmlspecialchars($row['fname'] . ' ' . $row['lname']) . '</td>
                                     <td>' . htmlspecialchars($row['email']) . '</td>
@@ -168,7 +168,7 @@ if ($unverified_result) {
                             <th>Full Name</th>
                             <th>Email</th>
                             <th>Status</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -211,7 +211,7 @@ if ($unverified_result) {
                             <th>Email</th>
                             <th>Grade Level</th>
                             <th>Status</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -225,7 +225,7 @@ if ($unverified_result) {
 
                         if ($studentResult->num_rows > 0) {
                             while ($row = $studentResult->fetch_assoc()) {
-                                $grade_level_display = !empty($row['grade_level']) ? 'Grade ' . htmlspecialchars($row['grade_level']) : 'N/A';
+                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level']))) : 'N/A';
                                 echo "<tr>
                                     <td>{$row['fname']} {$row['lname']}</td>
                                     <td>{$row['email']}</td>
@@ -256,7 +256,7 @@ if ($unverified_result) {
                             <th>Email</th>
                             <th>Role</th>
                             <th>Grade Level</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -269,7 +269,7 @@ if ($unverified_result) {
 
                         if ($unverifiedResult->num_rows > 0) {
                             while ($row = $unverifiedResult->fetch_assoc()) {
-                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? 'Grade ' . htmlspecialchars($row['grade_level']) : 'N/A';
+                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level']))) : 'N/A';
                                 echo "<tr>
                                     <td>{$row['fname']} {$row['lname']}</td>
                                     <td>{$row['email']}</td>
@@ -332,9 +332,10 @@ if ($unverified_result) {
                     <div class="mb-3" id="editGradeLevelGroup">
                         <label for="editGradeLevel" class="form-label">Grade Level</label>
                         <select class="form-select" name="grade_level" id="editGradeLevel">
-                            <option value="">N/A (e.g., Teacher)</option>
-                            <option value="11">Grade 11</option>
-                            <option value="12">Grade 12</option>
+                            <option value="">N/A</option>
+
+                            <option value="grade_11">Grade 11</option>
+                            <option value="grade_12">Grade 12</option>
                         </select>
                     </div>
 
@@ -349,7 +350,7 @@ if ($unverified_result) {
                 </div>
 
                 <div class="modal-footer bg-white">
-                    <button type="submit" class="btn btn-success" id="saveUserChangesBtn">Save Changes</button> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button> <button type="submit" class="btn btn-success" id="saveUserChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>

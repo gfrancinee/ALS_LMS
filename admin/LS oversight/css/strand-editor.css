@@ -1,0 +1,185 @@
+.topbar {
+    position: sticky;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: bold;
+}
+
+header h1 {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    ;
+    margin-bottom: 0.5rem;
+    color: rgb(0, 0, 0);
+
+    #font span:nth-child(1) {
+        color: red;
+    }
+
+    #font span:nth-child(2) {
+        color: green;
+    }
+
+    #font span:nth-child(3) {
+        color: blue;
+    }
+
+}
+
+/* Logos */
+.top-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+}
+
+/* Page Title */
+h2 {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease-in-out;
+}
+
+.back-link:hover {
+    color: #dc3545;
+}
+
+/* === 1. MODERN TABLE STYLING (Card-like rows) === */
+.table {
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+    /* Add spacing between rows */
+}
+
+.table thead th {
+    border: none !important;
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-top: 0;
+    padding-bottom: 0.5rem;
+    text-align: left;
+}
+
+.table thead th:last-child {
+    text-align: center;
+}
+
+.table tbody tr {
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    border-radius: 0.5rem;
+    /* Rounded corners for the row */
+    overflow: hidden;
+    /* Important for border-radius */
+    transition: all 0.2s ease-out;
+}
+
+.table tbody td {
+    border: none;
+    /* Remove all cell borders */
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+}
+
+/* Style first and last cells for rounded corners */
+.table tbody tr td:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.table tbody tr td:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+/* New Hover Effect */
+.table tbody tr:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* === 2. ICON ACTION BUTTONS (Circular Ghost Style) === */
+.table .btn-sm {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    border-radius: 50% !important;
+    /* Make it circular */
+    transition: all 0.2s ease-in-out;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    color: #495057 !important;
+    box-shadow: none !important;
+}
+
+/* Hover & Focus/Active States */
+.table .btn-sm.btn-info:hover,
+.table .btn-sm.btn-info:focus {
+    background-color: #0dcaf0 !important;
+    color: #fff !important;
+}
+
+.table .btn-sm.btn-primary:hover,
+.table .btn-sm.btn-primary:focus {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+.table .btn-sm.btn-danger:hover,
+.table .btn-sm.btn-danger:focus {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+/* === 3. MODAL & BACK LINK === */
+.modal .form-control:focus,
+.modal .form-select:focus {
+    box-shadow: none;
+    border-color: #0d6efd;
+    border-width: 2px;
+}
+
+.modal .btn-close:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.back-link {
+    text-decoration: none;
+    color: #6c757d;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: #dc3545;
+}

@@ -76,70 +76,84 @@ if (!isset($conn) || $conn->connect_error) {
             </div>
         </div>
 
-        <div class="container-fluid px-4 pb-5">
-            <div class="row g-4 mb-5">
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 border-primary border-3">
-                        <div class="card-body p-3">
-                            <h5 class="card-title text-primary"><i class="bi bi-book me-2"></i> Total Learning Strands</h5>
-                            <p class="card-text display-5 fw-bold"><?php echo $total_courses; ?></p>
-                            <p class="text-muted mb-0">Total learning strands in the system.</p>
-                        </div>
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-value text-primary"><?php echo $total_courses; ?></div>
+                    <div class="stat-label text-primary">
+                        <i class="bi bi-book me-2"></i>
+                        Total Learning Strands
                     </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 border-success border-3">
-                        <div class="card-body p-3">
-                            <h5 class="card-title text-success"><i class="bi bi-check-circle me-2"></i> Active Learning Strands</h5>
-                            <p class="card-text display-5 fw-bold"><?php echo $active_courses; ?></p>
-                            <p class="text-muted mb-0">Courses currently available to learners.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 border-warning border-3">
-                        <div class="card-body p-3">
-                            <h5 class="card-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i> Materials Needing Review</h5>
-                            <p class="card-text display-5 fw-bold"><?php echo $courses_needing_review; ?></p>
-                            <p class="text-muted mb-0">Materials flagged for content or quality check.</p>
-                        </div>
-                    </div>
+                    <p class="stat-sublabel">Total learning strands in the system.</p>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-lg-8 mx-auto">
-                    <div class="card shadow-lg">
-                        <div class="card-header bg-light">
-                            <h4 class="mb-0"><i class="bi bi-list-columns-reverse me-2"></i> Learning Strand Management </h4>
-                        </div>
-                        <ul class="list-group course-actions-list">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Manage Learning Strands & Materials
-                                <a href="strand_materials_editor.php" class="btn btn-primary btn-sm">Go to Editor</a>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                View Quiz Performance Data
-                                <a href="quiz_performance.php" class="btn btn-info btn-sm">View Attempts</a>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Review Student Answers
-                                <a href="student_answers_review.php" class="btn btn-secondary btn-sm">Start Review</a>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
-                                Latest Added Learning Strand: <span class="fw-bold text-success"><?php echo $recently_added_course; ?></span>
-                                <a href="strand_details.php?name=<?php echo urlencode($recently_added_course); ?>" class="btn btn-outline-success btn-sm">Details</a>
-                            </li>
-                        </ul>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-value text-success"><?php echo $active_courses; ?></div>
+                    <div class="stat-label text-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Active Learning Strands
                     </div>
+                    <p class="stat-sublabel">Learning Strands currently available to learners.</p>
                 </div>
             </div>
 
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-value text-danger"><?php echo $courses_needing_review; ?></div>
+                    <div class="stat-label text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Materials Needing Review
+                    </div>
+                    <p class="stat-sublabel">Materials flagged for content or quality check.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 mx-auto">
+                <div class="card shadow-lg" style="border: none; border-radius: 0.75rem;">
+                    <div class="card-header bg-light" style="border-radius: 0.75rem 0.75rem 0 0; border: none; padding: 1.25rem 1.5rem;">
+                        <h4 class="mb-0"><i class="bi bi-list-columns-reverse me-2"></i> Learning Strand Management </h4>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle management-table">
+                            <tbody>
+                                <tr>
+                                    <td>Manage Learning Strands & Materials</td>
+                                    <td class="text-center">
+                                        <a href="strand_materials_editor.php" class="btn btn-outline-primary rounded-pill px-3">Go to Editor</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>View Quiz Performance Data</td>
+                                    <td class="text-center">
+                                        <a href="quiz_performance.php" class="btn btn-outline-info rounded-pill px-3">View Attempts</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Review Student Answers</td>
+                                    <td class="text-center">
+                                        <a href="student_answers_review.php" class="btn btn-outline-secondary rounded-pill px-3">Start Review</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Latest Added: <span class="fw-bold text-success ms-2"><?php echo $recently_added_course; ?></span></td>
+                                    <td class="text-center">
+                                        <a href="strand_details.php?name=<?php echo urlencode($recently_added_course); ?>" class="btn btn-outline-success rounded-pill px-3">Details</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

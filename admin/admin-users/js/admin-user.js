@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .finally(() => {
                 confirmVerifyBtn.disabled = false;
-                confirmVerifyBtn.textContent = 'Yes, Verify';
+                confirmVerifyBtn.textContent = 'Verify';
             });
     });
 
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .finally(() => {
                 // Reset button state
                 confirmDeleteBtn.disabled = false;
-                confirmDeleteBtn.textContent = 'Yes, Delete';
+                confirmDeleteBtn.textContent = 'Yes,';
             });
     });
 

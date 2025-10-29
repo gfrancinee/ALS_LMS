@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../includes/auth.php';
+require_once '../includes/db.php';
 
 // Check if ID is passed via GET and is valid
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {

@@ -13,54 +13,6 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/admin.css">
-    <style>
-        #messages-icon-float {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1050;
-            /* Ensure it's above other content */
-            background-color: var(--bs-primary);
-            /* Use theme primary color, or choose another */
-            color: white;
-            border-radius: 50%;
-            width: 55px;
-            /* Adjust size as needed */
-            height: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            text-decoration: none;
-            /* Remove underline from link */
-        }
-
-        #messages-icon-float:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        #messages-icon-float i {
-            font-size: 1.75rem;
-            /* Adjust icon size */
-        }
-
-        /* Style for logout button to be fixed bottom-left */
-        #logoutBtn {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1050;
-        }
-
-        /* Adjust main content padding if needed to avoid overlap */
-        body {
-            padding-bottom: 80px;
-            /* Add padding to prevent content hiding behind fixed buttons */
-        }
-    </style>
     <script src="js/admin.js" defer></script>
 </head>
 
@@ -78,16 +30,54 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
         </div>
     </header>
 
-    <div class="container-fluid full-height d-flex align-items-center justify-content-center">
-        <div class="row w-100">
-            <main class="col-md-8 mx-auto px-4 py-5 text-center">
-                <h2 class="mb-5">Admin Controls</h2>
-                <div class="d-grid gap-3 col-8 mx-auto">
-                    <a href="view-roles/view-roles.php" class="btn solid-btn btn-lg">View Roles</a>
-                    <a href="admin-users/admin-users.php" class="btn solid-btn btn-lg">User Management</a>
-                    <a href="LS oversight/ls.php" class="btn solid-btn btn-lg">LS Oversight</a>
-                </div>
-            </main>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">Admin Controls</h2>
+            </div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+
+            <div class="col-md-4">
+                <a href="view-roles/view-roles.php" class="action-card">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="action-icon text-primary">
+                                <i class="bi bi-person-video3"></i>
+                            </div>
+                            <h5 class="card-title">View Roles</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="admin-users/admin-users.php" class="action-card">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="action-icon text-success">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <h5 class="card-title">User Management</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="LS oversight/ls.php" class="action-card">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="action-icon text-info">
+                                <i class="bi bi-book-half"></i>
+                            </div>
+                            <h5 class="card-title">LS Oversight</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
         </div>
     </div>
 

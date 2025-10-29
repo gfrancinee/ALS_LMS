@@ -1,5 +1,5 @@
 <?php
-require_once '../../includes/db.php';
+require_once '../includes/db.php';
 
 // --- ADDED: Prepare for a JSON response ---
 header('Content-Type: application/json');
