@@ -106,7 +106,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
     <div class="container mt-4">
         <h2><?= htmlspecialchars($strand['strand_title']) ?> <small class="text-muted">(<?= htmlspecialchars($strand['strand_code']) ?>)</small></h2>
         <p><?= ($strand['description']) ?></p>
-        <span class="badge bg-secondary"><?= htmlspecialchars($strand['grade_level']) ?></span>
+        <span class="badge rounded-pill bg-light text-dark"><?= htmlspecialchars($strand['grade_level']) ?></span>
         <span class="badge bg-warning text-dark ms-2"><i class="bi bi-eye-slash me-1"></i>Read-Only Mode</span>
 
         <!-- Tabs -->

@@ -63,14 +63,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 
 <body>
-    <div class="container-fluid d-flex justify-content-end align-items-center vh-100 p-0">
-        <!-- Logo Column -->
-        <div class="logos d-flex flex-column align-items-center me-5 pe-5">
-            <img src="img/BNHS.jpg" alt="school" class="logo circular mb-3" />
-            <img src="img/ALS.png" alt="ALS" class="logo circular" />
-        </div>
+    <div class="container-fluid d-flex justify-content-center align-items-center vh-100 p-0">
 
-        <!-- Login Form Column -->
         <main class="login-container bg-light">
             <header class="mb-4 text-center">
                 <h1 id="font">

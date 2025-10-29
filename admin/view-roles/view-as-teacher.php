@@ -183,7 +183,7 @@ $grade_param = ($db_grade === 'Grade 11') ? 'grade_11' : 'grade_12';
         </button>
 
         <!-- Strand Cards -->
-        <div class="row mt-4 mx-4">
+        <div class="row mt-4 mx-1">
             <?php if (empty($strands)): ?>
                 <div class="col-12">
                     <div class="alert alert-info mx-3">
@@ -212,7 +212,7 @@ $grade_param = ($db_grade === 'Grade 11') ? 'grade_11' : 'grade_12';
                                 <div class="card-body d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h5 class="card-title mb-0 flex-grow-1 text-dark"><?= htmlspecialchars($strand['strand_title']) ?></h5>
-                                        <span class="badge bg-primary ms-2 mx-4"><?= htmlspecialchars($strand['strand_code']) ?></span>
+                                        <span class="badge bg-primary ms-2 mx-1"><?= htmlspecialchars($strand['strand_code']) ?></span>
                                     </div>
 
                                     <div class="card-text text-muted flex-grow-1 description-preview">

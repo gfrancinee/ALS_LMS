@@ -178,7 +178,7 @@ if ($user_role === 'teacher') {
     <div class="container mt-4">
         <h2><?= htmlspecialchars($strand['strand_title']) ?> <small class="text-muted">(<?= htmlspecialchars($strand['strand_code']) ?>)</small></h2>
         <p><?= ($strand['description']) ?></p>
-        <span class="badge bg-secondary"><?= htmlspecialchars($strand['grade_level']) ?></span>
+        <span class="badge rounded-pill bg-light text-dark"><?= htmlspecialchars($strand['grade_level']) ?></span>
 
         <!-- Tabs -->
         <ul class="nav nav-tabs mb-0 mt-4 <?= $tab_class ?>" id="strandTabs" role="tablist">

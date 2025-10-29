@@ -185,7 +185,7 @@ if ($currentUser) {
                 No learning strands found for <?= htmlspecialchars($display_grade) ?>.
             </div>
         <?php else: ?>
-            <div class="row mt-4 mx-4">
+            <div class="row mt-4 mx-1">
                 <?php foreach ($strands as $strand): ?>
                     <div class="col-md-4 mb-4">
                         <a href="view-strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none">

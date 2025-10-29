@@ -1,14 +1,15 @@
-/* Base layout */
-html,
 body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: #ac3333;
-    background-image: linear-gradient(to bottom left, #c56868, #590505);
-    display: flex;
-    justify-content: right;
-    align-items: center;
+    /* 1. Add your image with a dark overlay */
+    /* This dark gradient (rgba) sits on top of your image */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url('../img/classroom.jpg');
+
+    /* 2. Make it cover the screen */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    width: 100%;
 }
 
 /* Logo container */
@@ -41,7 +42,7 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     width: 100%;
     max-width: 400px;
-    margin-right: 13rem;
+    margin-right: 30rem;
 }
 
 /* Header styling */
@@ -193,4 +194,27 @@ a:hover {
     background-color: #fff;
     /* Return background to white for readability while typing */
     box-shadow: none;
+}
+
+/* === LOGIN FORM TRANSITION === */
+
+/* 1. This defines the animation (changed to slide from left) */
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+        /* Start 20px to the left */
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        /* End at its normal position */
+    }
+}
+
+/* 2. This applies the new animation to your login container */
+.login-container {
+    /* This tells the animation to run */
+    animation: fadeInLeft 0.7s ease-out forwards;
 }

@@ -4,178 +4,215 @@ body {
     margin: 0;
 }
 
-/* Topbar */
 .topbar {
-    position: sticky;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 2rem;
-    background: #ffffff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    border: none;
-}
-
-.title {
-    font-size: 1.75rem;
-    font-weight: bold;
-}
-
-header h1 {
-    font-family: 'Segoe UI', sans-serif;
-    text-align: center;
-    font-size: 23px;
-    ;
-    margin-bottom: 0.5rem;
-    color: rgb(0, 0, 0);
-
-    #font span:nth-child(1) {
-        color: red;
-    }
-
-    #font span:nth-child(2) {
-        color: green;
-    }
-
-    #font span:nth-child(3) {
-        color: blue;
-    }
-
-}
-
-/* Logos */
-.top-icons {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    background-color: #ffffff;
+    z-index: 1030;
+    /* This is a standard height for a py-3 header */
+    height: 74px;
 }
 
 .top-logo {
-    width: 40px;
     height: 40px;
-    border-radius: 50%;
-    border: 1px solid #dee2e6;
+    width: 40px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.title #font {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    color: rgb(0, 0, 0);
+    font-weight: 600;
+}
+
+.title #font span:nth-child(1) {
+    color: red;
+}
+
+.title #font span:nth-child(2) {
+    color: green;
+}
+
+.title #font span:nth-child(3) {
+    color: blue;
 }
 
 .sidebar {
-    margin: 0;
-    top: 100px;
-    left: 0;
-    background: #fff;
-    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
-    z-index: 999;
-    align-items: center;
-    gap: 1.5rem;
+    top: 74px;
+    height: calc(100vh - 74px);
+    width: 65px !important;
+    padding-top: 1rem !important;
+    /* Top spacing */
+    gap: 1rem !important;
+    /* Spacing BETWEEN icons */
+    background-color: #ffffff;
+    z-index: 1020;
+    /* We removed align-items: center from the HTML */
 }
 
-.sidebar-link {
-    margin-top: 2.5rem;
-    width: 100%;
-    padding: 5px 0;
-    text-align: center;
+/* This styles all the <a> tags (the icon "buttons") */
+.sidebar .sidebar-link {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 10px !important;
+    color: #6c757d !important;
+    text-decoration: none !important;
+    transition: all 0.1s ease-out;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    /* === THIS IS THE ALIGNMENT FIX === */
+    /* This centers the 45px button inside the 65px sidebar */
+    margin-top: 1.5rem !important;
+    margin-left: 0.6rem;
+    margin-right: 0 auto;
+
+    padding: 0 !important;
 }
 
-.sidebar-link i {
-    padding: 3px;
+/* This is the modern hover effect */
+.sidebar .sidebar-link:hover {
+    background-color: #f0f0f0;
+    color: #0d6a2f !important;
 }
 
-.sidebar a {
-    color: black;
-    text-decoration: none;
+/* This is your active tab (light green background) */
+.sidebar .sidebar-link.active-tab {
+    background-color: #d1f3e0;
+    color: #0d6a2f !important;
+    border: none !important;
 }
 
-.sidebar a:hover {
-    color: green;
-}
-
-.sidebar-link.active-tab {
-    color: green;
-    border-left: 4px solid green;
-    padding-left: 4px;
-}
-
-/* Main Content */
-.content {
-    margin-left: 70px;
-    padding: 1rem;
-    flex: 1;
-}
-
-.section-title {
-    font-weight: bold;
-    margin-left: 5rem;
-}
-
-.strand-button {
-    background: rgb(239, 239, 239);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.10);
-    border-radius: 6px;
+/* This modernizes the dropdown menus that pop out */
+.sidebar .dropdown-menu {
     border: none;
-    padding: 10px;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    transition: background 0.2s;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
 }
 
-.strand-button:hover {
-    background-color: #eef2f5;
+/* === 3. MAIN CONTENT === */
+.content {
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 74px);
+    margin-left: 65px !important;
+    padding: 2rem !important;
+    /* Consistent padding */
 }
 
-.strand-button i {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 2px;
+/* Style the "My Learning Strand" title */
+.content .section-title {
+    font-weight: bold;
+    margin-left: 0 !important;
+    /* Remove the old margin */
+    margin-bottom: 1.5rem !important;
+    /* Add space below title */
 }
 
-.strand-button i:hover {
-    color: black;
-}
-
-/* New styles for the Learning Strand cards */
+/* === 5. MODERN STRAND CARDS === */
 .strand-card {
-    border: 1px solid #e9ecef;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    border-radius: 0.5rem;
+    border: none;
+    border-radius: 0.75rem;
+    /* Modern rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    /* Soft shadow */
+    transition: all 0.3s ease-out;
+    position: relative;
+    /* Needed for card-options */
 }
 
 .strand-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+    /* "Lift" effect on hover */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.strand-card .card-title {
-    font-weight: 600;
+.strand-card .card-title a {
     color: #212529;
+    font-weight: 600;
 }
 
-/* Ensure badges have some space */
-.strand-card .badge {
-    margin-right: 5px;
+.strand-card .card-title a:hover {
+    color: #0d6efd;
 }
 
-/* Position the three-dots menu on the card */
-.strand-card {
+/* Fix for stretched-link */
+.strand-card .card-body {
     position: relative;
+    z-index: 2;
+    padding: 1.5rem;
+    /* More padding inside card */
 }
 
+/* Card options button (three-dots) */
 .card-options {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 10;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 3;
 }
 
-.sidebar .dropdown {
-    width: 100%;
+.card-options .btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #6c757d;
 }
 
-.strand-card .card-text {
-    font-size: 0.7rem;
-    line-height: 1.5;
+.card-options .btn:hover {
+    color: #000;
+}
+
+/* Style the new light badges */
+.strand-card .badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+    font-weight: 500;
+}
+
+/* === 6. MODAL FOCUS STYLES (Green) === */
+
+/* Target text inputs, textareas, and selects inside #createStrandModal */
+#createStrandModal .form-control:focus,
+#createStrandModal .form-select:focus {
+    border-color: #198754;
+    /* Green border color */
+    border-width: 2px;
+    /* Set border thickness */
+    box-shadow: none;
+    /* Remove the glow */
+}
+
+/* Also remove focus shadow from the modal's close 'X' button */
+#createStrandModal .btn-close:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+/* === 7. SIDEBAR DROPDOWN ITEM FIX === */
+
+/* Remove the blue active/focus background from dropdown items */
+.sidebar .dropdown-menu .dropdown-item:active,
+.sidebar .dropdown-menu .dropdown-item:focus {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    /* Keep text color default */
+}
+
+/* Optional: Add a subtle hover effect */
+.sidebar .dropdown-menu .dropdown-item:hover {
+    border-radius: 0.45rem;
+    background-color: #f8f9fa;
+    /* Light grey */
+    color: #198754;
 }
 
 .dropend .dropdown-menu {

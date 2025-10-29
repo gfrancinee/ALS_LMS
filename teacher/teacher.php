@@ -66,7 +66,7 @@ if ($currentUser) {
         const currentUserId = <?= $_SESSION['user_id'] ?? 'null'; ?>;
     </script>
 
-    <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+    <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3">
         <div class="d-flex align-items-left">
             <h1 class="title m-0">
                 <div id="font">
@@ -80,9 +80,9 @@ if ($currentUser) {
         </div>
     </header>
 
-    <aside class="sidebar position-fixed top-0 start-0 d-flex flex-column align-items-center pt-5 gap-2 shadow" style="width: 65px; height: 100vh;">
+    <aside class="sidebar position-fixed start-0 d-flex flex-column">
 
-        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center active-tab" data-tab="courses"><i class="bi bi-book-fill fs-4" aria-label="Courses"></i></a>
+        <a href="#" class="sidebar-link d-flex justify-content-center align-items-center active-tab" data-tab="courses"><i class="bi bi-book-half fs-4" aria-label="Learning Strands"></i></a>
 
         <!-- Messages -->
         <div class="dropdown dropend">
@@ -168,13 +168,13 @@ if ($currentUser) {
         ?>
 
         <!-- Create Button -->
-        <button class="strand-button btn d-inline-flex align-items-center gap-2 px-3 py-2 ms-3" data-bs-toggle="modal" data-bs-target="#createStrandModal">
+        <button class="btn btn-primary rounded-pill d-inline-flex align-items-center gap-2 px-3 py-2 ms-3" data-bs-toggle="modal" data-bs-target="#createStrandModal">
             <i class="bi bi-plus-circle"></i>
             <span>Create Learning Strand</span>
         </button>
 
         <!-- Strand Cards -->
-        <div class="row mt-4 mx-4">
+        <div class="row mt-4 mx-1">
             <?php while ($strand = $strands->fetch_assoc()): ?>
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 strand-card">
@@ -220,8 +220,8 @@ if ($currentUser) {
                             <!-- === END OF FIX === -->
 
                             <div>
-                                <span class="badge bg-secondary"><?= htmlspecialchars($strand['grade_level']) ?></span>
-                                <span class="badge bg-primary"><?= htmlspecialchars($strand['strand_code']) ?></span>
+                                <span class="badge rounded-pill bg-light text-dark"><?= htmlspecialchars($strand['grade_level']) ?></span>
+                                <span class="badge rounded-pill bg-light text-dark"><?= htmlspecialchars($strand['strand_code']) ?></span>
                             </div>
                         </div>
                     </div>
