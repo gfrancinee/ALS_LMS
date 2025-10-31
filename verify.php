@@ -86,7 +86,7 @@ if (isset($conn) && $conn instanceof mysqli) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Email Verification</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/register.css" />
+    <link rel="stylesheet" href="css/verify.css" />
     <style>
         #resendFeedback {
             min-height: 24px;
@@ -99,11 +99,13 @@ if (isset($conn) && $conn instanceof mysqli) {
     </style>
 </head>
 
-<body class="bg-light">
-    <main class="container mt-5">
+<body class="verify-page">
+    <main class="container d-flex justify-content-center align-items-center min-vh-100">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="register-container">
+
+                <div class="verify-container">
+
                     <header>
                         <h1 class="text-center">Verify Your Account</h1>
                         <p class="text-center text-muted">
@@ -134,6 +136,7 @@ if (isset($conn) && $conn instanceof mysqli) {
                         <p id="resendFeedback"></p>
                     </div>
                 </div>
+
             </div>
         </div>
     </main>

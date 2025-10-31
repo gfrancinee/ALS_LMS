@@ -17,7 +17,7 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
 </head>
 
 <body>
-    <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+    <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3">
         <div class="d-flex align-items-left">
             <h1 class="title m-0">
                 <div id="font">
@@ -26,14 +26,15 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
             </h1>
         </div>
         <div class="top-icons d-flex align-items-center gap-3">
-            <img src="../img/ALS.png" class="top-logo" alt="ALS Logo" /> <img src="../img/BNHS.jpg" class="top-logo" alt="BNHS Logo" />
+            <img src="../img/ALS.png" class="top-logo" alt="ALS Logo" />
+            <img src="../img/BNHS.jpg" class="top-logo" alt="BNHS Logo" />
         </div>
     </header>
 
     <div class="container py-5">
         <div class="row">
             <div class="col-12 text-center mb-5">
-                <h2 class="display-5 fw-bold">Admin Controls</h2>
+                <h2 class="display-5 fw-normal">Admin Controls</h2>
             </div>
         </div>
 

@@ -166,4 +166,5 @@ document.addEventListener("DOMContentLoaded", () => {
     goHomeBtn.addEventListener("click", () => {
         window.location.href = "login.php";
     });
+
 });

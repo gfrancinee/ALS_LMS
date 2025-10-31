@@ -24,54 +24,37 @@ body {
 }
 
 .topbar {
-    position: sticky;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    background: #fff;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-    border: none;
-}
-
-.title {
-    font-size: 1.75rem;
-    font-weight: bold;
-}
-
-header h1 {
-    font-family: 'Segoe UI', sans-serif;
-    text-align: center;
-    font-size: 23px;
-    ;
-    margin-bottom: 0.5rem;
-    color: rgb(0, 0, 0);
-
-    #font span:nth-child(1) {
-        color: red;
-    }
-
-    #font span:nth-child(2) {
-        color: green;
-    }
-
-    #font span:nth-child(3) {
-        color: blue;
-    }
-
-}
-
-/* Logos */
-.top-icons {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    background-color: #ffffff;
+    z-index: 1030;
+    /* This is a standard height for a py-3 header */
+    height: 74px;
 }
 
 .top-logo {
-    width: 40px;
     height: 40px;
-    border-radius: 50%;
-    border: 1px solid #dee2e6;
+    width: 40px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.title #font {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    color: rgb(0, 0, 0);
+    font-weight: 600;
+}
+
+.title #font span:nth-child(1) {
+    color: red;
+}
+
+.title #font span:nth-child(2) {
+    color: green;
+}
+
+.title #font span:nth-child(3) {
+    color: blue;
 }
 
 /* Page Title */

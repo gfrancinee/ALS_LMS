@@ -1,0 +1,60 @@
+/* === 1. BODY & BACKGROUND === */
+body {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+        url('../img/classroom.jpg');
+    /* Or your classroom image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* === 2. VERIFY CONTAINER (No conflict!) === */
+.verify-container {
+    width: 1000px;
+    /* The "shorter" (narrower) width */
+    max-width: 100%;
+    padding: 2.5rem 2.5rem 1rem 2.5rem;
+    /* This padding will make it "fit the content" */
+
+    /* These styles come from your screenshot */
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    /* The correct "fade in down" animation */
+    animation: fadeInDown 0.7s ease-out forwards;
+}
+
+/* === 3. INPUT FOCUS STYLE === */
+#verification_code:focus {
+    border-color: #dc3545;
+    /* Red border */
+    border-width: 2px;
+    box-shadow: none;
+}
+
+/* === 4. ANIMATION DEFINITION === */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+        /* "fade in down" (from top) */
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#resendLink {
+    text-decoration: none;
+}
+
+/* Optional: Add the underline back on hover so users know it's clickable */
+#resendLink:hover {
+    color: blue;
+}

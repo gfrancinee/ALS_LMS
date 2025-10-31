@@ -44,7 +44,7 @@ $materials = $materials_result->get_result();
 </head>
 
 <body>
-    <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+    <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3">
         <div class="d-flex align-items-left">
             <h1 class="title m-0">
                 <div id="font">
@@ -53,8 +53,9 @@ $materials = $materials_result->get_result();
             </h1>
         </div>
         <div class="top-icons d-flex align-items-center gap-3">
-            <img src="img/ALS.png" class="top-logo" alt="ALS Logo" />
-            <img src="img/BNHS.jpg" class="top-logo" alt="BNHS Logo" />
+            <img src="../img/ALS.png" class="top-logo" alt="ALS Logo" />
+            <img src="../img/BNHS.jpg" class="top-logo" alt="BNHS Logo" />
+        </div>
     </header>
 
     <div class="container py-4">

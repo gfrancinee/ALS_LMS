@@ -1,17 +1,106 @@
-/* Gradient background for the entire page */
+/* === 1. BODY & BACKGROUND === */
 body {
-    background: linear-gradient(to bottom left, #c56868, #590505);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url('../img/classroom.jpg');
+    /* <-- Or your preferred image */
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     min-height: 100vh;
-    margin: 0;
-    padding: 0;
+    width: 100%;
+    font-family: 'Segoe UI', sans-serif;
+
+    html,
+    body {
+        /* For Firefox */
+        scrollbar-width: none;
+
+        /* For Internet Explorer and OLD Edge */
+        -ms-overflow-style: none;
+    }
 }
 
-/* White background for the registration form container */
+/* For Chrome, Safari, and ALL NEW versions of Edge */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* === 2. REGISTER CONTAINER === */
 .register-container {
-    background-color: #fbfbfb;
-    border-radius: 8px;
-    padding: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 600px;
+    max-width: 95%;
+    height: auto;
+    /* This makes it fit the content */
+
+    padding: 2.5rem;
+
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    animation: fadeInRight 0.7s ease-out forwards;
+
+    /* These margins add space at the top and bottom */
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+
+    /* This adds space from the right edge of the screen */
+    margin-right: 5rem;
+}
+
+.form-control {
+    border-radius: 0.5rem;
+    border-width: 0.5px;
+    border-color: #d4d4d4;
+    /* This is the key: the border exists but is transparent, preventing layout shifts on click */
+    background-color: #ffffff;
+    /* A light gray background to define the input area */
+    transition: border-color 0.20s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+/* === 3. FORM & FOCUS STYLES === */
+.form-control:focus,
+.form-select:focus {
+    border-color: #dc3545;
+    /* Standard blue to match the button */
+    border-width: 2px;
+    box-shadow: none;
+    /* Remove the glow */
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* === 5. FADE-OUT-RIGHT ANIMATION === */
+@keyframes fadeOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+        /* Slide 20px to the right */
+    }
+}
+
+/* This class will trigger the animation */
+.register-container.fade-out-right {
+    animation: fadeOutRight 0.3s ease-in forwards;
 }
 
 h1 {
@@ -26,36 +115,4 @@ a {
 .form-label {
     font-size: small;
     margin-bottom: 2.5px;
-}
-
-/*
-  This applies the modern, borderless style to all text fields and the dropdown menu.
-*/
-.form-control,
-.form-select {
-    border-radius: 0.5rem;
-    border-width: 0.5px;
-    border-color: #b4b4b4;
-    background-color: #ffffff;
-    /* A light gray background to define the input area */
-    transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
-}
-
-.form-control:hover,
-.form-select:hover {
-    background-color: #e9ecef;
-    /* A slightly darker gray for the hover background */
-}
-
-/*
-  This makes the transparent border become a thick red border only when the
-  text field or dropdown is clicked.
-*/
-.form-control:focus,
-.form-select:focus {
-    border-color: #dc3545;
-    border-width: 2px;
-    background-color: #fff;
-    /* Return background to white for readability */
-    box-shadow: none;
 }

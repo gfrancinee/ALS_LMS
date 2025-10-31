@@ -1,6 +1,4 @@
 body {
-    /* 1. Add your image with a dark overlay */
-    /* This dark gradient (rgba) sits on top of your image */
     background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
         url('../img/classroom.jpg');
 
@@ -172,22 +170,13 @@ a:hover {
 .form-control {
     border-radius: 0.5rem;
     border-width: 0.5px;
-    border-color: #b4b4b4;
+    border-color: #d4d4d4;
     /* This is the key: the border exists but is transparent, preventing layout shifts on click */
     background-color: #ffffff;
     /* A light gray background to define the input area */
     transition: border-color 0.20s ease-in-out, background-color 0.15s ease-in-out;
 }
 
-.form-control:hover {
-    background-color: #e9ecef;
-    /* A slightly darker gray for the hover background */
-}
-
-/*
-  This is your existing style. It will now make the transparent border
-  become a thick red border only when the text field is clicked.
-*/
 .form-control:focus {
     border-color: #dc3545;
     border-width: 2px;
@@ -217,4 +206,23 @@ a:hover {
 .login-container {
     /* This tells the animation to run */
     animation: fadeInLeft 0.7s ease-out forwards;
+}
+
+/* === 5. FADE-OUT-LEFT ANIMATION === */
+@keyframes fadeOutLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+        /* Slide 20px to the left */
+    }
+}
+
+/* This class will trigger the animation */
+.login-container.fade-out-left {
+    animation: fadeOutLeft 0.3s ease-in forwards;
 }
