@@ -145,6 +145,23 @@ body {
     font-weight: 500;
 }
 
+/* === 6. CARD TITLE ALIGNMENT FIX === */
+
+.strand-title-link {
+    display: flex;
+    align-items: flex-start;
+    /* Aligns icon and text to the top */
+}
+
+.strand-title-link i {
+    /* Keep the icon from shrinking */
+    flex-shrink: 0;
+
+    /* Nudges the icon down slightly to match the text */
+    position: relative;
+    top: 2px;
+}
+
 /* === 7. SIDEBAR DROPDOWN ITEM FIX === */
 
 /* Remove the blue active/focus background from dropdown items */

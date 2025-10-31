@@ -164,7 +164,9 @@ if ($currentUser) {
                         <a href="../strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none">
                             <div class="card h-100 strand-card">
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title mb-2"><?= htmlspecialchars($strand['strand_title']) ?></h5>
+                                    <h5 class="card-title mb-2 strand-title-link"> <i class="bi bi-book-half fs-4 me-2 text-primary"></i>
+                                        <span><?= htmlspecialchars($strand['strand_title']) ?></span>
+                                    </h5>
                                     <div class="card-text text-muted flex-grow-1 description-preview">
                                         <?= $strand['description'] ?>
                                     </div>

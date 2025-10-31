@@ -207,8 +207,9 @@ if ($currentUser) {
                         <!-- Card Content -->
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title mb-2">
-                                <a href="../strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none text-dark stretched-link">
-                                    <?= htmlspecialchars($strand['strand_title']) ?>
+                                <a href="../strand/strand.php?id=<?= $strand['id'] ?>" class="text-decoration-none text-dark stretched-link strand-title-link">
+                                    <i class="bi bi-book-half fs-4 me-2 text-success"></i>
+                                    <span><?= htmlspecialchars($strand['strand_title']) ?></span>
                                 </a>
                             </h5>
 
