@@ -47,17 +47,16 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
     <main class="content">
         <div class="container py-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">Quiz Performance <Data></Data></h2>
+                <h2 class="mb-0">Quiz Performance Data</h2>
                 <div class="mb-3">
-                    <a href="ls.php" class="back-link">
-                        <i class="bi bi-arrow-left me-1"></i>Back
+                    <a href="ls.php" class="back-link"> <i class="bi bi-arrow-left me-1"></i>Back
                     </a>
                 </div>
             </div>
 
             <ul class="nav nav-tabs" id="gradeTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-pane" type="button" role="tab">All Grade Levels</button>
+                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-pane" type="button" role="tab">All</button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="g11-tab" data-bs-toggle="tab" data-bs-target="#g11-pane" type="button" role="tab">Grade 11</button>
@@ -70,15 +69,20 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
             <div class="tab-content" id="gradeTabsContent">
 
                 <div class="tab-pane fade show active" id="all-pane" role="tabpanel">
-                    <table class="table mt-2">
+                    <table class="table align-middle">
                         <tbody>
                             <?php foreach ($strands as $strand): ?>
                                 <tr>
-                                    <td style="text-align: left;"><?= htmlspecialchars($strand['strand_title']) ?></td>
-                                    <td><?= htmlspecialchars($strand['strand_code']) ?></td>
-                                    <td><?= htmlspecialchars($strand['grade_level']) ?></td>
                                     <td>
-                                        <a href="strand_attempts.php?id=<?= $strand['id'] ?>" class="btn btn-outline-primary btn-sm">
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold"><i class="bi bi-book-half me-3 text-success mx-3"></i><?= htmlspecialchars($strand['strand_title']) ?></span>
+                                            <span class="text-muted small ps-5">
+                                                <?= htmlspecialchars($strand['strand_code']) ?> | <?= htmlspecialchars($strand['grade_level']) ?>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="learning_strand_attempts.php?id=<?= $strand['id'] ?>" class="btn text-primary btn-sm me-3 btn-pill-hover">
                                             View Attempts
                                         </a>
                                     </td>
@@ -90,13 +94,6 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
 
                 <div class="tab-pane fade" id="g11-pane" role="tabpanel">
                     <table class="table mt-4">
-                        <thead>
-                            <tr>
-                                <th style="text-align: left;">Learning Strand</th>
-                                <th>Code</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
                         <tbody>
                             <?php
                             $g11_count = 0;
@@ -105,10 +102,16 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
                                     $g11_count++;
                             ?>
                                     <tr>
-                                        <td style="text-align: left;"><?= htmlspecialchars($strand['strand_title']) ?></td>
-                                        <td><?= htmlspecialchars($strand['strand_code']) ?></td>
                                         <td>
-                                            <a href="strand_attempts.php?id=<?= $strand['id'] ?>" class="btn btn-outline-primary btn-sm">
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-bold"><i class="bi bi-book-half me-3 text-success mx-3"></i><?= htmlspecialchars($strand['strand_title']) ?></span>
+                                                <span class="text-muted small ps-5">
+                                                    <?= htmlspecialchars($strand['strand_code']) ?>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="learning_strand_attempts.php?id=<?= $strand['id'] ?>" class="btn text-primary btn-sm me-3 btn-pill-hover">
                                                 View Attempts
                                             </a>
                                         </td>
@@ -116,7 +119,7 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
                             <?php
                                 endif;
                             endforeach;
-                            if ($g11_count == 0) echo "<tr><td colspan='3' class='text-center text-muted p-4'>No Grade 11 strands found.</td></tr>";
+                            if ($g11_count == 0) echo "<tr><td colspan='2' class='text-center text-muted p-4'>No Grade 11 strands found.</td></tr>";
                             ?>
                         </tbody>
                     </table>
@@ -124,13 +127,6 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
 
                 <div class="tab-pane fade" id="g12-pane" role="tabpanel">
                     <table class="table mt-4">
-                        <thead>
-                            <tr>
-                                <th style="text-align: left;">Learning Strand</th>
-                                <th>Code</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
                         <tbody>
                             <?php
                             $g12_count = 0;
@@ -139,10 +135,16 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
                                     $g12_count++;
                             ?>
                                     <tr>
-                                        <td style="text-align: left;"><?= htmlspecialchars($strand['strand_title']) ?></td>
-                                        <td><?= htmlspecialchars($strand['strand_code']) ?></td>
                                         <td>
-                                            <a href="strand_attempts.php?id=<?= $strand['id'] ?>" class="btn btn-outline-primary btn-sm">
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-bold"><i class="bi bi-book-half me-3 text-success mx-3"></i><?= htmlspecialchars($strand['strand_title']) ?></span>
+                                                <span class="text-muted small ps-5">
+                                                    <?= htmlspecialchars($strand['strand_code']) ?>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="learning_strand_attempts.php?id=<?= $strand['id'] ?>" class="btn text-primary btn-sm me-3 btn-pill-hover">
                                                 View Attempts
                                             </a>
                                         </td>
@@ -150,7 +152,7 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
                             <?php
                                 endif;
                             endforeach;
-                            if ($g12_count == 0) echo "<tr><td colspan='3' class='text-center text-muted p-4'>No Grade 12 strands found.</td></tr>";
+                            if ($g12_count == 0) echo "<tr><td colspan='2' class='text-center text-muted p-4'>No Grade 12 strands found.</td></tr>";
                             ?>
                         </tbody>
                     </table>
