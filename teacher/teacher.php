@@ -61,7 +61,7 @@ if ($currentUser) {
     <script src="js/teacher.js" defer></script>
 </head>
 
-<body>
+<body class="bg-light">
     <script>
         const currentUserId = <?= $_SESSION['user_id'] ?? 'null'; ?>;
     </script>

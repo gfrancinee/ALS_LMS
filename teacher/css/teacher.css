@@ -2,6 +2,21 @@ body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #f8f9fa;
     margin: 0;
+
+    html,
+    body {
+        /* For Firefox */
+        scrollbar-width: none;
+
+        /* For Internet Explorer and OLD Edge */
+        -ms-overflow-style: none;
+    }
+}
+
+/* For Chrome, Safari, and ALL NEW versions of Edge */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
 }
 
 .topbar {
