@@ -15,9 +15,9 @@ if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
 }
 $attempt_id = $_GET['id'];
 
-// 2. Fetch Main Attempt Details
+// 2. Fetch Main Attempt Details (UPDATED: added a.status)
 $sql_attempt = "SELECT
-                    a.score, a.total_items, a.submitted_at,
+                    a.score, a.total_items, a.submitted_at, a.status, -- <-- ADDED a.status
                     u.fname, u.lname,
                     q.title AS quiz_title,
                     q.strand_id
@@ -38,7 +38,7 @@ if ($attempt_result->num_rows === 0) {
 $attempt = $attempt_result->fetch_assoc();
 
 
-// 3. Fetch All Answers for this Attempt (THIS QUERY IS NOW FIXED)
+// 3. Fetch All Answers for this Attempt (Your correct query)
 $sql_answers = "SELECT
                     qb.question_text, 
                     sa.answer_text, 
@@ -117,18 +117,28 @@ $answers = $stmt_answers->get_result();
                 </div>
             </div>
 
+            <?php if ($attempt['status'] == 'pending_grading'): ?>
+                <div class="card review-bar-card shadow-sm border-0 mb-4">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-white">Review Student Answers</h5>
+                        <a href="review_answers.php?attempt_id=<?= $attempt_id ?>" class="btn btn-light fw-bold">
+                            Start Review
+                        </a>
+                    </div>
+                </div>
+            <?php endif; ?>
             <h5 class="mb-3">Answer Sheet</h5>
             <?php $q_num = 1; ?>
             <?php while ($answer = $answers->fetch_assoc()): ?>
                 <?php $is_correct = $answer['is_correct'] == 1; ?>
 
-                <div class="card answer-card mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card answer-card shadow-sm border-0 mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-white">
                         <strong>Question <?= $q_num++ ?></strong>
                         <?php if ($is_correct): ?>
-                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill">Correct</span>
+                            <span class="badge text-success">Correct</span>
                         <?php else: ?>
-                            <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">Incorrect</span>
+                            <span class="badge text-danger">Incorrect</span>
                         <?php endif; ?>
                     </div>
                     <div class="card-body">

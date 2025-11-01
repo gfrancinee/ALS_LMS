@@ -136,7 +136,7 @@ if (!isset($conn) || $conn->connect_error) {
                                 <tr>
                                     <td>Review Student Answers</td>
                                     <td class="text-center">
-                                        <a href="student_answers_review.php" class="btn btn-outline-secondary rounded-pill px-3">Start Review</a>
+                                        <a href="quiz_performance.php" class="btn btn-outline-secondary rounded-pill px-3">Start Review</a>
                                     </td>
                                 </tr>
                                 <tr>
