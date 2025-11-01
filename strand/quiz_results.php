@@ -153,6 +153,10 @@ while ($row = $result_review->fetch_assoc()) {
     if ($row['grading_type'] == 'automatic' && $row['student_is_correct'] == 0) {
         $wrong_question_ids_from_review[] = $row['question_id'];
     }
+    // NEW: Also add manually-graded questions that scored 0
+    elseif ($row['grading_type'] == 'manual' && $row['points_awarded'] !== null && $row['points_awarded'] == 0) {
+        $wrong_question_ids_from_review[] = $row['question_id'];
+    }
 }
 $stmt_review->close();
 
@@ -186,13 +190,31 @@ if (!empty($question_ids)) {
 if (!empty($wrong_question_ids_from_review)) {
     $recommendations = []; // Reset recommendations
     $recommended_ids = []; // To prevent duplicate recommendations
+    $material_wrong_count = []; // Track how many wrong questions per material
+
     foreach ($wrong_question_ids_from_review as $q_id) {
         $rec = recommendMaterialForQuestion($conn, $q_id, $attempt_details['strand_id']);
-        if ($rec !== null && !in_array($rec['id'], $recommended_ids)) {
-            $recommendations[] = $rec;
-            $recommended_ids[] = $rec['id'];
+        if ($rec !== null) {
+            $material_id = $rec['id'];
+
+            // If this material hasn't been added yet, add it
+            if (!in_array($material_id, $recommended_ids)) {
+                $recommendations[] = $rec;
+                $recommended_ids[] = $material_id;
+                $material_wrong_count[$material_id] = 1; // First wrong question for this material
+            } else {
+                // Material already exists, increment the count
+                $material_wrong_count[$material_id]++;
+            }
         }
     }
+
+    // Sort recommendations by wrong question count (highest to lowest)
+    usort($recommendations, function ($a, $b) use ($material_wrong_count) {
+        $count_a = $material_wrong_count[$a['id']] ?? 0;
+        $count_b = $material_wrong_count[$b['id']] ?? 0;
+        return $count_b - $count_a; // Descending order (most wrong questions first)
+    });
 } else {
     $recommendations = []; // Ensure recommendations are empty if no wrong answers
 }

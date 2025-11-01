@@ -268,54 +268,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAvailableStudents() {
         const studentListContainer = document.getElementById('availableStudentsList');
-        if (!studentListContainer) return;
-        studentListContainer.innerHTML = '<p>Loading students...</p>';
-        try {
-            // This path goes up TWO levels from teacher/strand/ to the root ajax folder
-            const response = await fetch(`../ajax/get_available_students.php?strand_id=${strandId}`);
-            const students = await response.json();
-            if (students.error) throw new Error(students.error);
-
-            if (students.length === 0) {
-                studentListContainer.innerHTML = '<p>No new students are available to add.</p>';
-                return;
-            }
-
-            let html = students.map(s => `
-            <div class="form-check student-item">
-                <input class="form-check-input" type="checkbox" value="${s.id}" id="student-${s.id}">
-                <label class="form-check-label" for="student-${s.id}">${s.fname} ${s.lname}</label>
-            </div>`).join('');
-            studentListContainer.innerHTML = html;
-        } catch (error) {
-            console.error('Failed to load students:', error);
-            studentListContainer.innerHTML = '<p class="text-danger">Could not load student list.</p>';
+        if (!studentListContainer) {
+            console.error('availableStudentsList element not found');
+            return;
         }
-    }
 
-    // 3. The loadAvailableStudents function (this one is likely okay, but included for completeness)
-    async function loadAvailableStudents() {
-        const studentListContainer = document.getElementById('availableStudentsList');
         studentListContainer.innerHTML = '<p>Loading students...</p>';
+
         try {
-            const response = await fetch(`../ajax/get_available_students.php?strand_id=${window.strandId}`);
+            const response = await fetch(`../ajax/get_available_students.php?strand_id=${strandId}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const students = await response.json();
-            if (students.error) throw new Error(students.error);
+
+            if (students.error) {
+                studentListContainer.innerHTML = `<div class="alert alert-danger">${students.error}</div>`;
+                return;
+            }
 
             if (students.length === 0) {
-                studentListContainer.innerHTML = '<p>No new students are available to add.</p>';
+                studentListContainer.innerHTML = '<p class="text-muted">No new students are available to add.</p>';
                 return;
             }
 
             let html = students.map(s => `
             <div class="form-check student-item">
                 <input class="form-check-input" type="checkbox" value="${s.id}" id="student-${s.id}">
-                <label class="form-check-label" for="student-${s.id}">${s.fname} ${s.lname}</label>
-            </div>`).join('');
+                <label class="form-check-label" for="student-${s.id}">
+                    ${s.lname}, ${s.fname} <span class="text-muted">(${s.grade_level})</span>
+                </label>
+            </div>
+        `).join('');
+
             studentListContainer.innerHTML = html;
+
         } catch (error) {
             console.error('Failed to load students:', error);
-            studentListContainer.innerHTML = '<p class="text-danger">Could not load student list.</p>';
+            studentListContainer.innerHTML = '<div class="alert alert-danger">Could not load student list. Please try again.</div>';
         }
     }
 

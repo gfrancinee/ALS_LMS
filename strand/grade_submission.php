@@ -39,20 +39,25 @@ if (!$attempt_details || $attempt_details['teacher_id'] != $teacher_id) {
     die("Attempt not found or you do not have permission to view it.");
 }
 
-// --- FIX #2 (Student Answer Bug): THIS SQL QUERY IS NOW CORRECT ---
+// --- THIS IS THE FULLY CORRECTED SQL QUERY ---
 $sql_answers = "
     SELECT
         qb.id as question_id,
         qb.question_text,
         qb.question_type,
-        qb.grading_type, -- This is the key
+        qb.grading_type,
         qb.max_points,
         sa.id as student_answer_id,
         
-        -- If grading is manual, show the raw text.
-        -- If grading is automatic, join to get the option text.
+        -- This CASE statement is now correct
         CASE 
+            -- If it's manual, just show the text
             WHEN qb.grading_type = 'manual' THEN sa.answer_text
+            
+            -- If it's automatic AND identification/short_answer, show the text
+            WHEN qb.grading_type = 'automatic' AND qb.question_type IN ('identification', 'short_answer', 'Short Answer/Enumeration') THEN sa.answer_text
+            
+            -- If it's automatic and anything else (MC, T/F), get the option text
             ELSE opt.option_text
         END as student_answer_display_text,
         
@@ -61,11 +66,11 @@ $sql_answers = "
     FROM question_bank qb
     JOIN student_answers sa ON qb.id = sa.question_id
 
-    -- Only JOIN if grading is automatic
+    -- This JOIN is now correct
     LEFT JOIN question_options opt ON 
-        qb.grading_type = 'automatic'
+        (qb.grading_type = 'automatic' AND qb.question_type IN ('multiple_choice', 'true_false'))
         AND opt.id = CAST(sa.answer_text AS UNSIGNED) 
-        AND opt.question_id = qb.id -- ensure we're joining the right question's options
+        AND opt.question_id = qb.id
 
     WHERE sa.quiz_attempt_id = ?
     ORDER BY sa.id

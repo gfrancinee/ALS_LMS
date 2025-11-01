@@ -15,9 +15,9 @@ if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
 }
 $attempt_id = $_GET['id'];
 
-// 2. Fetch Main Attempt Details (UPDATED: added a.status)
+// 2. Fetch Main Attempt Details (Your code, unchanged)
 $sql_attempt = "SELECT
-                    a.score, a.total_items, a.submitted_at, a.status, -- <-- ADDED a.status
+                    a.score, a.total_items, a.submitted_at, a.status,
                     u.fname, u.lname,
                     q.title AS quiz_title,
                     q.strand_id
@@ -38,23 +38,46 @@ if ($attempt_result->num_rows === 0) {
 $attempt = $attempt_result->fetch_assoc();
 
 
-// 3. Fetch All Answers for this Attempt (Your correct query)
-$sql_answers = "SELECT
-                    qb.question_text, 
-                    sa.answer_text, 
-                    sa.is_correct,  
-                    (SELECT GROUP_CONCAT(opt.option_text SEPARATOR ', ') 
-                     FROM question_options opt 
-                     WHERE opt.question_id = qb.id AND opt.is_correct = 1) AS correct_answer
-                FROM student_answers sa
-                JOIN question_bank qb ON sa.question_id = qb.id
-                WHERE sa.quiz_attempt_id = ? -- <-- THIS WAS THE FIX
-                ORDER BY sa.id";
+// --- FIX: THE "NUMBERS FOR ANSWERS" SQL FIX ---
+// This query now checks the question_type to get the correct answer text
+$sql_answers = "
+    SELECT
+        qb.id as question_id,
+        qb.question_text,
+        qb.question_type,
+        sa.is_correct,
+        
+        -- This CASE statement gets the student's answer text
+        CASE 
+            WHEN qb.question_type IN ('multiple_choice', 'true_false') THEN opt_student.option_text
+            ELSE sa.answer_text
+        END as student_answer_text,
+        
+        -- This subquery gets the correct answer text
+        (SELECT GROUP_CONCAT(opt_correct.option_text SEPARATOR ', ') 
+         FROM question_options opt_correct 
+         WHERE opt_correct.question_id = qb.id AND opt_correct.is_correct = 1) AS correct_answer_text
+    
+    FROM student_answers sa
+    JOIN question_bank qb ON sa.question_id = qb.id
 
+    -- This JOIN finds the text for the student's selected option (MC/TF)
+    LEFT JOIN question_options opt_student ON 
+        qb.question_type IN ('multiple_choice', 'true_false')
+        AND opt_student.id = CAST(sa.answer_text AS UNSIGNED)
+        AND opt_student.question_id = qb.id
+
+    WHERE sa.quiz_attempt_id = ?
+    ORDER BY sa.id
+";
 $stmt_answers = $conn->prepare($sql_answers);
+if ($stmt_answers === false) {
+    die("Prepare failed (answers): " . $conn->error);
+}
 $stmt_answers->bind_param("i", $attempt_id);
 $stmt_answers->execute();
 $answers = $stmt_answers->get_result();
+// --- END OF FIX ---
 
 ?>
 
@@ -127,6 +150,7 @@ $answers = $stmt_answers->get_result();
                     </div>
                 </div>
             <?php endif; ?>
+
             <h5 class="mb-3">Answer Sheet</h5>
             <?php $q_num = 1; ?>
             <?php while ($answer = $answers->fetch_assoc()): ?>
@@ -149,14 +173,15 @@ $answers = $stmt_answers->get_result();
                         <div class="answer-row <?= $is_correct ? 'text-success' : 'text-danger' ?>">
                             <i class="bi <?= $is_correct ? 'bi-check-circle-fill' : 'bi-x-circle-fill' ?> me-2"></i>
                             <strong>Your Answer:</strong>
-                            <span class="answer-text"><?= htmlspecialchars($answer['answer_text'] ?? 'No answer') ?></span>
+
+                            <span class="answer-text"><?= htmlspecialchars($answer['student_answer_text'] ?? 'No answer') ?></span>
                         </div>
 
                         <?php if (!$is_correct): ?>
                             <div class="answer-row text-success mt-2">
                                 <i class="bi bi-check-circle-fill me-2"></i>
                                 <strong>Correct Answer:</strong>
-                                <span class="answer-text"><?= htmlspecialchars($answer['correct_answer'] ?? 'N/A') ?></span>
+                                <span class="answer-text"><?= htmlspecialchars($answer['correct_answer_text'] ?? 'N/A') ?></span>
                             </div>
                         <?php endif; ?>
                     </div>
