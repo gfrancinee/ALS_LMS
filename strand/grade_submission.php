@@ -39,22 +39,36 @@ if (!$attempt_details || $attempt_details['teacher_id'] != $teacher_id) {
     die("Attempt not found or you do not have permission to view it.");
 }
 
-// --- Fetch Questions, Student Answers, and Correct Options for this Attempt ---
+// --- FIX #2 (Student Answer Bug): THIS SQL QUERY IS NOW CORRECT ---
 $sql_answers = "
     SELECT
         qb.id as question_id,
         qb.question_text,
         qb.question_type,
-        qb.grading_type,
+        qb.grading_type, -- This is the key
         qb.max_points,
         sa.id as student_answer_id,
-        sa.answer_text as student_answer_text,
+        
+        -- If grading is manual, show the raw text.
+        -- If grading is automatic, join to get the option text.
+        CASE 
+            WHEN qb.grading_type = 'manual' THEN sa.answer_text
+            ELSE opt.option_text
+        END as student_answer_display_text,
+        
         sa.is_correct as student_is_correct,
-        sa.points_awarded -- Store manually awarded points
+        sa.points_awarded
     FROM question_bank qb
     JOIN student_answers sa ON qb.id = sa.question_id
+
+    -- Only JOIN if grading is automatic
+    LEFT JOIN question_options opt ON 
+        qb.grading_type = 'automatic'
+        AND opt.id = CAST(sa.answer_text AS UNSIGNED) 
+        AND opt.question_id = qb.id -- ensure we're joining the right question's options
+
     WHERE sa.quiz_attempt_id = ?
-    ORDER BY sa.id -- Order by the sequence they were answered/stored
+    ORDER BY sa.id
 ";
 $stmt_answers = $conn->prepare($sql_answers);
 if ($stmt_answers === false) {
@@ -64,13 +78,16 @@ $stmt_answers->bind_param("i", $attempt_id);
 $stmt_answers->execute();
 $result_answers = $stmt_answers->get_result();
 $questions_and_answers = [];
+// --- FIX #1 (Numbering Bug): Store results in a simple array
 while ($row = $result_answers->fetch_assoc()) {
-    $questions_and_answers[$row['question_id']] = $row;
+    $questions_and_answers[] = $row; // This fixes the array index
 }
 $stmt_answers->close();
+// --- END OF SQL FIXES ---
 
-// Fetch correct options separately (can be complex in one query)
-$question_ids = array_keys($questions_and_answers);
+
+// Fetch correct options separately (This is your original, unchanged code)
+$question_ids = array_column($questions_and_answers, 'question_id'); // Get question IDs
 $correct_options = [];
 if (!empty($question_ids)) {
     $placeholders = implode(',', array_fill(0, count($question_ids), '?'));
@@ -119,18 +136,23 @@ require_once '../includes/header.php'; // Adjust path if needed
             <form id="grading-form" action="process_grading.php" method="POST">
                 <input type="hidden" name="attempt_id" value="<?= $attempt_id ?>">
 
+                <?php $q_num = 1; // FIX #1 (Numbering Bug): Initialize counter to 1 
+                ?>
                 <?php foreach ($questions_and_answers as $index => $qa): ?>
                     <?php
-                    $q_num = $index + 1; // Simple numbering based on fetch order
-                    $is_manual = ($qa['grading_type'] == 'manual' || $qa['question_type'] == 'essay'); // Determine if manual input needed
-                    $points_value = ($qa['points_awarded'] !== null) ? $qa['points_awarded'] : ($qa['student_is_correct'] ? $qa['max_points'] : 0); // Pre-fill points
+                    // Your original logic
+                    // $q_num = $index + 1; // <-- This was the original numbering bug
+                    $is_manual = ($qa['grading_type'] == 'manual' || $qa['question_type'] == 'essay');
+                    $points_value = ($qa['points_awarded'] !== null) ? $qa['points_awarded'] : ($qa['student_is_correct'] ? $qa['max_points'] : 0);
                     ?>
                     <div class="card mt-4 border-light shadow-sm question-review-card"
                         data-grading="<?= htmlspecialchars($qa['grading_type']) ?>"
                         data-max-points="<?= htmlspecialchars($qa['max_points']) ?>"
                         data-auto-points="<?= ($qa['grading_type'] == 'automatic' ? ($points_value ?? '0') : '0') ?>">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Question <?= $q_num ?></h5>
+
+                            <h5 class="mb-0">Question <?= $q_num++ ?></h5>
+
                             <span class="badge <?= $is_manual ? 'text-warning' : 'text-info' ?>">
                                 <?= ucfirst($qa['grading_type']) ?> Grading (<?= $qa['max_points'] ?>pt<?= $qa['max_points'] > 1 ? 's' : '' ?>)
                             </span>
@@ -141,11 +163,13 @@ require_once '../includes/header.php'; // Adjust path if needed
                             <div class="mb-3">
                                 <label class="form-label small text-muted">Student's Answer:</label>
                                 <div class="p-2 border rounded bg-light student-answer">
-                                    <?php if (empty($qa['student_answer_text'])): ?>
+
+                                    <?php if ($qa['student_answer_display_text'] === null || $qa['student_answer_display_text'] === ''): ?>
                                         <em class="text-danger">-- No answer provided --</em>
                                     <?php else: ?>
-                                        <?= nl2br(htmlspecialchars($qa['student_answer_text'])) ?>
+                                        <?= nl2br(htmlspecialchars($qa['student_answer_display_text'])) ?>
                                     <?php endif; ?>
+
                                 </div>
                             </div>
 
@@ -188,6 +212,7 @@ require_once '../includes/header.php'; // Adjust path if needed
                 </div>
             </form>
         </div>
+
         <div class="col-md-4">
             <div class="card sticky-top mt-5 border-light shadow-sm" style="top: 20px;">
                 <div class="card-header">
@@ -217,86 +242,62 @@ require_once '../includes/header.php'; // Adjust path if needed
             let currentTotalScore = 0.0; // Use float for potential 0.5 points
             console.log('--- Recalculating Score ---'); // Keep for debugging
 
-            // --- FIX: Use the correct class selector ---
-            // Ensure your PHP loop adds class="question-review-card" to the main div/card for each question
             gradingForm.querySelectorAll('.question-review-card').forEach((block, index) => {
-                // --- END FIX ---
 
                 const gradingType = block.dataset.grading; // 'manual' or 'automatic'
                 const maxPoints = parseFloat(block.dataset.maxPoints || '0');
                 const autoPoints = parseFloat(block.dataset.autoPoints || '0'); // Get auto points
 
-                // --- Debugging Logs ---
                 console.log(`Question ${index + 1}: Type=${gradingType}, Max=${maxPoints}, AutoPts=${autoPoints}`);
-                // --- End Logs ---
 
 
                 if (gradingType === 'manual') {
                     const input = block.querySelector('.manual-grade-input');
                     if (input) {
                         let points = parseFloat(input.value);
-                        // --- Debugging Log ---
                         console.log(`  Manual Input Value: "${input.value}", Parsed: ${points}`);
-                        // --- End Log ---
 
-                        // Treat empty or invalid as 0 for calculation
                         if (isNaN(points) || points < 0) {
                             points = 0.0;
                         }
-                        // Add the valid (or 0) score, capped at max points
                         const scoreToAdd = Math.min(points, maxPoints);
                         currentTotalScore += scoreToAdd;
-                        // --- Debugging Log ---
                         console.log(`  Manual Score Added: ${scoreToAdd}`);
-                        // --- End Log ---
                     } else {
                         console.log('  Manual input not found!');
                     }
                 } else { // Assumed automatic
-                    // Get the pre-calculated auto points from the data attribute
                     currentTotalScore += autoPoints;
-                    // --- Debugging Log ---
                     console.log(`  Automatic Score Added: ${autoPoints}`);
-                    // --- End Log ---
                 }
             });
 
             console.log('Final Calculated Score:', currentTotalScore); // Debug Final Score
 
-            // Update the display, ensuring it doesn't visually exceed total possible
             if (scoreDisplay) {
-                // Round to avoid potential floating point issues in display
                 const finalScore = Math.min(currentTotalScore, totalPossiblePoints);
-                // Format to potentially show one decimal place if needed (e.g., for 0.5)
                 scoreDisplay.textContent = Number.isInteger(finalScore) ? finalScore : finalScore.toFixed(1);
             }
         }
 
         // Add event listeners to manual input fields
         manualGradeInputs.forEach(input => {
-            // Update preview dynamically as the teacher types
             input.addEventListener('input', recalculateScorePreview);
 
-            // Add validation on blur (when clicking away)
             input.addEventListener('blur', () => {
                 const max = parseFloat(input.getAttribute('max'));
                 let value = parseFloat(input.value);
 
                 if (isNaN(value) || value < 0) {
-                    // Clear invalid negative input, recalculate score as 0 for this item
                     input.value = ''; // Or set to '0' if you prefer
                     recalculateScorePreview();
                 } else if (value > max) {
-                    // Correct value if over max, then recalculate
                     input.value = max;
                     recalculateScorePreview();
                 }
-                // No need for recalculateScorePreview() again if within limits, 'input' event handled it
             });
         });
 
-        // Initial calculation on page load. 
-        // This should now correctly sum the initial values from PHP (auto points + saved manual points).
         recalculateScorePreview();
     });
 </script>
