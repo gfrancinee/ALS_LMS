@@ -11,7 +11,8 @@ if (!isset($conn) || $conn->connect_error) {
     $total_courses = 'DB Error';
     $active_courses = 'DB Error';
     $courses_needing_review = 'DB Error';
-    $recently_added_course = 'CONNECTION FAILED';
+    $recently_added_course = 'CONNECTION FAILED'; // <-- Use your original variable
+    $recently_added_course_id = 0;
 } else {
     // Connection is good, proceed with MySQLi queries
     try {
@@ -26,16 +27,21 @@ if (!isset($conn) || $conn->connect_error) {
         $result_materials = $conn->query("SELECT COUNT(*) AS count FROM learning_materials");
         $courses_needing_review = $result_materials ? $result_materials->fetch_assoc()['count'] : '0';
 
-        // 4. LATEST COURSE FIX: Changed column name from 'strand_name' to 'strand_title'
-        $result_latest = $conn->query("SELECT strand_title FROM learning_strands ORDER BY id DESC LIMIT 1");
+        // --- FIX #1: Select both 'id' and 'strand_title' ---
+        $result_latest = $conn->query("SELECT id, strand_title FROM learning_strands ORDER BY id DESC LIMIT 1");
         $latest_row = $result_latest ? $result_latest->fetch_assoc() : null;
+
         $recently_added_course = $latest_row ? $latest_row['strand_title'] : 'None Added';
+        // --- FIX #2: Add this line to store the ID ---
+        $recently_added_course_id = $latest_row ? $latest_row['id'] : 0;
     } catch (Exception $e) {
         // Handle database query exceptions
         $total_courses = 'Query Error';
         $active_courses = 'Query Error';
         $courses_needing_review = 'Query Error';
         $recently_added_course = 'Query Error';
+        // --- FIX #3: Add this line to prevent errors on failure ---
+        $recently_added_course_id = 0;
     }
 }
 ?>
@@ -111,6 +117,7 @@ if (!isset($conn) || $conn->connect_error) {
                 </div>
             </div>
         </div>
+
         <div class="row">
             <div class="col-lg-12 mx-auto">
                 <div class="card shadow-lg" style="border: none; border-radius: 0.75rem;">
@@ -140,9 +147,9 @@ if (!isset($conn) || $conn->connect_error) {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>Latest Added: <span class="fw-bold text-success ms-2"><?php echo $recently_added_course; ?></span></td>
+                                    <td>Latest Added: <span class="fw-bold text-success ms-2"><?php echo htmlspecialchars($recently_added_course); ?></span></td>
                                     <td class="text-center">
-                                        <a href="strand_details.php?name=<?php echo urlencode($recently_added_course); ?>" class="btn btn-outline-success rounded-pill px-3">Details</a>
+                                        <a href="strand_details.php?id=<?php echo $recently_added_course_id; ?>" class="btn btn-outline-success rounded-pill px-3">Details</a>
                                     </td>
                                 </tr>
                             </tbody>

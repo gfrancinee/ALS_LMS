@@ -8,15 +8,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
-// --- 1. Get Strand Name from URL ---
-$strand_name = $_GET['name'] ?? '';
-if (empty($strand_name)) {
-    die("Error: No strand name provided.");
+// --- 1. Get Strand ID from URL ---
+$strand_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT); // <-- FIX: Get ID
+if (empty($strand_id)) {
+    die("Error: No strand ID provided.");
 }
 
-// --- 2. Fetch Strand Details ---
-$stmt_strand = $conn->prepare("SELECT * FROM learning_strands WHERE strand_title = ?");
-$stmt_strand->bind_param("s", $strand_name);
+// --- 2. Fetch Strand Details by ID ---
+$stmt_strand = $conn->prepare("SELECT * FROM learning_strands WHERE id = ?"); // <-- FIX: Query by ID
+$stmt_strand->bind_param("i", $strand_id); // <-- FIX: Bind integer (i)
 $stmt_strand->execute();
 $strand_result = $stmt_strand->get_result();
 
@@ -24,10 +24,10 @@ if ($strand_result->num_rows === 0) {
     die("Error: Strand not found.");
 }
 $strand = $strand_result->fetch_assoc();
-$strand_id = $strand['id'];
+// $strand_id is already set
 $stmt_strand->close();
 
-// --- 3. Fetch Enrolled Students ---
+// --- 3. Fetch Enrolled Students (This query is already correct) ---
 $sql_students = "SELECT u.fname, u.lname 
                  FROM users u
                  JOIN strand_participants sp ON u.id = sp.student_id
@@ -38,14 +38,14 @@ $stmt_students->bind_param("i", $strand_id);
 $stmt_students->execute();
 $students_result = $stmt_students->get_result();
 
-// --- 4. Fetch Learning Materials ---
+// --- 4. Fetch Learning Materials (This query is already correct) ---
 $sql_materials = "SELECT label, type FROM learning_materials WHERE strand_id = ? ORDER BY label";
 $stmt_materials = $conn->prepare($sql_materials);
 $stmt_materials->bind_param("i", $strand_id);
 $stmt_materials->execute();
 $materials_result = $stmt_materials->get_result();
 
-// --- 5. Fetch Assessments (Quizzes) ---
+// --- 5. Fetch Assessments (Quizzes) (This query is already correct) ---
 $sql_assessments = "SELECT title FROM assessments WHERE strand_id = ? ORDER BY title";
 $stmt_assessments = $conn->prepare($sql_assessments);
 $stmt_assessments->bind_param("i", $strand_id);
@@ -63,12 +63,11 @@ $assessments_result = $stmt_assessments->get_result();
     <title>Strand Details: <?= htmlspecialchars($strand['strand_title']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/admin.css"> <!-- Link to your main admin CSS -->
+    <link rel="stylesheet" href="../css/admin.css">
 </head>
 
 <body>
 
-    <!-- Header -->
     <header class="topbar sticky-top d-flex justify-content-between align-items-center px-4 py-3">
         <div class="d-flex align-items-left">
             <h1 class="title m-0">
@@ -85,18 +84,15 @@ $assessments_result = $stmt_assessments->get_result();
 
     <main class="content">
         <div class="container py-4">
-            <!-- Title Bar -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0">Details for "<?= htmlspecialchars($strand['strand_title']) ?>"</h2>
                 <div class="mb-3">
-                    <!-- Links back to the page you came from -->
                     <a href="ls.php" class="back-link">
                         <i class="bi bi-arrow-left me-1"></i>Back to Oversight
                     </a>
                 </div>
             </div>
 
-            <!-- Summary Stat Cards -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="stat-card">
@@ -118,9 +114,7 @@ $assessments_result = $stmt_assessments->get_result();
                 </div>
             </div>
 
-            <!-- Detailed Lists -->
             <div class="row">
-                <!-- Enrolled Students -->
                 <div class="col-lg-4">
                     <h5 class="mb-3">Enrolled Students</h5>
                     <table class="table">
@@ -140,7 +134,6 @@ $assessments_result = $stmt_assessments->get_result();
                     </table>
                 </div>
 
-                <!-- Learning Materials -->
                 <div class="col-lg-4">
                     <h5 class="mb-3">Learning Materials</h5>
                     <table class="table">
@@ -160,7 +153,6 @@ $assessments_result = $stmt_assessments->get_result();
                     </table>
                 </div>
 
-                <!-- Assessments -->
                 <div class="col-lg-4">
                     <h5 class="mb-3">Assessments</h5>
                     <table class="table">
@@ -179,7 +171,7 @@ $assessments_result = $stmt_assessments->get_result();
                         </tbody>
                     </table>
                 </div>
-            </div> <!-- /row -->
+            </div>
         </div>
     </main>
 
