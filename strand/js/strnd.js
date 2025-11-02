@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // The remove button is ONLY created if the user is a teacher
             let removeButtonHtml = '';
             if (window.userRole === 'teacher' && participant.role !== 'admin') {
-                removeButtonHtml = `<button class="btn btn-sm btn-outline-danger remove-participant-btn" data-participant-id="${participant.participant_id}"><i class="bi bi-trash"></i> Remove</button>`;
+                removeButtonHtml = `<button class="btn text-danger btn-sm me-3 btn-pill-hover remove-participant-btn" data-participant-id="${participant.participant_id}"><i class="bi bi-trash3"></i> Remove</button>`;
             }
 
             const participantHtml = `
@@ -602,12 +602,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (action === 'edit') {
                 modalTitle.textContent = 'Edit Category Name';
                 modalBody.innerHTML = `<label for="editCategoryName" class="form-label">Category Name</label><input type="text" id="editCategoryName" class="form-control" value="${catName}">`;
-                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Changes</button>`;
+                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary rounded-pill px-3" id="saveCategoryBtn">Save Changes</button>`;
             } else if (action === 'delete') {
                 this._elementToDelete = button.closest('.accordion-item');
                 modalTitle.textContent = 'Confirm Deletion';
                 modalBody.innerHTML = `<p>Are you sure you want to delete "<strong>${catName}</strong>"?</p><p class="text-danger small">This action cannot be undone.</p>`;
-                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger" id="deleteCategoryBtn">Delete</button>`;
+                modalFooter.innerHTML = `<button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger rounded-pill px-3" id="deleteCategoryBtn">Delete</button>`;
             }
         });
 
@@ -749,13 +749,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (action === 'edit') {
                 modalTitle.textContent = 'Edit Category Name';
                 submitBtn.textContent = 'Save Changes';
-                submitBtn.className = 'btn btn-primary';
+                submitBtn.className = 'btn btn-primary rounded-pill px-3';
                 nameGroup.style.display = 'block';
                 deleteConfirm.style.display = 'none';
             } else if (action === 'delete') {
                 modalTitle.textContent = 'Delete Category';
                 submitBtn.textContent = 'Delete';
-                submitBtn.className = 'btn btn-danger';
+                submitBtn.className = 'btn btn-danger rounded-pill px-3';
                 nameGroup.style.display = 'none';
                 deleteConfirm.style.display = 'block';
                 document.getElementById('deleteMaterialCategoryName').textContent = name;

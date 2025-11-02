@@ -223,7 +223,7 @@ if (!empty($wrong_question_ids_from_review)) {
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm border-0 text-center bg-light mt-0">
+            <div class="card shadow-sm border-0 text-center bg-white mt-0">
                 <div class="card-body p-5">
                     <h1 class="card-title">Quiz Completed!</h1>
                     <p class="lead">You have completed the <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
@@ -272,7 +272,7 @@ if (!empty($wrong_question_ids_from_review)) {
             <?php
             if (!empty($recommendations) && isset($percentage) && $percentage < 74 && isset($grading_pending) && !$grading_pending):
             ?>
-                <div class="card shadow-sm border-0 mb-4 mt-4 bg-light">
+                <div class="card shadow-sm border-0 mb-4 mt-4 bg-white">
                     <div class="card-body">
 
                         <p class="text-center mb-3 text-info small">
@@ -306,7 +306,7 @@ if (!empty($wrong_question_ids_from_review)) {
 
             <?php if (!empty($review_items)): ?>
                 <div class="card shadow-sm border-0 mt-4">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-white">
                         <h4 class="mb-0">Question Review</h4>
                     </div>
                     <div class="card-body p-4">

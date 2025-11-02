@@ -148,8 +148,8 @@ if ($unverified_result) {
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
                                             ' . (!$row['is_verified'] ? '<button class="btn btn-sm btn-primary verify-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Verify User"><i class="bi bi-check-circle"></i></button>' : '') . '
-                                            <button class="btn btn-sm btn-success edit-btn" data-id="' . $row['id'] . '" title="Edit User"><i class="bi bi-pencil-square"></i></button>
-                                            <button class="btn btn-sm btn-danger delete-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Delete User"><i class="bi bi-trash3"></i></button>
+                                            <button class="btn btn-sm btn-success rounded-pill px-3 edit-btn" data-id="' . $row['id'] . '" title="Edit User"><i class="bi bi-pencil-square"></i></button>
+                                            <button class="btn btn-sm btn-danger rounded-pill px-3 delete-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Delete User"><i class="bi bi-trash3"></i></button>
                                         </div>
                                     </td>
                                 </tr>';
@@ -190,8 +190,8 @@ if ($unverified_result) {
                                     <td class='text-center'>
                                         <div class='d-flex justify-content-center gap-2'>
                                             " . (!$row['is_verified'] ? '<button class="btn btn-sm btn-success verify-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Verify User"><i class="bi bi-check-circle"></i></button>' : '') . "
-                                            <button class='btn btn-sm btn-primary edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
-                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
+                                            <button class='btn btn-sm btn-primary rounded-pill px-3 edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
+                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger rounded-pill px-3' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
                                         </div>
                                     </td>
                                 </tr>";
@@ -235,8 +235,8 @@ if ($unverified_result) {
                                     <td class='text-center'>
                                         <div class='d-flex justify-content-center gap-2'>
                                             " . (!$row['is_verified'] ? '<button class="btn btn-sm btn-success verify-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Verify User"><i class="bi bi-check-circle"></i></button>' : '') . "
-                                            <button class='btn btn-sm btn-primary edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
-                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
+                                            <button class='btn btn-sm btn-primary rounded-pill px-3 edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
+                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger rounded-pill px-3' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
                                         </div>
                                     </td>
                                 </tr>";
@@ -279,8 +279,8 @@ if ($unverified_result) {
                                     <td class='text-center'>
                                         <div class='d-flex justify-content-center gap-2'>
                                             <button class='btn btn-sm btn-success verify-btn' data-id='{$row['id']}' data-email='{$row['email']}' title='Verify User'><i class='bi bi-check-circle'></i></button>
-                                            <button class='btn btn-sm btn-primary edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
-                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
+                                            <button class='btn btn-sm btn-primary rounded-pill px-3 edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
+                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger rounded-pill px-3' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
                                         </div>
                                     </td>
                                 </tr>";
@@ -351,7 +351,7 @@ if ($unverified_result) {
                 </div>
 
                 <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button> <button type="submit" class="btn btn-success" id="saveUserChangesBtn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button> <button type="submit" class="btn btn-success rounded-pill px-3" id="saveUserChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -369,8 +369,8 @@ if ($unverified_result) {
                     <p><strong>Email:</strong> <span id="verifyUserEmail" class="text-muted"></span></p>
                 </div>
                 <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="confirmVerifyBtn">Verify</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success rounded-pill px-3" id="confirmVerifyBtn">Verify</button>
                 </div>
             </div>
         </div>
@@ -388,8 +388,8 @@ if ($unverified_result) {
                     <p><strong>Email:</strong> <span id="deleteUserEmail" class="text-muted"></span></p>
                 </div>
                 <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteBtn">Delete</button>
                 </div>
             </div>
         </div>

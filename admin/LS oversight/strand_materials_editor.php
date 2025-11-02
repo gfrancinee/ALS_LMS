@@ -83,10 +83,10 @@ $strands_result = $conn->query("SELECT * FROM learning_strands ORDER BY strand_t
                                     <button class=\"btn btn-sm btn-info manage-materials-btn\" data-id=\"{$row['id']}\" title=\"Manage Materials\">
                                         <i class=\"bi bi-folder-fill\"></i>
                                     </button>
-                                    <button class=\"btn btn-sm btn-primary edit-strand-btn\" data-id=\"{$row['id']}\" title=\"Edit Learning Strand\">
+                                    <button class=\"btn btn-sm btn-primary rounded-pill px-3 edit-strand-btn\" data-id=\"{$row['id']}\" title=\"Edit Learning Strand\">
                                         <i class=\"bi bi-pencil-square\"></i>
                                     </button>
-                                    <button class=\"btn btn-sm btn-danger delete-strand-btn\" data-id=\"{$row['id']}\" title=\"Delete Learning Strand\">
+                                    <button class=\"btn btn-sm btn-danger rounded-pill px-3 delete-strand-btn\" data-id=\"{$row['id']}\" title=\"Delete Learning Strand\">
                                         <i class=\"bi bi-trash3\"></i>
                                     </button>
                                 </div>
@@ -134,8 +134,8 @@ $strands_result = $conn->query("SELECT * FROM learning_strands ORDER BY strand_t
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success" id="saveStrandChangesBtn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-3" id="saveStrandChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -153,8 +153,8 @@ $strands_result = $conn->query("SELECT * FROM learning_strands ORDER BY strand_t
                     <p><strong>Title:</strong> <span id="deleteStrandTitle" class="text-muted"></span></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteStrandBtn">Delete</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteStrandBtn">Delete</button>
                 </div>
             </div>
         </div>

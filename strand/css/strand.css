@@ -482,3 +482,29 @@ a.dropdown-item:active {
     /* This removes the unwanted line at the top of the list. */
     border-top: none;
 }
+
+/* Red pill-shaped hover effect */
+.btn-pill-hover {
+    border-radius: 50px;
+    /* Pill shape */
+    padding: 0.375rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-pill-hover:hover {
+    background-color: #dc3545;
+    /* Red background */
+    color: white !important;
+    /* White text */
+}
+
+.btn-pill-hover:hover i {
+    color: white !important;
+    /* White icon */
+}
+
+/* Optional: Add focus state */
+.btn-pill-hover:focus {
+    box-shadow: none !important;
+    outline: none;
+}

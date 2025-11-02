@@ -12,4 +12,4 @@
     <link rel="stylesheet" href="/ALS_LMS/strand/css/manage_assessment.css">
 </head>
 
-<body>
+<body class="bg-light">

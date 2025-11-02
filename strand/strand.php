@@ -200,7 +200,7 @@ if ($user_role === 'teacher') {
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-4">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
+                        <button type="button" class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>
@@ -366,8 +366,8 @@ if ($user_role === 'teacher') {
                             </div>
 
                             <div class="d-flex justify-content-end">
-                                <button type="button" class="btn btn-secondary me-2" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Upload</button>
+                                <button type="button" class="btn btn-secondary rounded-pill px-3 me-2" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer">Cancel</button>
+                                <button type="submit" class="btn btn-primary rounded-pill px-3">Upload</button>
                             </div>
                         </form>
                     </div>
@@ -379,7 +379,7 @@ if ($user_role === 'teacher') {
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-4">
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
+                        <button type="button" class="btn btn-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>
@@ -652,8 +652,8 @@ if ($user_role === 'teacher') {
                             </div>
 
                             <div class="d-flex justify-content-end gap-2 mt-3">
-                                <button type="button" class="btn btn-secondary me-2" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer">Cancel</button>
-                                <button type="submit" class="btn btn-success">Create Assessment</button>
+                                <button type="button" class="btn btn-secondary rounded-pill px-3 me-2" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer">Cancel</button>
+                                <button type="submit" class="btn btn-success rounded-pill px-3">Create Assessment</button>
                             </div>
                         </form>
                     </div>
@@ -667,7 +667,7 @@ if ($user_role === 'teacher') {
                 ?>
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-3">
-                        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#participantModal">
+                        <button class="btn btn-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#participantModal">
                             <i class="bi bi-person-plus me-1"></i>Add Participant
                         </button>
                     </div>
@@ -732,8 +732,8 @@ if ($user_role === 'teacher') {
                             <div id="edit-material-type-specific-fields"></div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-3">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -753,8 +753,8 @@ if ($user_role === 'teacher') {
                         <p class="text-danger small">This action cannot be undone.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteMaterialBtn">Delete</button>
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteMaterialBtn">Delete</button>
                     </div>
                 </div>
             </div>
@@ -783,8 +783,8 @@ if ($user_role === 'teacher') {
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" id="materialCategorySubmitBtn">Save</button>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-3" id="materialCategorySubmitBtn">Save</button>
                         </div>
                     </form>
                 </div>
@@ -884,8 +884,8 @@ if ($user_role === 'teacher') {
                         <p class="text-danger small">This action cannot be undone.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteBtn">Delete</button>
                     </div>
                 </div>
             </div>
@@ -941,9 +941,9 @@ if ($user_role === 'teacher') {
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" id="saveAssessmentCategoryBtn">Save Changes</button>
-                            <button type="submit" class="btn btn-danger" id="deleteAssessmentCategoryBtn">Delete</button>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-3" id="saveAssessmentCategoryBtn">Save Changes</button>
+                            <button type="submit" class="btn btn-danger rounded-pill px-3" id="deleteAssessmentCategoryBtn">Delete</button>
                         </div>
                     </form>
                 </div>
@@ -1001,8 +1001,8 @@ if ($user_role === 'teacher') {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="addSelectedStudentsBtn">Add Students</button>
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary rounded-pill px-3" id="addSelectedStudentsBtn">Add Students</button>
                     </div>
                 </div>
             </div>

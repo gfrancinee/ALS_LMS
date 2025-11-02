@@ -155,8 +155,8 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><button class="dropdown-item text-success read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                                                <li><button class="dropdown-item text-danger read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                <li><button class="dropdown-item text-success rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                <li><button class="dropdown-item text-danger rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                             </ul>
                                         </div>
                                     <?php endif; ?>
@@ -200,8 +200,8 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                                 <i class="bi bi-three-dots-vertical"></i>
                                                             </button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><button class="dropdown-item text-success read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                                                                <li><button class="dropdown-item text-danger read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                                <li><button class="dropdown-item text-success rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                                <li><button class="dropdown-item text-danger rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                                             </ul>
                                                         </div>
                                                     <?php endif; ?>
@@ -259,8 +259,8 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><button class="dropdown-item text-success read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                                                <li><button class="dropdown-item text-danger read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                <li><button class="dropdown-item text-success rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                <li><button class="dropdown-item text-danger rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                             </ul>
                                         </div>
                                     <?php endif; ?>
@@ -313,8 +313,8 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                                             <li>
                                                                                 <hr class="dropdown-divider">
                                                                             </li>
-                                                                            <li><button class="dropdown-item text-success read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                                                                            <li><button class="dropdown-item text-danger read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                                                            <li><button class="dropdown-item text-success rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                                                            <li><button class="dropdown-item text-danger rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                                                         </ul>
                                                                     </div>
                                                                 </div>

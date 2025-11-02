@@ -306,8 +306,8 @@ if ($currentUser) {
                     <input type="hidden" name="strand_id" id="editStrandIdInput" value="">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-3">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -325,8 +325,8 @@ if ($currentUser) {
                 </div>
                 <div class="modal-footer">
                     <input type="hidden" name="strand_id" id="deleteStrandId">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteStrandBtn">Delete</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteStrandBtn">Delete</button>
                 </div>
             </div>
         </div>

@@ -79,7 +79,7 @@ $questions_stmt->close();
         </a>
     </div>
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-light py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
             <h3 class="mb-0">Manage: <?= htmlspecialchars($assessment['title']) ?></h3>
         </div>
         <div class="card-body p-4">
@@ -92,10 +92,10 @@ $questions_stmt->close();
 
             <div class="mb-4 d-flex justify-content-start align-items-center border-bottom pb-4">
                 <h5 class="me-3 mb-0">Add Questions:</h5>
-                <button type="button" class="btn text-dark" data-bs-toggle="collapse" href="#addNewQuestionForm" role="button" aria-expanded="false" aria-controls="addNewQuestionForm">
+                <button type="button" class="btn btn-primary rounded-pill px-3" data-bs-toggle="collapse" href="#addNewQuestionForm" role="button" aria-expanded="false" aria-controls="addNewQuestionForm">
                     <i class="bi bi-plus-circle me-1"></i> Create New Question
                 </button>
-                <button type="button" class="btn text-dark" data-bs-toggle="modal" data-bs-target="#questionBankModal">
+                <button type="button" class="btn btn-primary rounded-pill px-3 mx-4" data-bs-toggle="modal" data-bs-target="#questionBankModal">
                     <i class="bi bi-journal-plus me-1"></i> Add from Question Bank
                 </button>
             </div>
@@ -174,8 +174,8 @@ $questions_stmt->close();
                         </div>
 
                         <div class="d-flex justify-content-end mt-3">
-                            <button type="button" class="btn btn-secondary me-2" data-bs-toggle="collapse" href="#addNewQuestionForm">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add Question</button>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3 me-2" data-bs-toggle="collapse" href="#addNewQuestionForm">Cancel</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-3">Add Question</button>
                         </div>
                     </form>
                 </div>
@@ -246,8 +246,8 @@ $questions_stmt->close();
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="addSelectedQuestionsBtn">Add Selected Questions</button>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary rounded-pill px-3" id="addSelectedQuestionsBtn">Add Selected Questions</button>
                         </div>
                     </div>
                 </div>
@@ -307,8 +307,8 @@ $questions_stmt->close();
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" form="edit-question-form" class="btn btn-primary">Save Changes</button>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" form="edit-question-form" class="btn btn-primary rounded-pill px-3">Save Changes</button>
                         </div>
                     </div>
                 </div>
@@ -328,8 +328,8 @@ $questions_stmt->close();
                         <div class="modal-footer">
                             <form id="remove-question-form" action="../ajax/delete_question.php" method="POST"> <input type="hidden" name="question_id" id="remove_question_id">
                                 <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-danger">Remove</button>
+                                <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger rounded-pill px-3">Remove</button>
                             </form>
                         </div>
                     </div>

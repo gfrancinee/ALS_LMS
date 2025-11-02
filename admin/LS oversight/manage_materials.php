@@ -114,10 +114,10 @@ $materials = $materials_result->get_result();
                             <td>{$material_type}</td>
                            <td class=\"text-end\">
                                 <div class=\"d-flex justify-content-end gap-2\">
-                                    <button class=\"btn btn-sm btn-primary edit-material-btn\" data-id=\"{$row['id']}\" title=\"Edit Material\">
+                                    <button class=\"btn btn-sm btn-primary rounded-pill px-3 edit-material-btn\" data-id=\"{$row['id']}\" title=\"Edit Material\">
                                         <i class=\"bi bi-pencil-square\"></i>
                                     </button>
-                                    <button class=\"btn btn-sm btn-danger delete-material-btn\" data-id=\"{$row['id']}\" title=\"Delete Material\">
+                                    <button class=\"btn btn-sm btn-danger rounded-pill px-3 delete-material-btn\" data-id=\"{$row['id']}\" title=\"Delete Material\">
                                         <i class=\"bi bi-trash3\"></i>
                                     </button>
                                 </div>
@@ -170,8 +170,8 @@ $materials = $materials_result->get_result();
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success" id="saveMaterialChangesBtn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-3" id="saveMaterialChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -189,8 +189,8 @@ $materials = $materials_result->get_result();
                     <p><strong>Title:</strong> <span id="deleteMaterialLabel" class="text-muted"></span></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteMaterialBtn">Delete</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteMaterialBtn">Delete</button>
                 </div>
             </div>
         </div>

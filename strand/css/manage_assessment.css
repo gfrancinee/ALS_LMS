@@ -104,36 +104,6 @@ body::-webkit-scrollbar {
     /* Green glow on focus */
 }
 
-/* Target the buttons specifically */
-.btn.text-dark {
-    background-color: transparent;
-    /* No default background */
-    border-color: transparent;
-    /* No default border */
-    color: #6c757d;
-    /* Default text color */
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-    /* Smooth hover */
-}
-
-/* Hover effect: Light gray background, white text */
-.btn.text-dark:hover {
-    background-color: #e9ecef !important;
-    /* Light gray */
-    color: #000000 !important;
-    /* White text */
-    border-color: #e9ecef !important;
-    /* Match border to background on hover */
-}
-
-/* Remove the blue focus outline/border on click */
-.btn.text-dark:focus {
-    box-shadow: none !important;
-    /* Removes Bootstrap focus glow */
-    outline: none !important;
-    /* Removes browser default outline */
-}
-
 /* Change background and border color when checked */
 .form-check-input[type="radio"]:checked {
     background-color: #198754;
@@ -153,4 +123,19 @@ body::-webkit-scrollbar {
     /* Removes Bootstrap focus shadow */
     outline: none !important;
     /* Removes browser default outline */
+}
+
+.btn-pill-hover {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-pill-hover:hover {
+    background-color: #0d6efd;
+    /* This is the primary blue color */
+    color: #fff !important;
+    /* This forces the text to be white */
+    border-radius: 50rem;
+    /* This makes it a "pill" shape */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* Optional: adds a slight shadow */
 }

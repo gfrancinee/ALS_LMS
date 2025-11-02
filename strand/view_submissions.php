@@ -79,8 +79,8 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
         </div>
     <?php else: ?>
         <div class="table-responsive border-none">
-            <table class="table table-striped table-hover">
-                <thead class="table-light">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-white">
                     <tr>
                         <th>Student Name</th>
                         <th>Score</th>
@@ -95,7 +95,7 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                             <td><?= $submission['score'] ?> / <?= $submission['total_items'] ?></td>
                             <td><?= date("M j, Y, g:i A", strtotime($submission['submitted_at'])) ?></td>
                             <td>
-                                <a href="grade_submission.php?attempt_id=<?= $submission['attempt_id'] ?>" class="btn btn-sm btn-primary">
+                                <a href="grade_submission.php?attempt_id=<?= $submission['attempt_id'] ?>" class="btn text-primary btn-sm me-3 btn-pill-hover">
                                     <i class="bi bi-eye-fill me-1"></i> View
                                 </a>
                             </td>

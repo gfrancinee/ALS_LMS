@@ -201,8 +201,8 @@ $grade_param = ($db_grade === 'Grade 11') ? 'grade_11' : 'grade_12';
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                    <li><button class="dropdown-item text-success read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
-                                    <li><button class="dropdown-item text-danger read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
+                                    <li><button class="dropdown-item text-success rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
+                                    <li><button class="dropdown-item text-danger rounded-pill px-3 read-only-overlay" disabled><i class="bi bi-trash3 me-2"></i> Delete</button></li>
                                     </li>
                                 </ul>
                             </div>
