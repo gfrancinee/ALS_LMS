@@ -73,3 +73,10 @@ h2 {
 .back-link:hover {
     color: #dc3545;
 }
+
+.manual-grade-input:focus {
+    box-shadow: none;
+    /* Removes the blue glow */
+    border: 2px solid #dc3545;
+    /* Sets the 2px red border */
+}

@@ -136,39 +136,39 @@ function getGradeLevelText($gradeLevel)
                                         <i class="bi bi-person-circle mb-3" style="font-size: 150px; color: #6c757d;"></i>
                                     <?php endif; ?>
                                     <div class="mb-3">
-                                        <label for="avatar_image" class="form-label">Change Picture</label>
+                                        <label for="avatar_image" class="form-label small">Change Picture</label>
                                         <input class="form-control form-control-sm" type="file" name="avatar_image" id="avatar_image">
                                     </div>
                                 </div>
                                 <div class="col-md-8">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label for="fname" class="form-label">First Name</label>
+                                            <label for="fname" class="form-label small">First Name</label>
                                             <input type="text" class="form-control" name="fname" id="fname" value="<?= htmlspecialchars($user['fname']) ?>" required>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label for="lname" class="form-label">Last Name</label>
+                                            <label for="lname" class="form-label small">Last Name</label>
                                             <input type="text" class="form-control" name="lname" id="lname" value="<?= htmlspecialchars($user['lname']) ?>" required>
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="email" class="form-label">Email Address</label>
+                                        <label for="email" class="form-label small">Email Address</label>
                                         <input type="email" class="form-control" name="email" id="email" value="<?= htmlspecialchars($user['email']) ?>" disabled>
                                         <small class="form-text text-muted">Email address cannot be changed.</small>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="phone" class="form-label">Phone Number</label>
+                                        <label for="phone" class="form-label small">Phone Number</label>
                                         <input type="tel" class="form-control" name="phone" id="phone" value="<?= htmlspecialchars($user['phone']) ?>">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="address" class="form-label">Address</label>
+                                        <label for="address" class="form-label small">Address</label>
                                         <textarea class="form-control" name="address" id="address" rows="3"><?= htmlspecialchars($user['address']) ?></textarea>
                                     </div>
 
                                     <!-- Added: Grade Level (only shown for students) -->
                                     <?php if ($user['role'] === 'student'): ?>
                                         <div class="mb-3">
-                                            <label for="gradeLevel" class="form-label">Grade Level</label>
+                                            <label for="gradeLevel" class="form-label small">Grade Level</label>
                                             <select class="form-select" name="gradeLevel" id="gradeLevel">
                                                 <option value="" <?= empty($user['grade_level']) ? 'selected' : '' ?>>Select your grade level</option>
                                                 <option value="grade_11" <?= ($user['grade_level'] === 'grade_11') ? 'selected' : '' ?>>Grade 11</option>

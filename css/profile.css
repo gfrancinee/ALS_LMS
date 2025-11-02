@@ -15,3 +15,19 @@
 .profile-card form .d-flex {
     padding-top: 1.25rem;
 }
+
+.form-control:focus {
+    border-color: #dc3545;
+    border-width: 2px;
+    background-color: #fff;
+    /* Return background to white for readability while typing */
+    box-shadow: none;
+}
+
+.form-select:focus {
+    border-color: #dc3545;
+    border-width: 2px;
+    background-color: #fff;
+    /* Return background to white for readability while typing */
+    box-shadow: none;
+}
