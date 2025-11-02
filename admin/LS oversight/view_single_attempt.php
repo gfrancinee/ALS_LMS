@@ -141,10 +141,10 @@ $answers = $stmt_answers->get_result();
             </div>
 
             <?php if ($attempt['status'] == 'pending_grading'): ?>
-                <div class="card review-bar-card shadow-sm border-0 mb-4">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-white">Review Student Answers</h5>
-                        <a href="review_answers.php?attempt_id=<?= $attempt_id ?>" class="btn btn-light fw-bold">
+                <div class="card bg-white rounded-3 shadow-sm border-0 mb-4">
+                    <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 text-dark fw-semibold">Review Student Answers</h6>
+                        <a href="review_answers.php?attempt_id=<?= $attempt_id ?>" class="btn btn-primary btn-sm fw-bold rounded-pill px-3">
                             Start Review
                         </a>
                     </div>

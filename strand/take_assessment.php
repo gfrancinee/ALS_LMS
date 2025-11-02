@@ -86,7 +86,7 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
 
         <div class="card-footer bg-white text-center p-3 border-0">
             <?php if ($is_available): ?>
-                <a href="quiz.php?id=<?= $assessment['id'] ?>" class="btn btn-primary btn-lg">
+                <a href="quiz.php?id=<?= $assessment['id'] ?>" class="btn btn-primary rounded-pill px-3 btn-lg">
                     <i class="bi bi-play-circle-fill me-2"></i>Start Quiz
                 </a>
                 <p class="text-muted small mt-2">The timer will begin as soon as you start the quiz.</p>

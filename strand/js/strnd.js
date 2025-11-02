@@ -1344,9 +1344,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- REVIEW ATTEMPT MODAL LOGIC ---
-    // --- NEW AND IMPROVED REVIEW ATTEMPT MODAL LOGIC ---
-    // This listens for clicks inside the container that holds the student list
     const attemptsModalBody = document.getElementById('attemptsListContainer');
     if (attemptsModalBody) {
 

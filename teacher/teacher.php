@@ -268,7 +268,7 @@ if ($currentUser) {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Create LS</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-3">Create LS</button>
                     </div>
                 </form>
         </div>

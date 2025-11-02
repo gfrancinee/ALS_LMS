@@ -195,7 +195,7 @@ require_once '../includes/header.php';
                 <?php endforeach; ?>
 
                 <div class="text-center mt-5">
-                    <button type="submit" class="btn btn-success btn-lg">Submit Assessment</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-3 btn-lg">Submit Assessment</button>
                 </div>
             </form>
         </div>

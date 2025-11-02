@@ -12,7 +12,7 @@
 
 <body>
 
-    <main class="container d-flex justify-content-end min-vh-100">
+    <main class="container d-flex justify-content-center min-vh-100">
         <div class="register-container">
             <header>
                 <h1 class="text-center">Registration Form</h1>

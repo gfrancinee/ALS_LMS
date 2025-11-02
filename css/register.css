@@ -32,7 +32,7 @@ body::-webkit-scrollbar {
 /* === 2. REGISTER CONTAINER === */
 .register-container {
     width: 600px;
-    max-width: 95%;
+    max-width: 100%;
     height: auto;
     /* This makes it fit the content */
 
@@ -42,14 +42,14 @@ body::-webkit-scrollbar {
     border-radius: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 
-    animation: fadeInRight 0.7s ease-out forwards;
+    animation: popUp 0.3s ease-out;
 
     /* These margins add space at the top and bottom */
     margin-top: 1rem;
     margin-bottom: 1rem;
 
     /* This adds space from the right edge of the screen */
-    margin-right: 5rem;
+
 }
 
 .form-control {
@@ -72,36 +72,18 @@ body::-webkit-scrollbar {
     /* Remove the glow */
 }
 
-@keyframes fadeInRight {
+@keyframes popUp {
     from {
         opacity: 0;
-        transform: translateX(20px);
+        transform: scale(0.8);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: scale(1);
     }
 }
 
-/* === 5. FADE-OUT-RIGHT ANIMATION === */
-@keyframes fadeOutRight {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-
-    to {
-        opacity: 0;
-        transform: translateX(20px);
-        /* Slide 20px to the right */
-    }
-}
-
-/* This class will trigger the animation */
-.register-container.fade-out-right {
-    animation: fadeOutRight 0.3s ease-in forwards;
-}
 
 h1 {
     font-family: Helvetica;

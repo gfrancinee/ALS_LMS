@@ -45,7 +45,8 @@ $stmt_check->close();
 // --- START DATABASE TRANSACTION ---
 $conn->begin_transaction();
 $total_score_earned = 0;     // Student's calculated score (for auto-graded items)
-$total_points_possible = 0;  // Total possible points for the whole assessment
+$total_points_possible = 0;
+$has_manual_grading = false;
 
 try {
     // 1. Fetch ALL Questions, Grading Info, and Correct Answers
@@ -91,6 +92,10 @@ try {
         // Add this question's max points to the assessment's total
         $total_points_possible += $question['max_points'];
 
+        if ($question['grading_type'] == 'manual') {
+            $has_manual_grading = true;
+        }
+
         if ($student_answer_text !== null) {
             // --- AUTO-GRADING LOGIC ---
             if ($question['grading_type'] == 'automatic') {
@@ -134,7 +139,7 @@ try {
 
     // 4. Finalize and update the quiz_attempt record
     $end_time = date("Y-m-d H:i:s");
-    $status = 'submitted'; // Use 'submitted' or 'pending_grading'
+    $status = $has_manual_grading ? 'pending_grading' : 'submitted';
 
     $sql_update_attempt = "UPDATE quiz_attempts SET 
                             submitted_at = ?, 

@@ -1,0 +1,75 @@
+body {
+
+    html,
+    body {
+        /* For Firefox */
+        scrollbar-width: none;
+
+        /* For Internet Explorer and OLD Edge */
+        -ms-overflow-style: none;
+    }
+}
+
+/* For Chrome, Safari, and ALL NEW versions of Edge */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+}
+
+.topbar {
+    background-color: #ffffff;
+    z-index: 1030;
+    /* This is a standard height for a py-3 header */
+    height: 74px;
+}
+
+.top-logo {
+    height: 40px;
+    width: 40px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.title #font {
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    font-size: 23px;
+    color: rgb(0, 0, 0);
+    font-weight: 600;
+}
+
+.title #font span:nth-child(1) {
+    color: red;
+}
+
+.title #font span:nth-child(2) {
+    color: green;
+}
+
+.title #font span:nth-child(3) {
+    color: blue;
+}
+
+/* Page Title */
+h2 {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.back-container {
+    position: absolute;
+    top: 98px;
+    right: 78.5px;
+    z-index: 1000;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease-in-out;
+}
+
+.back-link:hover {
+    color: #dc3545;
+}

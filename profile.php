@@ -181,8 +181,8 @@ function getGradeLevelText($gradeLevel)
 
                             <div class="d-flex justify-content-end">
                                 <!-- --- UPDATED: Use the dynamic dashboard link --- -->
-                                <a href="<?= $dashboard_link ?>" class="btn btn-secondary me-2">Back</a>
-                                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Changes</button>
+                                <a href="<?= $dashboard_link ?>" class="btn btn-secondary rounded-pill px-3 me-2">Back</a>
+                                <button type="submit" class="btn btn-primary rounded-pill px-3"><i class="bi bi-save me-2"></i>Save Changes</button>
                             </div>
                         </form>
                     </div>

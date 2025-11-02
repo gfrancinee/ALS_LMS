@@ -154,7 +154,7 @@ require_once '../includes/header.php'; // Adjust path if needed
                         data-grading="<?= htmlspecialchars($qa['grading_type']) ?>"
                         data-max-points="<?= htmlspecialchars($qa['max_points']) ?>"
                         data-auto-points="<?= ($qa['grading_type'] == 'automatic' ? ($points_value ?? '0') : '0') ?>">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
 
                             <h5 class="mb-0">Question <?= $q_num++ ?></h5>
 
@@ -188,7 +188,7 @@ require_once '../includes/header.php'; // Adjust path if needed
                             <?php endif; ?>
 
                         </div>
-                        <div class="card-footer d-flex justify-content-end align-items-center">
+                        <div class="card-footer d-flex justify-content-end align-items-center bg-white">
                             <?php if ($is_manual): ?>
                                 <label for="points_<?= $qa['student_answer_id'] ?>" class="form-label me-2 mb-0">Points:</label>
                                 <input type="number"
@@ -211,8 +211,8 @@ require_once '../includes/header.php'; // Adjust path if needed
                 <?php endforeach; ?>
 
                 <div class="mt-4 text-end">
-                    <button type="submit" class="btn btn-success btn-md">
-                        <i class="bi bi-check-circle-fill me-2"></i> Save Grades & Update Total Score
+                    <button type="submit" class="btn btn-success rounded-pill px-3 btn-md">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save Grades & Update Total Score
                     </button>
                 </div>
             </form>
@@ -220,7 +220,7 @@ require_once '../includes/header.php'; // Adjust path if needed
 
         <div class="col-md-4">
             <div class="card sticky-top mt-5 border-light shadow-sm" style="top: 20px;">
-                <div class="card-header">
+                <div class="card-header bg-white">
                     Summary
                 </div>
                 <div class="card-body text-center">

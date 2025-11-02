@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <body>
     <div class="container-fluid d-flex justify-content-center align-items-center vh-100 p-0">
 
-        <main class="login-container bg-light">
+        <main class="login-container bg-white" style="max-width: 450px; width: 100%;">
             <header class="mb-4 text-center">
                 <h1 id="font">
                     <span>A</span><span>L</span><span>S</span> Learning Management System
@@ -102,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="submit mb-3">
-                    <button id="loginBtn" type="submit" class="btn w-100">
+                    <button id="loginBtn" type="submit" class="btn w-100 btn-primary rounded-pill px-3 btn-md">
                         <span class="btn-text">Log In</span>
                         <span class="spinner-border spinner-border-sm text-light" role="status" style="display:none;"></span>
                     </button>
