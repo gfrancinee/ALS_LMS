@@ -114,7 +114,7 @@ function getGradeLevelText($gradeLevel)
     <link rel="stylesheet" href="css/profile.css" />
 </head>
 
-<body>
+<body class="bg-light">
     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
             <div class="col-md-8">

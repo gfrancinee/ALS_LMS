@@ -215,7 +215,7 @@ if ($currentUser) {
 
                             <!-- === THIS IS THE FIX === -->
                             <!-- htmlspecialchars() has been removed from this line -->
-                            <div class="card-text text-muted flex-grow-1">
+                            <div class="card-text text-muted flex-grow-1 small">
                                 <?= $strand['description'] ?>
                             </div>
                             <!-- === END OF FIX === -->

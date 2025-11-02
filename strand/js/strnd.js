@@ -266,17 +266,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function loadAvailableStudents() {
+    async function loadAvailableStudents(searchQuery = '') {
         const studentListContainer = document.getElementById('availableStudentsList');
         if (!studentListContainer) {
             console.error('availableStudentsList element not found');
             return;
         }
 
-        studentListContainer.innerHTML = '<p>Loading students...</p>';
+        studentListContainer.innerHTML = '<p class="text-center text-muted p-3">Loading students...</p>';
 
         try {
-            const response = await fetch(`../ajax/get_available_students.php?strand_id=${strandId}`);
+            // It now sends the strandId AND the search query
+            const response = await fetch(`../ajax/get_available_students.php?strand_id=${strandId}&search=${encodeURIComponent(searchQuery)}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -290,10 +291,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (students.length === 0) {
-                studentListContainer.innerHTML = '<p class="text-muted">No new students are available to add.</p>';
+                // Shows a different message if the search found nothing
+                if (searchQuery.length > 0) {
+                    studentListContainer.innerHTML = '<p class="text-muted text-center p-3">No students found matching that search.</p>';
+                } else {
+                    studentListContainer.innerHTML = '<p class="text-muted text-center p-3">No new students are available to add.</p>';
+                }
                 return;
             }
 
+            // Your original (correct) code to build the list
             let html = students.map(s => `
             <div class="form-check student-item">
                 <input class="form-check-input" type="checkbox" value="${s.id}" id="student-${s.id}">
@@ -301,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${s.lname}, ${s.fname} <span class="text-muted">(${s.grade_level})</span>
                 </label>
             </div>
-        `).join('');
+            `).join('');
 
             studentListContainer.innerHTML = html;
 
@@ -1635,10 +1642,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (studentSearchInput) {
             studentSearchInput.addEventListener('keyup', () => {
                 const filter = studentSearchInput.value.toLowerCase();
-                document.querySelectorAll('.student-item').forEach(item => {
-                    const label = item.querySelector('label').textContent.toLowerCase();
-                    item.style.display = label.includes(filter) ? '' : 'none';
-                });
+                // This now re-runs the search on the server
+                loadAvailableStudents(filter);
             });
         }
 

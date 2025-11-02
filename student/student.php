@@ -167,7 +167,7 @@ if ($currentUser) {
                                     <h5 class="card-title mb-2 strand-title-link"> <i class="bi bi-book-half fs-4 me-2 text-primary"></i>
                                         <span><?= htmlspecialchars($strand['strand_title']) ?></span>
                                     </h5>
-                                    <div class="card-text text-muted flex-grow-1 description-preview">
+                                    <div class="card-text text-muted flex-grow-1 description-preview small">
                                         <?= $strand['description'] ?>
                                     </div>
                                     <div>
