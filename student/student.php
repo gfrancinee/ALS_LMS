@@ -171,8 +171,8 @@ if ($currentUser) {
                                         <?= $strand['description'] ?>
                                     </div>
                                     <div>
-                                        <span class="badge rounded-pill bg-light text-dark"><?= htmlspecialchars($strand['grade_level']) ?></span>
-                                        <span class="badge rounded-pill bg-light text-dark"><?= htmlspecialchars($strand['strand_code']) ?></span>
+                                        <span class="badge rounded-pill text-dark"><?= htmlspecialchars($strand['grade_level']) ?></span>
+                                        <span class="badge rounded-pill text-dark"><?= htmlspecialchars($strand['strand_code']) ?></span>
                                     </div>
                                 </div>
                             </div>

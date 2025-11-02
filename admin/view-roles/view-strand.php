@@ -107,7 +107,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
         <h2><?= htmlspecialchars($strand['strand_title']) ?> <small class="text-muted">(<?= htmlspecialchars($strand['strand_code']) ?>)</small></h2>
         <p><?= ($strand['description']) ?></p>
         <span class="badge rounded-pill bg-light text-dark"><?= htmlspecialchars($strand['grade_level']) ?></span>
-        <span class="badge bg-warning text-dark ms-2"><i class="bi bi-eye-slash me-1"></i>Read-Only Mode</span>
+        <span class="badge text-warning ms-2"><i class="bi bi-eye-slash me-1"></i>Read-Only Mode</span>
 
         <!-- Tabs -->
         <ul class="nav nav-tabs mb-0 mt-4 <?= $tab_class ?>" id="strandTabs" role="tablist">
@@ -127,7 +127,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
             <div class="tab-pane fade show active" id="modules" role="tabpanel">
                 <?php if ($is_teacher_view): ?>
                     <div class="d-flex justify-content-end mb-4">
-                        <button type="button" class="btn btn-primary read-only-overlay" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
+                        <button type="button" class="btn btn-primary rounded-pill px-3 read-only-overlay" data-bs-toggle="modal" data-bs-target="#manageMaterialCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>
@@ -231,7 +231,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
             <div class="tab-pane fade" id="assessments" role="tabpanel">
                 <?php if ($is_teacher_view): ?>
                     <div class="d-flex justify-content-end mb-4">
-                        <button type="button" class="btn btn-success read-only-overlay" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
+                        <button type="button" class="btn btn-success rounded-pill px-3 read-only-overlay" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
                     </div>
@@ -354,7 +354,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
             <div class="tab-pane fade" id="participants" role="tabpanel">
                 <?php if ($is_teacher_view): ?>
                     <div class="d-flex justify-content-end mb-3">
-                        <button class="btn btn-secondary read-only-overlay" data-bs-toggle="modal" data-bs-target="#participantModal">
+                        <button class="btn btn-secondary rounded-pill px-3 read-only-overlay" data-bs-toggle="modal" data-bs-target="#participantModal">
                             <i class="bi bi-person-plus me-1"></i>Add Participant
                         </button>
                     </div>
@@ -420,7 +420,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                         <input type="text" class="form-control" placeholder="Category name..." disabled>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -440,7 +440,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                         <input type="text" class="form-control" placeholder="Category name..." disabled>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -459,7 +459,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>

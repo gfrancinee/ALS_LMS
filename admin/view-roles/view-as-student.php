@@ -171,7 +171,7 @@ if ($currentUser) {
 
         <div class="section-title h4 fw-semibold ms-3 mb-4">Learning Strands - <?= htmlspecialchars($display_grade) ?></div>
 
-        <div class="alert" style="background-color: #fff3cd; color: #856404; border-color: #ffeeba; padding: 1rem; margin-bottom: 1.5rem; margin-left: 1rem; margin-right: 1rem; border-radius: 0.25rem;">
+        <div class="alert" style="background-color: #fff3cd; color: #856404; padding: 1rem; margin-bottom: 1.5rem; margin-left: 1rem; margin-right: 1rem; border-radius: 0.25rem;">
             <i class="bi bi-exclamation-triangle me-2"></i>
             <strong>Read-Only Mode:</strong> You are viewing as a student for <?= htmlspecialchars($display_grade) ?>. All features are disabled.
         </div>
@@ -192,10 +192,10 @@ if ($currentUser) {
                                 <div class="card-body d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h5 class="card-title mb-0 flex-grow-1"><?= htmlspecialchars($strand['strand_title']) ?></h5>
-                                        <span class="badge bg-primary ms-2"><?= htmlspecialchars($strand['strand_code']) ?></span>
+                                        <span class="badge text-dark ms-2"><?= htmlspecialchars($strand['strand_code']) ?></span>
                                     </div>
 
-                                    <div class="card-text text-muted flex-grow-1 description-preview">
+                                    <div class="card-text text-muted flex-grow-1 small description-preview">
                                         <?= $strand['description'] ?>
                                     </div>
 

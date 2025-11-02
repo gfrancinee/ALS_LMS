@@ -55,8 +55,8 @@ require_once '../../includes/auth.php';
                                 <hr>
                                 <!-- Updated: Dropdown for grade level selection -->
                                 <div class="btn-group">
-                                    <button type="button" class="btn text-primary dropdown-toggle shadow-none" data-bs-toggle="dropdown" aria-expanded="false">
-                                        View as Student
+                                    <button type="button" class="btn text-primary btn-sm me-3 btn-pill-hoverr dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        View as Teacher
                                     </button>
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" href="view-as-student.php?grade=grade_11">Grade 11</a></li>
@@ -78,7 +78,7 @@ require_once '../../includes/auth.php';
                                 <p>View materials, courses, or simulate teacher experience for Teacher.</p>
                                 <hr>
                                 <div class="btn-group">
-                                    <button type="button" class="btn text-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn text-success btn-sm me-3 btn-pill-hover dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                         View as Teacher
                                     </button>
                                     <ul class="dropdown-menu">

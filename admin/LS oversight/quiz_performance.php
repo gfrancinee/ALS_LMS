@@ -82,7 +82,7 @@ $strands = $result->fetch_all(MYSQLI_ASSOC);
                                         </div>
                                     </td>
                                     <td class="text-end">
-                                        <a href="learning_strand_attempts.php?id=<?= $strand['id'] ?>" class="btn btn-outline-secondary rounded-pill px-3">
+                                        <a href="learning_strand_attempts.php?id=<?= $strand['id'] ?>" class="btn text-primary btn-sm me-3 btn-pill-hover">
                                             View Attempts
                                         </a>
                                     </td>

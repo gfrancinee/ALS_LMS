@@ -55,22 +55,6 @@ h2 {
     color: #dc3545;
 }
 
-@media (max-width: 576px) {
-
-    .table th,
-    .table td {
-        font-size: 0.85rem;
-    }
-
-    .btn-sm {
-        font-size: 0.75rem;
-    }
-
-    h2 {
-        font-size: 1.25rem;
-    }
-}
-
 .accordion-button:focus {
     box-shadow: none !important;
     background-color: transparent !important;
@@ -102,34 +86,6 @@ h2 {
     box-shadow: none !important;
 }
 
-.btn.text-primary.dropdown-toggle:hover {
-    background-color: #e7f1ff;
-}
-
-.btn.text-primary.dropdown-toggle:focus {
-    box-shadow: none !important;
-    outline: none;
-    border: none;
-}
-
-.btn.text-primary.dropdown-toggle {
-    transition: background-color 0.2s ease;
-}
-
-.btn.text-success.dropdown-toggle:hover {
-    background-color: #def9ea;
-}
-
-.btn.text-success.dropdown-toggle:focus {
-    box-shadow: none !important;
-    outline: none;
-    border: none;
-}
-
-.btn.text-success.dropdown-toggle {
-    transition: background-color 0.2s ease;
-}
-
 .dropdown-menu {
     border-radius: 0.6rem;
     border: none;
@@ -140,4 +96,46 @@ h2 {
 .dropdown-toggle.active {
     box-shadow: none !important;
     outline: 0 !important;
+}
+
+.btn-pill-hover {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-pill-hoverr:hover {
+    background-color: #0d6efd;
+    /* This is the primary blue color */
+    color: #fff !important;
+    /* This forces the text to be white */
+    border-radius: 50rem;
+    /* This makes it a "pill" shape */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* Optional: adds a slight shadow */
+}
+
+.btn-pill-hover:hover {
+    background-color: #198754;
+    /* This is the primary blue color */
+    color: #fff !important;
+    /* This forces the text to be white */
+    border-radius: 50rem;
+    /* This makes it a "pill" shape */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* Optional: adds a slight shadow */
+}
+
+@media (max-width: 576px) {
+
+    .table th,
+    .table td {
+        font-size: 0.85rem;
+    }
+
+    .btn-sm {
+        font-size: 0.75rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
 }
