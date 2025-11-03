@@ -93,7 +93,7 @@ body {
 
 /* Your existing styles */
 #messages-icon-float {
-    position: fixed;
+    position: fixed !important;
     bottom: 20px;
     right: 20px;
     z-index: 1050;

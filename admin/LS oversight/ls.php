@@ -23,7 +23,6 @@ if (!isset($conn) || $conn->connect_error) {
         // 2. Active Courses (Set equal to Total courses for simple status tracking)
         $active_courses = $total_courses;
 
-        // 3. Materials Needing Review (Counting total learning materials as a metric)
         $result_materials = $conn->query("SELECT COUNT(*) AS count FROM learning_materials");
         $courses_needing_review = $result_materials ? $result_materials->fetch_assoc()['count'] : '0';
 
@@ -83,7 +82,7 @@ if (!isset($conn) || $conn->connect_error) {
             </div>
         </div>
 
-        <div class="row g-4 mb-5">
+        <div class="row g-4 mb-4">
             <div class="col-md-4">
                 <div class="stat-card">
                     <div class="stat-value text-primary"><?php echo $total_courses; ?></div>
@@ -91,7 +90,7 @@ if (!isset($conn) || $conn->connect_error) {
                         <i class="bi bi-book me-2"></i>
                         Total Learning Strands
                     </div>
-                    <p class="stat-sublabel">Total learning strands in the system.</p>
+                    <p class="stat-sublabel">Total Learning Strands in the system.</p>
                 </div>
             </div>
 
@@ -110,54 +109,55 @@ if (!isset($conn) || $conn->connect_error) {
                 <div class="stat-card">
                     <div class="stat-value text-danger"><?php echo $courses_needing_review; ?></div>
                     <div class="stat-label text-danger">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        Materials Needing Review
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Total Learning Materials
                     </div>
-                    <p class="stat-sublabel">Materials flagged for content or quality check.</p>
+                    <p class="stat-sublabel">Total materials uploaded in the system.</p>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col-lg-12 mx-auto">
-                <div class="card shadow-lg" style="border: none; border-radius: 0.75rem;">
-                    <div class="card-header bg-light" style="border-radius: 0.75rem 0.75rem 0 0; border: none; padding: 1.25rem 1.5rem;">
-                        <h4 class="mb-0"><i class="bi bi-list-columns-reverse me-2"></i> Learning Strand Management </h4>
-                    </div>
+    <div class="row">
+        <div class="col-lg-12 mx-auto">
+            <div class="card shadow-lg mb-2" style="border: none; border-radius: 0.75rem; margin-right: 5rem; margin-left: 5rem;">
+                <div class="card-header bg-light" style="border-radius: 0.75rem 0.75rem 0 0; border: none; padding: 1.25rem 1.5rem;">
+                    <h4 class="mb-0"><i class="bi bi-list-columns-reverse me-2"></i> Learning Strand Management </h4>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table align-middle management-table">
-                            <tbody>
-                                <tr>
-                                    <td>Manage Learning Strands & Materials</td>
-                                    <td class="text-center">
-                                        <a href="strand_materials_editor.php" class="btn btn-outline-primary rounded-pill px-3">Go to Editor</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>View Quiz Performance Data</td>
-                                    <td class="text-center">
-                                        <a href="quiz_performance.php" class="btn btn-outline-info rounded-pill px-3">View Attempts</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Review Student Answers</td>
-                                    <td class="text-center">
-                                        <a href="quiz_performance.php" class="btn btn-outline-secondary rounded-pill px-3">Start Review</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Latest Added: <span class="fw-bold text-success ms-2"><?php echo htmlspecialchars($recently_added_course); ?></span></td>
-                                    <td class="text-center">
-                                        <a href="strand_details.php?id=<?php echo $recently_added_course_id; ?>" class="btn btn-outline-success rounded-pill px-3">Details</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table align-middle management-table">
+                        <tbody>
+                            <tr>
+                                <td>Manage Learning Strands & Materials</td>
+                                <td class="text-center">
+                                    <a href="strand_materials_editor.php" class="btn btn-outline-primary rounded-pill px-3">Go to Editor</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>View Quiz Performance Data</td>
+                                <td class="text-center">
+                                    <a href="quiz_performance.php" class="btn btn-outline-info rounded-pill px-3">View Attempts</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Review Student Answers</td>
+                                <td class="text-center">
+                                    <a href="quiz_performance.php" class="btn btn-outline-secondary rounded-pill px-3">Start Review</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Latest Added: <span class="fw-bold text-success ms-2"><?php echo htmlspecialchars($recently_added_course); ?></span></td>
+                                <td class="text-center">
+                                    <a href="learning_strand_details.php?id=<?php echo $recently_added_course_id; ?>" class="btn btn-outline-success rounded-pill px-3">Details</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+    </div>
 
     </div>
 

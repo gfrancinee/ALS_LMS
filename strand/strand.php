@@ -210,7 +210,7 @@ if ($user_role === 'teacher') {
 
                     <?php if (empty($material_categories)): ?>
                         <div id="no-material-categories-message" class="text-center text-muted p-5">
-                            <p><i class="bi bi-journal-x fs-1"></i></p>
+                            <p><i class="bi bi-file-earmark-text fs-1"></i></p>
                             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                                 <h5>No material categories have been created yet.</h5>
                                 <p>Click "Manage Categories" to get started.</p>
@@ -389,7 +389,7 @@ if ($user_role === 'teacher') {
 
                     <?php if (empty($categories) && empty($uncategorized_assessments)): ?>
                         <div id="no-categories-message" class="text-center text-muted p-5">
-                            <p><i class="bi bi-journal-x fs-1"></i></p>
+                            <p><i class="bi bi-clipboard-check fs-1"></i></p>
                             <h5>No assessments or categories have been created yet.</h5>
                             <p>Click "Manage Categories" to get started.</p>
                         </div>

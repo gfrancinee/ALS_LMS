@@ -136,8 +136,9 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                 <div class="accordion assessment-accordion" id="materialsAccordion">
                     <?php if (empty($material_categories)): ?>
                         <div class="text-center text-muted p-5">
-                            <p><i class="bi bi-journal-x fs-1"></i></p>
+                            <p><i class="bi bi-file-earmark-text fs-1"></i></p>
                             <h5>No learning materials are available yet.</h5>
+                            <p>Click "Manage Categories" to get started.</p>
                         </div>
                     <?php endif; ?>
 
@@ -240,8 +241,9 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                 <div class="accordion assessment-accordion" id="assessmentAccordion">
                     <?php if (empty($categories)): ?>
                         <div class="text-center text-muted p-5">
-                            <p><i class="bi bi-journal-x fs-1"></i></p>
+                            <p><i class="bi bi-clipboard-check fs-1"></i></p>
                             <h5>No assessments are available yet.</h5>
+                            <p>Click "Manage Categories" to get started.</p>
                         </div>
                     <?php endif; ?>
 

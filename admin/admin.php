@@ -13,7 +13,6 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/admin.css">
-    <script src="js/admin.js" defer></script>
 </head>
 
 <body>
@@ -85,9 +84,63 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
     <a id="logout-icon-float" href="../logout.php" class="btn btn-sm btn-danger ms-3">
         <i class="bi bi-box-arrow-left"></i>
     </a>
-    <a id="messages-icon-float" href="#" title="Messages">
-        <i class="bi bi-chat-dots-fill"></i> </a>
+    <div class="dropend" id="messages-icon-float-wrapper" style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
+
+        <a href="#" class="position-relative" id="messages-icon-float"
+            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+            style="background-color: var(--bs-primary); color: white; border-radius: 50%; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); text-decoration: none;">
+
+            <i class="bi bi-chat-dots-fill" style="font-size: 1.75rem;"></i>
+
+            <span id="message-notification-dot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none">
+                <span class="visually-hidden">New messages</span>
+            </span>
+        </a>
+
+        <div class="dropdown-menu shadow" id="messages-dropdown" aria-labelledby="messages-icon-float" style="width: 350px;">
+            <div class="px-3 pt-2">
+                <h5 class="mb-0">Messages</h5>
+                <hr class="my-2">
+                <div class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Search for people...">
+                </div>
+                <hr class="my-2">
+            </div>
+            <div class="list-group list-group-flush" id="conversation-list" style="max-height: 400px; overflow-y: auto;">
+                <div class="text-center text-muted p-5" id="no-messages-placeholder">
+                    No messages yet.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div id="chat-modal-header" class="d-flex align-items-center"></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="chat-modal-body">
+                </div>
+                <div class="modal-footer">
+                    <form id="message-form" class="w-100 d-flex gap-2">
+                        <input type="hidden" id="chat-conversation-id" name="conversation_id">
+
+                        <input type="text" id="chat-message-input" name="message_content" class="form-control" placeholder="Type a message..." required autocomplete="off">
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 
 </html>

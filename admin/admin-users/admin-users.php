@@ -74,25 +74,25 @@ if ($unverified_result) {
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="stat-value"><?= $stats['total_teachers'] + $stats['total_students'] ?></div>
+                    <div class="stat-value text-primary"><?= $stats['total_teachers'] + $stats['total_students'] ?></div>
                     <div class="stat-label text-primary"><i class="bi bi-people-fill me-2"></i>Total Users</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="stat-value"><?= $stats['total_students'] ?></div>
+                    <div class="stat-value text-success"><?= $stats['total_students'] ?></div>
                     <div class="stat-label text-success"><i class="bi bi-person-fill me-2"></i>Total Students</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="stat-value"><?= $stats['total_teachers'] ?></div>
+                    <div class="stat-value text-success"><?= $stats['total_teachers'] ?></div>
                     <div class="stat-label text-success"><i class="bi bi-person-fill me-2"></i>Total Teachers</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="stat-value"><?= $stats['unverified_users'] ?></div>
+                    <div class="stat-value text-danger"><?= $stats['unverified_users'] ?></div>
                     <div class="stat-label text-danger"><i class="bi bi-person-exclamation me-2"></i>Unverified Accounts</div>
                 </div>
             </div>
