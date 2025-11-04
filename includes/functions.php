@@ -1,8 +1,4 @@
 <?php
-// Make sure this is at the top of functions.php if it's not already
-// Note: db.php is often included in the file that *calls* this function,
-// but including it here makes it self-contained if needed.
-// If you get a 'cannot redeclare' error, you can remove the line below.
 require_once 'db.php';
 
 /**
@@ -16,179 +12,246 @@ require_once 'db.php';
  */
 function recommendMaterialForQuestion($conn, $question_id, $strand_id)
 {
-
-    // --- 1. Get the content of the wrong question ---
-    $question_text = '';
-    $stmt_q = $conn->prepare("SELECT question_text FROM question_bank WHERE id = ?");
-    if ($stmt_q) {
-        $stmt_q->bind_param("i", $question_id);
-        $stmt_q->execute();
-        $res_q = $stmt_q->get_result();
-        if ($res_q->num_rows > 0) {
-            $question_text = $res_q->fetch_assoc()['question_text'];
-        }
-        $stmt_q->close();
-    }
-
-    if (empty($question_text)) {
-        return null; // Can't recommend if we don't have the question text
-    }
-
-    // --- 2. Get all materials for this strand ---
-    // We fetch all materials to compare them.
-    $materials = [];
-
-    // *** FIX: Use 'learning_materials' table AND 'link_url' column ***
-    $sql_m = "
-        SELECT id, label, type, file_path, link_url, content_text 
-        FROM learning_materials 
-        WHERE strand_id = ?
-    ";
-    // *** END FIX ***
-
-    $stmt_m = $conn->prepare($sql_m);
-    if ($stmt_m === false) {
-        error_log("Prepare failed (get materials): " . $conn->error);
+    // --- 1. Get the full question text ---
+    $stmt = $conn->prepare("SELECT question_text FROM question_bank WHERE id = ?");
+    if (!$stmt) {
+        error_log("Prepare failed: " . $conn->error);
         return null;
     }
 
-    $stmt_m->bind_param("i", $strand_id);
-    $stmt_m->execute();
-    $res_m = $stmt_m->get_result();
+    $stmt->bind_param("i", $question_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    while ($row = $res_m->fetch_assoc()) {
-        $materials[] = $row;
+    if ($result->num_rows === 0) {
+        $stmt->close();
+        return null;
     }
-    $stmt_m->close();
+
+    $question = $result->fetch_assoc();
+    $question_text = strtolower($question['question_text']);
+    $stmt->close();
+
+    // --- 2. Get all materials for this strand with their full content ---
+    $stmt = $conn->prepare("
+        SELECT id, label, type, file_path, link_url, content_text 
+        FROM learning_materials 
+        WHERE strand_id = ?
+    ");
+
+    if (!$stmt) {
+        error_log("Prepare failed: " . $conn->error);
+        return null;
+    }
+
+    $stmt->bind_param("i", $strand_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $materials = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 
     if (empty($materials)) {
-        return null; // No materials to recommend
+        return null;
     }
 
-    // --- 3. Calculate similarity score for each material ---
-    $best_material = null;
-    $highest_score = -1.0; // Start with a score of -1
-
-    // Get the "important" words from the question
-    $question_words = cleanAndTokenizeText($question_text);
+    // --- 3. Calculate semantic similarity for each material ---
+    $best_match = null;
+    $highest_score = 0;
 
     foreach ($materials as $material) {
-        // Combine all text content for the material
-        // We add 'label' (title) because it's very important
-        $material_full_text = $material['label'] . ' ' . $material['content_text'];
+        $material_content = strtolower($material['content_text'] ?? '');
+        $material_label = strtolower($material['label'] ?? '');
 
-        // Get "important" words from the material
-        $material_words = cleanAndTokenizeText($material_full_text);
+        if (empty($material_content)) {
+            continue;
+        }
 
-        // Calculate how similar this material is to the question
-        $score = calculateJaccardSimilarity($question_words, $material_words);
-
-        // --- Debugging (Optional: Remove later) ---
-        // error_log("Material '{$material['label']}' Score: $score");
-        // ---
+        // Calculate similarity score using semantic analysis
+        $score = calculateSemanticSimilarity($question_text, $material_content, $material_label);
 
         if ($score > $highest_score) {
             $highest_score = $score;
-            $best_material = $material;
+            $best_match = $material;
         }
     }
 
-    // --- 4. Return the best match (if it's good enough) ---
-    // We set a threshold: only recommend if the score is > 0.
-    // This stops it from recommending a random material if no words match.
-    if ($highest_score > 0.0) {
-        return $best_material;
+    // Only return a match if the score is above threshold (20%)
+    if ($highest_score > 0.20) {
+        return $best_match;
     }
 
-    return null; // No good recommendation found
+    return null;
 }
 
 /**
- * Helper function to clean text and break it into unique "important" words.
+ * Calculate semantic similarity between question and material using multiple methods
  *
- * @param string $text The text to clean (question or material)
- * @return array A list of unique, important words
+ * @param string $question The full question text (lowercase)
+ * @param string $material The full material content text (lowercase)
+ * @param string $material_label The material title/label (lowercase)
+ * @return float Similarity score between 0 and 1
  */
-function cleanAndTokenizeText($text)
+function calculateSemanticSimilarity($question, $material, $material_label)
 {
-    // 1. Common English "stop words" to ignore.
-    // *** FIX: Removed course-specific words like 'media', 'literacy', etc. ***
-    $stopWords = [
-        'a',
-        'an',
-        'and',
-        'are',
-        'as',
-        'at',
-        'be',
-        'by',
-        'for',
-        'from',
-        'has',
-        'he',
-        'in',
-        'is',
-        'it',
-        'its',
-        'of',
-        'on',
-        'that',
-        'the',
-        'to',
-        'was',
-        'were',
-        'will',
-        'with',
-        'what',
-        'which',
-        'who',
-        'how',
-        'when',
-        'why'
-    ];
-    // *** END FIX ***
+    // Method 1: N-gram phrase matching (checks for consecutive word sequences)
+    $phrase_score = calculatePhraseMatching($question, $material);
 
-    // 1. Convert to lowercase
-    $text = strtolower($text);
-    // 2. Remove punctuation (keeps letters, numbers, and spaces)
-    $text = preg_replace('/[^\w\s]/', '', $text);
-    // 3. Break into words
-    $words = explode(' ', $text);
-    // 4. Remove stop words and empty strings
-    $words = array_filter($words, function ($word) use ($stopWords) {
-        return !empty($word) && !in_array($word, $stopWords);
+    // Method 2: Sentence-level matching
+    $sentence_score = calculateSentenceMatching($question, $material);
+
+    // Method 3: Distinctive keyword matching (proper nouns, technical terms)
+    $keyword_score = calculateKeywordMatching($question, $material);
+
+    // Method 4: Title relevance boost (if question mentions words from the title)
+    $title_score = calculateTitleRelevance($question, $material_label);
+
+    // Combine scores with weights
+    // Phrase matching is most important, followed by sentences, then keywords and title
+    $final_score = ($phrase_score * 0.40) + ($sentence_score * 0.30) + ($keyword_score * 0.20) + ($title_score * 0.10);
+
+    return $final_score;
+}
+
+/**
+ * Calculate phrase matching score using n-grams (sequences of consecutive words)
+ */
+function calculatePhraseMatching($question, $material)
+{
+    // Remove common stop words
+    $stopwords = ['this', 'that', 'these', 'those', 'what', 'which', 'who', 'when', 'where', 'why', 'how', 'does', 'about', 'with', 'from', 'have', 'been', 'their', 'there', 'would', 'could', 'should', 'what\'s', 'how\'s'];
+
+    $question_words = preg_split('/\s+/', $question);
+    $question_words = array_filter($question_words, function ($word) use ($stopwords) {
+        return strlen($word) > 2 && !in_array($word, $stopwords);
     });
-    // 5. Return a list of unique words
-    return array_unique($words);
+    $question_words = array_values($question_words);
+
+    if (empty($question_words)) {
+        return 0;
+    }
+
+    $phrase_matches = 0;
+    $total_weight = 0;
+
+    // Try matching 5-word, 4-word, 3-word, and 2-word phrases
+    for ($n = 5; $n >= 2; $n--) {
+        if (count($question_words) < $n) continue;
+
+        for ($i = 0; $i <= count($question_words) - $n; $i++) {
+            $phrase = implode(' ', array_slice($question_words, $i, $n));
+            $weight = $n; // Longer phrases get more weight
+            $total_weight += $weight;
+
+            if (strpos($material, $phrase) !== false) {
+                $phrase_matches += $weight;
+            }
+        }
+    }
+
+    return $total_weight > 0 ? ($phrase_matches / $total_weight) : 0;
 }
 
 /**
- * Calculates the Jaccard Similarity (Intersection over Union) between two sets of words.
- * A score of 1.0 means they are identical.
- * A score of 0.0 means they have zero words in common.
- *
- * @param array $set1 Words from the question
- * @param array $set2 Words from the material
- * @return float The similarity score
+ * Calculate sentence-level matching
  */
-function calculateJaccardSimilarity(array $set1, array $set2)
+function calculateSentenceMatching($question, $material)
 {
-    if (empty($set1) || empty($set2)) {
-        return 0.0;
+    // Split question into sentences
+    $sentences = preg_split('/[.!?]+/', $question, -1, PREG_SPLIT_NO_EMPTY);
+    $sentences = array_map('trim', $sentences);
+
+    if (empty($sentences)) {
+        return 0;
     }
 
-    // Find words that are in BOTH lists
-    $intersection = count(array_intersect($set1, $set2));
+    $sentence_matches = 0;
 
-    // Find all unique words from BOTH lists combined
-    $union = count(array_unique(array_merge($set1, $set2)));
+    foreach ($sentences as $sentence) {
+        if (strlen($sentence) < 15) continue; // Skip very short fragments
 
-    if ($union == 0) {
-        return 0.0;
+        // Split sentence into words
+        $words = preg_split('/\s+/', $sentence);
+        $words = array_filter($words, function ($w) {
+            return strlen($w) > 2;
+        });
+
+        if (empty($words)) continue;
+
+        // Check if at least 60% of the sentence words appear in material
+        $word_matches = 0;
+        foreach ($words as $word) {
+            if (strpos($material, $word) !== false) {
+                $word_matches++;
+            }
+        }
+
+        $sentence_match_rate = $word_matches / count($words);
+        if ($sentence_match_rate >= 0.6) {
+            $sentence_matches++;
+        }
     }
 
-    // The score is (Number of common words) / (Total number of unique words)
-    return $intersection / $union;
+    return count($sentences) > 0 ? ($sentence_matches / count($sentences)) : 0;
+}
+
+/**
+ * Calculate keyword matching for distinctive words
+ */
+function calculateKeywordMatching($question, $material)
+{
+    // Extract distinctive keywords:
+    // 1. Words that are capitalized (proper nouns)
+    // 2. Long words (6+ characters)
+    // 3. Technical terms
+
+    preg_match_all('/\b[A-Z][a-z]+\b/', $question, $proper_nouns);
+    preg_match_all('/\b\w{6,}\b/', $question, $long_words);
+
+    $distinctive_words = array_merge($proper_nouns[0], $long_words[0]);
+    $distinctive_words = array_unique(array_map('strtolower', $distinctive_words));
+
+    if (empty($distinctive_words)) {
+        return 0;
+    }
+
+    $keyword_matches = 0;
+    foreach ($distinctive_words as $keyword) {
+        if (strpos($material, $keyword) !== false) {
+            $keyword_matches++;
+        }
+    }
+
+    return $keyword_matches / count($distinctive_words);
+}
+
+/**
+ * Calculate title relevance (boost if question mentions words from material title)
+ */
+function calculateTitleRelevance($question, $material_label)
+{
+    if (empty($material_label)) {
+        return 0;
+    }
+
+    // Extract significant words from title (ignore "Module X:" pattern and common words)
+    $title_words = preg_replace('/module\s+\d+:\s*/i', '', $material_label);
+    $title_words = preg_split('/\s+/', $title_words);
+    $title_words = array_filter($title_words, function ($word) {
+        return strlen($word) > 3;
+    });
+
+    if (empty($title_words)) {
+        return 0;
+    }
+
+    $title_matches = 0;
+    foreach ($title_words as $word) {
+        if (strpos($question, $word) !== false) {
+            $title_matches++;
+        }
+    }
+
+    return count($title_words) > 0 ? ($title_matches / count($title_words)) : 0;
 }
 
 /**

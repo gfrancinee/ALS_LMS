@@ -11,9 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //==================================================//
     // START: SIDEBAR LOGIC
-    //==================================================//
     const sidebar = document.querySelector('.sidebar');
     const sidebarLinks = document.querySelectorAll('.sidebar .sidebar-link, .sidebar .dropdown > a');
     const coursesTab = document.querySelector('.sidebar [data-tab="courses"]');
@@ -403,9 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
 
-    // =================================================================== //
     // --- SECTION: NOTIFICATION LOGIC ---
-    // =================================================================== //
     const notificationsIconWrapper = document.getElementById('notifications-icon-wrapper');
     if (notificationsIconWrapper) {
         const notificationList = document.getElementById('notification-list');

@@ -183,19 +183,21 @@ h2 {
     border: 1px solid #eee;
 }
 
-/* This is the clickable link part */
 .assessment-item-link {
-    border: none;
-    flex-grow: 1;
-    /* Allows the link to take up all available space */
-    padding: 0.1rem 1rem;
+    border: 1px solid #eee;
     text-decoration: none;
     color: #212529;
+    flex-grow: 1;
+    min-width: 0;
+    transition: transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .assessment-item-link:hover {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #eee;
 }
 
 /* This is where the border is added */
@@ -436,14 +438,18 @@ a.dropdown-item:active {
     text-decoration: none;
     color: #212529;
     flex-grow: 1;
-    /* Allow link to take up space */
     min-width: 0;
-    /* Crucial for allowing text to be truncated */
+    transition: transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    border: 1px solid transparent;
 }
 
 .material-item-link:hover {
-    background-color: #f8f9fa;
-
+    /* Added this from our previous step */
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #b5b5b5;
 }
 
 /* Target the div that holds the text to handle overflow */

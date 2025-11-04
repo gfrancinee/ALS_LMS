@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </h2>
                         <div id="collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#assessmentAccordion">
-                            <div class="accordion-body"><ul class="list-unstyled mb-0"><li class="text-muted fst-italic">No assessments in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="${newCategory.id}"><i class="bi bi-plus-circle"></i> Create Assessment</button></div></div>
+                            <div class="accordion-body"><ul class="list-unstyled mb-0"><li class="text-muted fst-italic">No assessments in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success btn-sm me-3 btn-pill-hover text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="${newCategory.id}"><i class="bi bi-plus-circle"></i> Create Assessment</button></div></div>
                         </div>
                     </div>`;
                 accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
@@ -724,7 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </h2>
                         <div id="material-collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
-                            <div class="accordion-body"><ul class="list-unstyled mb-0 material-list-group"><li class="text-muted fst-italic p-3 no-materials-message">No materials in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="${newCategory.id}"><i class="bi-file-earmark-plus-fill"></i> Upload Material</button></div></div>
+                            <div class="accordion-body"><ul class="list-unstyled mb-0 material-list-group"><li class="text-muted fst-italic p-3 no-materials-message">No materials in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success btn-sm me-3 btn-pill-hover text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="${newCategory.id}"><i class="bi-file-earmark-plus-fill"></i> Upload Material</button></div></div>
                         </div>
                     </div>`;
                 accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
@@ -795,6 +795,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     // --- END: MATERIAL CATEGORY LOGIC ---
+
+    // --- NEW: Auto-scroll to "Upload Material" form ---
+
+    // 1. Find all the "Upload Material" buttons
+    const uploadMaterialButtons = document.querySelectorAll('.upload-material-btn');
+
+    // 2. Find the form container that collapses
+    const uploadMaterialContainer = document.getElementById('uploadMaterialContainer');
+
+    if (uploadMaterialButtons.length > 0 && uploadMaterialContainer) {
+
+        // 3. Listen for when the collapse is *finished opening*
+        uploadMaterialContainer.addEventListener('shown.bs.collapse', () => {
+            // 4. Once it's open, scroll it into view
+            uploadMaterialContainer.scrollIntoView({
+                behavior: 'smooth', // Makes it a nice, smooth scroll
+                block: 'start'    // Aligns it to the nearest edge
+            });
+        });
+    }
+    // --- END OF NEW CODE ---
 
 
     // --- START: UPLOAD MATERIAL LOGIC ---

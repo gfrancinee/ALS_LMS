@@ -186,9 +186,9 @@ if (!empty($question_ids)) {
     $stmt_all_opts->close();
 }
 
-// Ensure recommendations are based on the latest review check
+// --- AUTOMATIC RECOMMENDATION ENGINE LOGIC ---
+$recommendations = [];
 if (!empty($wrong_question_ids_from_review)) {
-    $recommendations = []; // Reset recommendations
     $recommended_ids = []; // To prevent duplicate recommendations
     $material_wrong_count = []; // Track how many wrong questions per material
 

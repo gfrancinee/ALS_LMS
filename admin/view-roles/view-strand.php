@@ -216,7 +216,7 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                     <?php if ($is_teacher_view): ?>
                                         <hr class="my-3">
                                         <div class="text-center">
-                                            <button class="btn btn-link text-success text-decoration-none read-only-overlay" disabled>
+                                            <button class="btn btn-link text-success btn-sm me-3 btn-pill-hover text-decoration-none read-only-overlay" disabled>
                                                 <i class="bi-file-earmark-plus-fill"></i> Upload Material
                                             </button>
                                         </div>
@@ -340,8 +340,8 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                     <?php if ($is_teacher_view): ?>
                                         <hr class="my-3">
                                         <div class="text-center">
-                                            <button class="btn btn-link text-success text-decoration-none read-only-overlay" disabled>
-                                                <i class="bi bi-plus-circle"></i> Create Assessment in this Category
+                                            <button class="btn btn-link text-success btn-sm me-3 btn-pill-hover text-decoration-none read-only-overlay" disabled>
+                                                <i class="bi bi-plus-circle"></i> Create Assessment
                                             </button>
                                         </div>
                                     <?php endif; ?>

@@ -300,7 +300,7 @@ if ($user_role === 'teacher') {
                                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                                         <hr class="my-3">
                                         <div class="text-center">
-                                            <button class="btn btn-link text-success text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="<?= $category['id'] ?>">
+                                            <button class="btn btn-link text-success btn-sm me-3 btn-pill-hoverr text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="<?= $category['id'] ?>">
                                                 <i class="bi-file-earmark-plus-fill"></i> Upload Material
                                             </button>
                                         </div>
@@ -560,8 +560,8 @@ if ($user_role === 'teacher') {
                                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                                         <hr class="my-3">
                                         <div class="text-center">
-                                            <button class="btn btn-link text-success text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="<?= $category['id'] ?>">
-                                                <i class="bi bi-plus-circle"></i> Create Assessment in this Category
+                                            <button class="btn btn-link text-success btn-sm me-3 btn-pill-hoverr text-decoration-none create-assessment-btn" data-bs-toggle="collapse" data-bs-target="#createAssessmentContainer" data-category-id="<?= $category['id'] ?>">
+                                                <i class="bi bi-plus-circle"></i> Create Assessment
                                             </button>
                                         </div>
                                     <?php endif; ?>
