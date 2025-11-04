@@ -107,33 +107,36 @@ $stmt->bind_param("iiisssss", $teacher_id, $strand_id, $category_id, $label, $ty
 if ($stmt->execute()) {
     $new_id = $stmt->insert_id;
 
-    // --- Notification Logic (Unchanged) ---
-    $student_ids = [];
-    $stmt_students = $conn->prepare("SELECT student_id FROM strand_participants WHERE strand_id = ? AND role = 'student'");
+    // 1. Get all students in that strand
+    $stmt_students = $conn->prepare("SELECT user_id FROM strand_participants WHERE strand_id = ?");
     $stmt_students->bind_param("i", $strand_id);
     $stmt_students->execute();
     $result_students = $stmt_students->get_result();
+    $student_ids = []; // Store just the IDs
     while ($row = $result_students->fetch_assoc()) {
-        $student_ids[] = $row['student_id'];
+        $student_ids[] = $row['user_id'];
     }
     $stmt_students->close();
 
-    $strand_title = "your course";
-    $stmt_title = $conn->prepare("SELECT strand_title FROM learning_strands WHERE id = ?");
-    $stmt_title->bind_param("i", $strand_id);
-    $stmt_title->execute();
-    if ($title_row = $stmt_title->get_result()->fetch_assoc()) {
-        $strand_title = $title_row['strand_title'];
-    }
-    $stmt_title->close();
+    // 2. Loop and create/update notifications for each student
+    $notification_type = 'new_material';
+    $notification_link = "strand.php?id=" . $strand_id; // Links to the strand page
 
-    $message = "New material '" . htmlspecialchars($label) . "' has been added to '" . htmlspecialchars($strand_title) . "'.";
-    $link = "strand/strand.php?id=" . $strand_id;
+    $stmt_notify = $conn->prepare("
+        INSERT INTO notifications (user_id, type, related_id, count, link, is_read)
+        VALUES (?, ?, ?, 1, ?, 0)
+        ON DUPLICATE KEY UPDATE
+            count = count + 1,
+            is_read = 0,
+            updated_at = NOW()
+    ");
 
     foreach ($student_ids as $student_id) {
-        create_notification($conn, $student_id, $message, $link);
+        // Use $strand_id as the related_id for grouping
+        $stmt_notify->bind_param("isss", $student_id, $notification_type, $strand_id, $notification_link);
+        $stmt_notify->execute();
     }
-    // --- End Notification Logic ---
+    $stmt_notify->close();
 
     echo json_encode([
         'success' => true,

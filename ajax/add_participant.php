@@ -100,3 +100,17 @@ echo json_encode([
 $verify_stmt->close();
 $stmt->close();
 $conn->close();
+
+// --- In your 'add_participant.php' script ---
+
+$notification_type = 'new_participant';
+$message = "You have been added to the strand: " . $strand_name;
+$link = "strand.php?id=" . $strand_id;
+
+$stmt_notify = $conn->prepare("
+    INSERT INTO notifications (user_id, type, related_id, message, link, is_read)
+    VALUES (?, ?, ?, ?, ?, 0)
+");
+$stmt_notify->bind_param("isiss", $student_id, $notification_type, $strand_id, $message, $link);
+$stmt_notify->execute();
+$stmt_notify->close();
