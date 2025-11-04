@@ -1,10 +1,12 @@
 <?php
-// /ajax/get_material_details.php
+// FILE: ajax/get_material_details.php
 session_start();
 require_once '../includes/db.php';
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+// --- FIX: Allow both 'teacher' and 'admin' ---
+$allowed_roles = ['teacher', 'admin'];
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], $allowed_roles)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
@@ -16,18 +18,17 @@ if (!$material_id) {
     exit;
 }
 
-// --- FIX: Select ONLY the 'label' ---
-// This is much faster as it doesn't fetch the large 'content_text'
-$stmt = $conn->prepare("SELECT label FROM learning_materials WHERE id = ? AND teacher_id = ?");
-$stmt->bind_param("ii", $material_id, $_SESSION['user_id']);
+// --- FIX: Select all the fields the modal needs ---
+$stmt = $conn->prepare("SELECT label, type, file_path, link_url FROM learning_materials WHERE id = ?");
+$stmt->bind_param("i", $material_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $material = $result->fetch_assoc();
 $stmt->close();
 
 if ($material) {
-    // The $material array now only contains ['label' => '...']
+    // Send all material data
     echo json_encode(['success' => true, 'data' => $material]);
 } else {
-    echo json_encode(['success' => false, 'error' => 'Material not found or you do not have permission.']);
+    echo json_encode(['success' => false, 'error' => 'Material not found.']);
 }

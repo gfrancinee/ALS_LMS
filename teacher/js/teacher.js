@@ -34,9 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    //==================================================//
-    // START: MESSAGING LOGIC
-    //==================================================//
+    // MESSAGING LOGIC
     const messagesIconWrapper = document.getElementById('messages-icon-wrapper');
     if (messagesIconWrapper) {
         let currentChatPartner = {};
@@ -51,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessageInput = document.getElementById('chat-message-input');
         let debounceTimer;
 
-
+        // --- THIS IS THE UPDATED fetchConversations FUNCTION ---
         const fetchConversations = async () => {
             try {
                 const response = await fetch('../ajax/get_conversations.php');
@@ -63,12 +61,41 @@ document.addEventListener('DOMContentLoaded', () => {
                             ? `<img src="../${convo.avatar_url}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">`
                             : `<i class="bi bi-person-circle me-3" style="font-size: 50px; color: #6c757d;"></i>`;
 
-                        const lastMessage = convo.last_message ? convo.last_message : 'No messages yet.';
-                        const convoItemHTML = `<a href="#" class="list-group-item list-group-item-action" data-conversation-id="${convo.conversation_id}" data-user-name="${convo.fname} ${convo.lname}" data-user-avatar="${convo.avatar_url || ''}"><div class="d-flex align-items-center">${avatarElement}<div><h6 class="mb-0">${convo.fname} ${convo.lname}</h6><p class="mb-0 text-muted text-truncate" style="max-width: 250px;">${lastMessage}</p></div></div></a>`;
+                        // Check if unread
+                        const isUnread = convo.unread_count > 0;
+
+                        // --- NEW BOLDING LOGIC ---
+                        const otherUserName = convo.other_user_name; // This name comes from get_conversations.php
+                        const lastMessageText = convo.last_message
+                            ? (isUnread ? `<strong>${convo.last_message}</strong>` : convo.last_message)
+                            : 'No messages yet.';
+                        const lastMessageTime = convo.last_message_time || '';
+
+                        // Build the new HTML
+                        const convoItemHTML = `
+                    <a href="#" class="list-group-item list-group-item-action" 
+                       data-conversation-id="${convo.conversation_id}" 
+                       data-user-name="${convo.other_user_name}" 
+                       data-user-avatar="${convo.avatar_url || ''}">
+                       
+                        <div class="d-flex align-items-center">
+                            ${avatarElement}
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-0 text-truncate">${isUnread ? `<strong>${otherUserName}</strong>` : otherUserName}</h6>
+                                    <small class="text-muted flex-shrink-0 ms-2">${isUnread ? `<strong>${lastMessageTime}</strong>` : lastMessageTime}</small>
+                                </div>
+                                <p class="mb-0 text-muted text-truncate" style="max-width: 250px;">
+                                    ${lastMessageText}
+                                </p>
+                            </div>
+                            ${isUnread ? '<span class="badge bg-primary rounded-pill ms-3 p-1"></span>' : ''}
+                        </div>
+                    </a>`;
                         conversationList.insertAdjacentHTML('beforeend', convoItemHTML);
                     });
                 } else {
-                    conversationList.innerHTML = '<div class="text-center text-muted p-5">No messages yet.</div>';
+                    conversationList.innerHTML = '<div class="text-center text-muted p-5" id="no-messages-placeholder">No messages yet.</div>';
                 }
             } catch (error) { console.error('Fetch conversations failed:', error); }
         };
@@ -102,19 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 300);
         });
 
+        // --- THIS IS THE UPDATED openChatWindow FUNCTION ---
         const openChatWindow = async (conversationId, otherUser = {}) => {
             chatConversationIdInput.value = conversationId;
 
-            // Mark messages as read
+            // Mark this specific conversation as read (Scenario A)
             const formData = new FormData();
             formData.append('conversation_id', conversationId);
             await fetch('../ajax/mark_messages_read.php', { method: 'POST', body: formData });
 
-            // "Remember" the user if their details are provided
+            // --- THIS IS THE FIX ---
+            // After marking as read, immediately check the total count again.
+            // This will make the red dot disappear instantly if it was the last unread message.
+            checkForMessages();
+            // --- END OF FIX ---
+
             if (otherUser.fname) {
                 currentChatPartner = otherUser;
             }
-            // If details are NOT provided (like after sending a message), use the remembered details
             if (!otherUser.fname) {
                 otherUser = currentChatPartner;
             }
@@ -129,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatModalBody.innerHTML = '';
             messages.forEach(msg => {
+                // 'currentUserId' must be defined on your page <script> tag
                 const isMe = msg.sender_id == currentUserId;
                 const msgHtml = `<div class="d-flex ${isMe ? 'justify-content-end' : ''}"><div class="p-2 rounded-3 mb-2" style="max-width: 75%; background-color: ${isMe ? '#0d6efd' : '#e9ecef'}; color: ${isMe ? 'white' : 'black'};">${msg.message_text}</div></div>`;
                 chatModalBody.insertAdjacentHTML('beforeend', msgHtml);
@@ -144,7 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             const link = event.target.closest('.list-group-item-action');
             if (!link) return;
-            const otherUser = { fname: link.dataset.userName.split(' ')[0], lname: link.dataset.userName.split(' ').slice(1).join(' '), avatar_url: link.dataset.userAvatar };
+
+            const userName = link.dataset.userName;
+            const otherUser = {
+                fname: userName.split(' ')[0],
+                lname: userName.split(' ').slice(1).join(' '),
+                avatar_url: link.dataset.userAvatar
+            };
+
             if (link.classList.contains('new-conversation-link')) {
                 const formData = new FormData();
                 formData.append('other_user_id', link.dataset.userId);
@@ -168,24 +208,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatMessageInput.value = '';
                     openChatWindow(chatConversationIdInput.value);
 
-                    // BUG #2 FIX IS HERE: Manually update the list after sending
                     const convoLink = conversationList.querySelector(`[data-conversation-id="${chatConversationIdInput.value}"]`);
                     if (convoLink) {
                         const lastMessageElement = convoLink.querySelector('p');
                         if (lastMessageElement) {
-                            lastMessageElement.textContent = "You: " + sentMessageText;
+                            lastMessageElement.innerHTML = `<strong>You: ${sentMessageText}</strong>`;
                         }
                     } else {
-                        // If it's a new conversation, just refresh the whole list
                         fetchConversations();
                     }
                 } else { alert(result.message); }
             } catch (error) { console.error('Failed to send message:', error); }
         });
 
+        // --- THIS IS THE UPDATED 'show' LISTENER ---
+        // We only fetch conversations. We DO NOT mark as read or hide the dot.
         messagesIconWrapper.parentElement.addEventListener('show.bs.dropdown', () => {
+            // 1. Fetch the list of conversations
             fetchConversations();
         });
+
 
         // --- SECTION: MESSAGES REAL-TIME CHECK ---
         const checkForMessages = async () => {

@@ -712,31 +712,47 @@ if ($user_role === 'teacher') {
         }
         ?>
 
-        <!-- Edit Material Modal -->
-        <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
+        <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
             <div class="modal-dialog">
-                <div class="modal-content">
-                    <form id="editMaterialForm" enctype="multipart/form-data">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editMaterialModalLabel">Edit Material</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" id="editMaterialId" name="material_id">
-                            <div class="mb-3">
-                                <label for="editMaterialLabel" class="form-label">Title</label>
-                                <input type="text" class="form-control" id="editMaterialLabel" name="label" required>
-                            </div>
+                <form id="editMaterialForm" class="modal-content" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Material</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="editMaterialId">
 
-                            <!-- The rest of the form (type, file/link inputs) will be loaded by JavaScript -->
-                            <div id="edit-material-type-specific-fields"></div>
+                        <div class="mb-3">
+                            <label for="editLabel" class="form-label">Material Title (Label)</label>
+                            <input type="text" class="form-control" name="label" id="editLabel" required>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary rounded-pill px-3">Save Changes</button>
+                        <div class="mb-3">
+                            <label for="editType" class="form-label">Material Type</label>
+                            <select class="form-select" name="type" id="editType" required>
+                                <option value="file">File</option>
+                                <option value="video">Video</option>
+                                <option value="audio">Audio</option>
+                                <option value="image">Image</option>
+                                <option value="link">Link URL</option>
+                            </select>
                         </div>
-                    </form>
-                </div>
+
+                        <div class="mb-3" id="editFileGroup" style="display: none;">
+                            <label for="editFile" class="form-label">Upload New File (Optional)</label>
+                            <input type="file" class="form-control" name="file_path" id="editFile">
+                            <div class="form-text">Current: <span id="currentFile"></span></div>
+                        </div>
+
+                        <div class="mb-3" id="editLinkGroup" style="display: none;">
+                            <label for="editLink" class="form-label">Link URL</label>
+                            <input type="url" class="form-control" name="link_url" id="editLink" placeholder="https://example.com">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-3" id="saveMaterialChangesBtn">Save Changes</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -863,8 +879,8 @@ if ($user_role === 'teacher') {
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-3">Save Changes</button>
                         </div>
                     </form>
                 </div>

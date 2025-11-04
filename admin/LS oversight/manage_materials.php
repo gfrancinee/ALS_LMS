@@ -135,7 +135,7 @@ $materials = $materials_result->get_result();
 
     <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="editMaterialForm" class="modal-content">
+            <form id="editMaterialForm" class="modal-content" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editModalLabel">Edit Material</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -171,7 +171,7 @@ $materials = $materials_result->get_result();
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success rounded-pill px-3" id="saveMaterialChangesBtn">Save Changes</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-3" id="saveMaterialChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>

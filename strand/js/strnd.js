@@ -939,42 +939,88 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LOGIC FOR EDIT/DELETE MATERIAL ---
     // --- Edit Material Logic ---
     const editMaterialModalEl = document.getElementById('editMaterialModal');
     if (editMaterialModalEl) {
-        const editMaterialForm = document.getElementById('editMaterialForm');
-        let materialElementToUpdate = null;
+        const editForm = document.getElementById('editMaterialForm');
+        const editMaterialId = document.getElementById('editMaterialId');
+        const editLabel = document.getElementById('editLabel');
+        const editType = document.getElementById('editType');
+        const editFileGroup = document.getElementById('editFileGroup');
+        const editLinkGroup = document.getElementById('editLinkGroup');
+        const currentFile = document.getElementById('currentFile');
+        const editLink = document.getElementById('editLink');
+        const editFile = document.getElementById('editFile');
+        let materialElementToUpdate = null; // This will store the <li> or <a> item
+
+        // Function to show/hide fields based on material type
+        function toggleEditFields(type) {
+            if (type === 'link') {
+                editFileGroup.style.display = 'none';
+                editLinkGroup.style.display = 'block';
+                editLink.required = true;
+                editFile.required = false;
+            } else {
+                editFileGroup.style.display = 'block';
+                editLinkGroup.style.display = 'none';
+                editLink.required = false;
+                editFile.required = false;
+            }
+        }
 
         // This part loads the data into the modal
         editMaterialModalEl.addEventListener('show.bs.modal', async function (event) {
             const button = event.relatedTarget;
             const materialId = button.dataset.id;
-            materialElementToUpdate = button.closest('.material-item'); // Get the parent item
 
-            // Populate the form
-            document.getElementById('editMaterialId').value = materialId;
+            // --- FIX: Find the correct parent element to update ---
+            // Your HTML from the video shows the button is in a dropdown
+            materialElementToUpdate = button.closest('.material-item');
+
+            // Clear old data
+            editForm.reset();
+            editLabel.value = 'Loading...';
+            currentFile.textContent = '';
 
             try {
                 const response = await fetch(`../ajax/get_material_details.php?id=${materialId}`);
-                const result = await response.json();
+                if (!response.ok) throw new Error('Network error.');
 
+                const result = await response.json();
                 if (result.success) {
-                    // This is the only field we need to populate
-                    document.getElementById('editMaterialLabel').value = result.data.label;
+                    const data = result.data;
+                    editMaterialId.value = materialId;
+                    editLabel.value = data.label;
+                    editType.value = data.type;
+
+                    if (data.type === 'link') {
+                        editLink.value = data.link_url;
+                        currentFile.textContent = 'N/A';
+                    } else {
+                        editLink.value = '';
+                        currentFile.textContent = data.file_path ? data.file_path.split('/').pop() : 'No file';
+                    }
+                    toggleEditFields(data.type);
                 } else {
-                    alert('Error: ' + (result.error || 'Could not load details.'));
+                    throw new Error(result.error || 'Could not load details.');
                 }
             } catch (error) {
                 console.error('Error fetching material details:', error);
-                alert('A network error occurred.');
+                alert('Error: ' + error.message);
+                bootstrap.Modal.getInstance(editMaterialModalEl).hide();
             }
         });
 
+        // When the type <select> changes, show/hide the fields
+        editType.addEventListener('change', () => {
+            toggleEditFields(editType.value);
+        });
+
         // This part saves the data
-        editMaterialForm.addEventListener('submit', async function (e) {
+        editForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(this);
+            const newLabel = formData.get('label'); // Get the new label text
 
             try {
                 const response = await fetch('../ajax/update_material.php', {
@@ -982,28 +1028,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: formData
                 });
 
+                if (!response.ok) throw new Error('Network response was not ok');
+
                 const result = await response.json();
 
                 if (result.success) {
-                    // SUCCESS!
+                    // --- THIS IS THE FIX ---
+                    // 1. Close the modal
                     bootstrap.Modal.getInstance(editMaterialModalEl).hide();
 
-                    // Live-update the title on the page
+                    // 2. Live-update the title on the page instead of reloading
                     if (materialElementToUpdate) {
-                        // Find the label text element by its class
-                        const labelElement = materialElementToUpdate.querySelector('.fw-bold');
+                        // Find the label text element (assuming it has .fw-bold or a specific class)
+                        // Let's try to find the 'span' that holds the title.
+                        // This selector might need to be adjusted to match your HTML
+                        const labelElement = materialElementToUpdate.querySelector('.material-title'); // Or '.fw-bold'
                         if (labelElement) {
-                            labelElement.textContent = formData.get('label');
+                            labelElement.textContent = newLabel;
                         }
                     }
+                    // --- END OF FIX ---
+
                 } else {
-                    // The PHP script returned {"success":false, "error":"..."}
-                    alert('Update failed: ' + (result.error || 'Please try again.'));
+                    throw new Error(result.message || 'An unknown error occurred.');
                 }
+
             } catch (error) {
-                // This catches network errors OR if the PHP script had a fatal error
-                console.error('Error submitting form:', error);
-                alert('An error occurred. The server response was not valid.');
+                console.error('Error updating material:', error);
+                alert('Error: ' + error.message);
             }
         });
     }

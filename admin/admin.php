@@ -101,9 +101,9 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
             <div class="px-3 pt-2">
                 <h5 class="mb-0">Messages</h5>
                 <hr class="my-2">
-                <div class="input-group mb-2">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control" placeholder="Search for people...">
+                <div class="search-wrapper mb-2">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" class="form-control pill-search" placeholder="Search for people...">
                 </div>
                 <hr class="my-2">
             </div>
@@ -128,7 +128,7 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
                     <form id="message-form" class="w-100 d-flex gap-2">
                         <input type="hidden" id="chat-conversation-id" name="conversation_id">
 
-                        <input type="text" id="chat-message-input" name="message_content" class="form-control" placeholder="Type a message..." required autocomplete="off">
+                        <input type="text" id="chat-message-input" name="message_text" class="form-control" placeholder="Type a message..." required autocomplete="off">
 
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-send-fill"></i>
@@ -139,6 +139,9 @@ require_once '../includes/functions.php'; // Make sure this file exists or remov
         </div>
     </div>
 
+    <script>
+        const currentUserId = <?php echo json_encode($_SESSION['user_id']); ?>;
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/admin.js"></script>
 </body>

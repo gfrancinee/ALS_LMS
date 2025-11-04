@@ -131,6 +131,69 @@ body {
     /* Add padding to prevent content hiding behind fixed buttons */
 }
 
+.dropend .dropdown-menu {
+    width: auto;
+    min-width: 220px;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* --- 1. Pill-Shaped Search Bar (Dropdown) --- */
+
+/* Wrapper for the pill search */
+.search-wrapper {
+    position: relative;
+}
+
+/* The search icon */
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    /* Muted text color */
+    z-index: 10;
+    /* Show on top of the input */
+}
+
+/* The new pill-shaped input */
+.pill-search {
+    border-radius: 50px !important;
+    /* Force pill shape */
+    background-color: #f8f9fa !important;
+    /* Light background */
+    border: none !important;
+    /* No border */
+    padding-left: 40px !important;
+    /* Make room for the icon */
+}
+
+/* Remove the focus glow for the pill search */
+.pill-search:focus {
+    background-color: #f8f9fa !important;
+    border: none !important;
+    box-shadow: none !important;
+    /* Remove glow */
+}
+
+
+/* --- 2. Modal Input & Button Fixes --- */
+
+/* Remove focus glow from modal close button */
+.modal-header .btn-close:focus {
+    box-shadow: none !important;
+}
+
+/* Style for the modal's message input */
+#chat-message-input:focus {
+    box-shadow: none !important;
+    /* Remove glow */
+    border-color: #dc3545 !important;
+    border-width: 2px;
+    /* Red border on focus */
+}
+
 /* --- NEW STYLES FOR FLOATING BUTTONS --- */
 /* This style is for the new logout button */
 #logout-icon-float {

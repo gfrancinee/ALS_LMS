@@ -86,9 +86,9 @@ if ($currentUser) {
                 <div class="px-3 pt-2" style="width: 350px;">
                     <h5 class="mb-0">Messages</h5>
                     <hr class="my-2">
-                    <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Search for people...">
+                    <div class="search-wrapper mb-2">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="form-control pill-search" placeholder="Search for people...">
                     </div>
                     <hr class="my-2">
                 </div>
