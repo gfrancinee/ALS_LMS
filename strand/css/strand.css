@@ -370,6 +370,8 @@ h2 {
 
 /* This makes the button transparent by default */
 .btn-toggle-desc {
+    font-size: small;
+    transition: all 0.2s ease-in-out;
     color: #6c757d;
     background-color: transparent;
     border: none;
@@ -378,6 +380,9 @@ h2 {
 /* This adds the background on hover */
 .btn-toggle-desc:hover {
     background-color: #e9ecef;
+    border-radius: 50rem;
+    /* This makes it a "pill" shape */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* This FORCES the blue outline to be removed on click */

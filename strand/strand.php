@@ -272,7 +272,7 @@ if ($user_role === 'teacher') {
                                                                 <i class="bi <?= $icon ?> fs-2 me-3"></i>
                                                                 <div>
                                                                     <span class="fw-bold"><?= htmlspecialchars($mat['label']) ?></span>
-                                                                    <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($mat['type']) ?></span>
+                                                                    <span class="badge bg-white text-dark fw-normal ms-2"><?= ucfirst($mat['type']) ?></span>
                                                                 </div>
                                                             </div>
                                                         </a>

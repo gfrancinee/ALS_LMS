@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // This loop now runs for BOTH teachers and students
         participants.forEach(participant => {
             let avatarSrc = participant.avatar_url ? `../${participant.avatar_url}` : 'icon';
-            const adminLabel = participant.role === 'admin' ? '<span class="badge bg-success ms-2">Admin</span>' : '';
+            const adminLabel = participant.role === 'admin' ? '<span class="badge text-success ms-2">Admin</span>' : '';
 
             // The remove button is ONLY created if the user is a teacher
             let removeButtonHtml = '';
