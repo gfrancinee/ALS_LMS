@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gradingArea) {
             gradingArea.style.display = 'block';
             gradingAutoRadio.checked = true; // Default to automatic
+            gradingAutoRadio.disabled = false; // Enable automatic by default
             gradingManualRadio.disabled = false; // Enable manual by default
             gradingHelpText.textContent = 'Automatic grading is based on the options/answer provided above.';
 
@@ -73,8 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (singleAnswerLabel) singleAnswerLabel.textContent = 'Correct Answer (Optional):';
                 gradingHelpText.textContent = 'Automatic grading is case-insensitive. Leave blank or choose Manual if multiple answers or partial credit is needed.';
             } else if (selectedType === 'essay') {
-                gradingManualRadio.disabled = true; // Force manual for essay
-                gradingManualRadio.checked = true; // Select manual for essay
+
+                // --- THIS IS THE FIX ---
+                gradingAutoRadio.disabled = true;   // 1. Disable the "Automatic" button
+                gradingManualRadio.disabled = false; // 2. Make sure the "Manual" button is ENABLED
+                gradingManualRadio.checked = true;  // 3. Check the "Manual" button
+                // --- END OF FIX ---
+
                 if (pointsGroup) pointsGroup.style.display = 'block'; // Show points for manual
                 if (maxPointsInput) maxPointsInput.value = maxPointsInput.value || 1; // Ensure points has a value
                 gradingHelpText.textContent = 'Essay questions require manual grading.';
@@ -101,12 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (selectedType === 'short_answer') {
                 gradingHelpText.textContent = 'Automatic grading is case-insensitive. Leave blank or choose Manual if multiple answers or partial credit is needed.';
             } else if (selectedType === 'essay') {
+                // This case is now handled by the logic in updateVisibleFields
                 gradingHelpText.textContent = 'Essay questions require manual grading.';
             } else { // MC, TF
                 gradingHelpText.textContent = 'Automatic grading is based on the options/answer provided above.';
             }
         }
     }
+
 
 
     if (questionTypeSelect) {

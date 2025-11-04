@@ -107,36 +107,34 @@ $stmt->bind_param("iiisssss", $teacher_id, $strand_id, $category_id, $label, $ty
 if ($stmt->execute()) {
     $new_id = $stmt->insert_id;
 
-    // 1. Get all students in that strand
-    $stmt_students = $conn->prepare("SELECT user_id FROM strand_participants WHERE strand_id = ?");
-    $stmt_students->bind_param("i", $strand_id);
-    $stmt_students->execute();
-    $result_students = $stmt_students->get_result();
-    $student_ids = []; // Store just the IDs
-    while ($row = $result_students->fetch_assoc()) {
-        $student_ids[] = $row['user_id'];
+    try {
+        $stmt_students = $conn->prepare("SELECT student_id FROM strand_participants WHERE strand_id = ?");
+
+        $stmt_students->bind_param("i", $strand_id);
+        $stmt_students->execute();
+        $result_students = $stmt_students->get_result();
+
+        // Set up notification details (Generic Message)
+        $notification_type = 'new_material';
+        $notification_link = "/ALS_LMS/strand/strand.php?id=" . $strand_id; // Links to the strand page
+        $notification_message = "New material has been added to one of your strands.";
+
+        // Loop and create/update notifications for each student
+        while ($row = $result_students->fetch_assoc()) {
+            // --- THE FIX IS HERE ---
+            $student_id = $row['student_id']; // Use the correct column name
+            // --- END OF FIX ---
+
+            if ($student_id != $teacher_id) {
+                create_notification($conn, $student_id, $notification_type, $category_id, $notification_message, $notification_link);
+            }
+            // --- END OF FIX ---
+        }
+        $stmt_students->close();
+    } catch (Exception $e) {
+        // Log the error, but don't fail the upload
+        error_log("Notification Error (upload_material.php): " . $e->getMessage());
     }
-    $stmt_students->close();
-
-    // 2. Loop and create/update notifications for each student
-    $notification_type = 'new_material';
-    $notification_link = "strand.php?id=" . $strand_id; // Links to the strand page
-
-    $stmt_notify = $conn->prepare("
-        INSERT INTO notifications (user_id, type, related_id, count, link, is_read)
-        VALUES (?, ?, ?, 1, ?, 0)
-        ON DUPLICATE KEY UPDATE
-            count = count + 1,
-            is_read = 0,
-            updated_at = NOW()
-    ");
-
-    foreach ($student_ids as $student_id) {
-        // Use $strand_id as the related_id for grouping
-        $stmt_notify->bind_param("isss", $student_id, $notification_type, $strand_id, $notification_link);
-        $stmt_notify->execute();
-    }
-    $stmt_notify->close();
 
     echo json_encode([
         'success' => true,

@@ -100,7 +100,7 @@ if ($user_role === 'teacher') {
     <title><?= htmlspecialchars($strand['strand_title']) ?> Strand | ALS LMS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <script src="https://cdn.tiny.cloud/1/qk934997maqmdownvd6tot030m8mvxhup6knjftrm2gdjxqm/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.tiny.cloud/1/7xskvh2bu8gio6eivhdb9jhxvgebwjuh180l3ct3sqza4vh5/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <link rel="stylesheet" href="css/strand.css">
     <script>
         window.strandId = <?= json_encode($strand_id) ?>;

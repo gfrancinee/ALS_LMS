@@ -1,5 +1,5 @@
 <?php
-require_once 'db.php';
+require_once __DIR__ . '/db.php';
 
 /**
  * Main recommendation function.
@@ -255,36 +255,70 @@ function calculateTitleRelevance($question, $material_label)
 }
 
 /**
- * Creates a new notification for a user.
+ * Creates or updates a notification in the database.
+ * This function automatically handles aggregation based on your table structure.
  *
- * @param mysqli $conn The database connection
- * @param int $user_id The ID of the user to notify
- * @param string $message The notification message
- * @param string $link The relative link for the notification
- * @return bool True on success, false on failure
+ * @param mysqli $conn The database connection.
+ * @param int $user_id The ID of the user to notify (recipient).
+ * @param string $type A short code for the action (e.g., 'submit_assessment').
+ * @param int $related_id The ID of the item (quiz, module, strand).
+ * @param string $message The text to display (e.g., "New submissions for...").
+ * @param string $link The URL the user should go to when clicking.
  */
-function create_notification($conn, $user_id, $message, $link)
+function create_notification($conn, $user_id, $type, $related_id, $message, $link)
 {
-    // We set 'is_read' to 0 (unread) by default
-    $sql = "INSERT INTO notifications (user_id, message, link, is_read) VALUES (?, ?, ?, 0)";
 
-    $stmt = $conn->prepare($sql);
+    // First, check if an unread notification of this exact type already exists
+    $stmt_check = $conn->prepare(
+        "SELECT id FROM notifications 
+         WHERE user_id = ? AND type = ? AND related_id = ? AND is_read = 0"
+    );
 
-    if ($stmt === false) {
-        // Log the error for debugging
-        error_log("Notification prepare failed: " . $conn->error);
-        return false;
+    if (!$stmt_check) {
+        error_log("Notification check prepare failed: " . $conn->error);
+        return;
     }
 
-    $stmt->bind_param("iss", $user_id, $message, $link);
+    $stmt_check->bind_param("isi", $user_id, $type, $related_id);
+    $stmt_check->execute();
+    $result = $stmt_check->get_result();
 
-    if ($stmt->execute()) {
-        $stmt->close();
-        return true; // Success
+    if ($result->num_rows > 0) {
+        // --- IT EXISTS! UPDATE IT ---
+        // We found an existing unread notification. Increment the count.
+        // The 'updated_at' column will automatically update and bump it to the top.
+        $existing_row = $result->fetch_assoc();
+        $existing_id = $existing_row['id'];
+
+        $stmt_update = $conn->prepare(
+            "UPDATE notifications SET count = count + 1, message = ? WHERE id = ?"
+        );
+
+        if (!$stmt_update) {
+            error_log("Notification update prepare failed: " . $conn->error);
+        } else {
+            // We update the message in case it needs to be plural
+            // (e.g., "1 submission" vs "2 submissions")
+            $stmt_update->bind_param("si", $message, $existing_id);
+            $stmt_update->execute();
+            $stmt_update->close();
+        }
     } else {
-        // Log the error for debugging
-        error_log("Notification execute failed: " . $stmt->error);
-        $stmt->close();
-        return false; // Failure
+        // --- IT'S NEW! INSERT IT ---
+        // No existing notification found. Create a new one with count = 1.
+        $stmt_insert = $conn->prepare(
+            "INSERT INTO notifications (user_id, type, related_id, count, message, link, is_read) 
+             VALUES (?, ?, ?, 1, ?, ?, 0)"
+        );
+
+        if (!$stmt_insert) {
+            error_log("Notification insert prepare failed: " . $conn->error);
+        } else {
+            $stmt_insert->bind_param("isiss", $user_id, $type, $related_id, $message, $link);
+            $stmt_insert->execute();
+            $stmt_insert->close();
+        }
     }
+
+    $stmt_check->close();
 }

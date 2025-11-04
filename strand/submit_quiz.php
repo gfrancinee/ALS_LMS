@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     die("Unauthorized access.");
 }
 $student_id = $_SESSION['user_id'];
+$student_name = $_SESSION['fname'] ?? 'A student'; // This line is correct
 
 // --- GET DATA FROM FORM ---
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -44,7 +45,7 @@ $stmt_check->close();
 
 // --- START DATABASE TRANSACTION ---
 $conn->begin_transaction();
-$total_score_earned = 0;     // Student's calculated score (for auto-graded items)
+$total_score_earned = 0;    // Student's calculated score (for auto-graded items)
 $total_points_possible = 0;
 $has_manual_grading = false;
 
@@ -75,8 +76,7 @@ try {
     }
     $stmt_questions->close();
 
-    // 2. Prepare statement to insert student's answers (NOW INCLUDES points_awarded)
-    // This matches the table structure required by process_grading.php
+    // 2. Prepare statement to insert student's answers
     $sql_insert_answer = "INSERT INTO student_answers 
                             (quiz_attempt_id, question_id, answer_text, is_correct, points_awarded) 
                           VALUES (?, ?, ?, ?, ?)";
@@ -87,9 +87,8 @@ try {
     foreach ($questions_data as $question_id => $question) {
         $student_answer_text = isset($submitted_answers[$question_id]) ? htmlspecialchars(trim($submitted_answers[$question_id]), ENT_QUOTES, 'UTF-8') : null;
         $is_correct = 0;
-        $points_awarded = 0; // Default points for this question
+        $points_awarded = 0;
 
-        // Add this question's max points to the assessment's total
         $total_points_possible += $question['max_points'];
 
         if ($question['grading_type'] == 'manual') {
@@ -100,35 +99,31 @@ try {
             // --- AUTO-GRADING LOGIC ---
             if ($question['grading_type'] == 'automatic') {
                 if ($question['question_type'] == 'multiple_choice' || $question['question_type'] == 'true_false') {
-                    // Answer is an option ID. Check if it's in the list of correct option IDs.
                     $correct_option_ids = explode(',', $question['correct_option_ids']);
                     if (in_array($student_answer_text, $correct_option_ids)) {
                         $is_correct = 1;
                         $points_awarded = $question['max_points'];
                     }
                 } elseif ($question['question_type'] == 'identification' || $question['question_type'] == 'short_answer') {
-                    // Answer is text. Check if it's in the list of correct texts (case-insensitive).
                     $correct_texts = explode('|', $question['correct_option_texts']);
                     if (in_array(strtolower($student_answer_text), $correct_texts)) {
                         $is_correct = 1;
                         $points_awarded = $question['max_points'];
                     }
                 }
-                // Add the earned points to the total score
                 $total_score_earned += $points_awarded;
             }
             // --- MANUAL GRADING LOGIC ---
             elseif ($question['grading_type'] == 'manual') {
                 $points_awarded = null; // Set to NULL to mark as "pending review"
-                $is_correct = 0; // Will be determined by teacher
+                $is_correct = 0;
             }
 
-            // Insert the student's answer
             $stmt_insert->bind_param("iisid", $quiz_attempt_id, $question_id, $student_answer_text, $is_correct, $points_awarded);
             $stmt_insert->execute();
         } else {
             // Student did not answer this question
-            $empty_answer = ""; // Store empty string
+            $empty_answer = "";
             $is_correct = 0;
             $points_awarded = 0;
             $stmt_insert->bind_param("iisid", $quiz_attempt_id, $question_id, $empty_answer, $is_correct, $points_awarded);
@@ -150,13 +145,49 @@ try {
     $stmt_update_attempt = $conn->prepare($sql_update_attempt);
     if ($stmt_update_attempt === false) throw new Exception("Prepare failed (update attempt): " . $conn->error);
 
-    // Save the $total_score_earned (from auto-grading) and $total_points_possible
     $stmt_update_attempt->bind_param("ssiiii", $end_time, $status, $total_score_earned, $total_points_possible, $quiz_attempt_id, $student_id);
     $stmt_update_attempt->execute();
     $stmt_update_attempt->close();
 
     // 5. Commit the transaction
     $conn->commit();
+
+    // --- [NOTIFICATION BLOCK] ---
+    try {
+        // Get the teacher_id and assessment title directly from the assessments table
+        $stmt_info = $conn->prepare(
+            "SELECT title, teacher_id 
+             FROM assessments
+             WHERE id = ?"
+        );
+        if ($stmt_info) {
+            $stmt_info->bind_param("i", $assessment_id);
+            $stmt_info->execute();
+            $info_result = $stmt_info->get_result()->fetch_assoc();
+
+            $teacher_id = $info_result['teacher_id'] ?? null;
+            $assessment_title = $info_result['title'] ?? 'Untitled Assessment';
+            $stmt_info->close();
+
+            if ($teacher_id) {
+                // Prepare notification details
+                $recipient_id = $teacher_id;
+                $type = 'submit_assessment';
+                $message = htmlspecialchars($student_name) . " submitted an attempt for '" . htmlspecialchars($assessment_title) . "'.";
+                $link = "teacher/view_attempt.php?attempt_id=" . $quiz_attempt_id;
+
+                // --- THIS IS THE FIX ---
+                // We pass the UNIQUE $quiz_attempt_id as the related_id.
+                // This forces 'create_notification' to make a new entry every time.
+                create_notification($conn, $recipient_id, $type, $quiz_attempt_id, $message, $link);
+                // --- END OF FIX ---
+            }
+        }
+    } catch (Exception $e) {
+        // Log notification error, but don't stop the student
+        error_log("Notification Error: " . $e->getMessage());
+    }
+    // --- [END OF NOTIFICATION BLOCK] ---
 
     // Redirect to the results page, as specified in your old code
     $_SESSION['success_message'] = "Assessment submitted successfully!";

@@ -249,28 +249,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const fetchNotifications = async () => {
             try {
+                // This calls 'get_notifications.php' which returns a raw array
                 const response = await fetch('../ajax/get_notifications.php');
                 const notifications = await response.json();
 
                 notificationList.innerHTML = ''; // Clear current list
-                let unreadCount = 0;
 
                 if (notifications && notifications.length > 0) {
                     notifications.forEach(notif => {
                         const itemClass = notif.is_read == 0 ? 'bg-light' : '';
-                        const link = notif.link ? `../${notif.link}` : '#';
+
+                        // --- FIX #1: Don't add '../' to the link ---
+                        const link = notif.link ? notif.link : '#';
+
+                        // --- FIX #2: Add the count badge logic ---
+                        const countBadge = notif.count > 1 ? `<span class="badge bg-primary rounded-pill">${notif.count}</span>` : '';
+
                         const notifHTML = `
-            <a href="${link}" class="list-group-item list-group-item-action ${itemClass}" data-notif-id="${notif.id}">
-                <div class="d-flex w-100 justify-content-between">
-                    <p class="mb-1 small">${notif.message}</p>
-                </div>
-                <small class="text-muted">${new Date(notif.created_at).toLocaleString()}</small>
-            </a>
-        `;
+                        <a href="${link}" class="list-group-item list-group-item-action ${itemClass}" data-notif-id="${notif.id}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <p class="mb-1 small">${notif.message}</p>
+                                ${countBadge}
+                            </div>
+                            <!-- --- FIX #3: Sort by updated_at (from the PHP) and format it --- -->
+                            <small class="text-muted">${new Date(notif.updated_at).toLocaleString('en-US', {
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                        })}</small>
+                        </a>
+                    `;
                         notificationList.insertAdjacentHTML('beforeend', notifHTML);
                     });
                 } else {
-                    // This is the logic from your messages code
+                    // This logic is fine and will show your placeholder
                     notificationList.innerHTML = '<div class="text-center text-muted p-5" id="no-notifications-placeholder">No new notifications.</div>';
                 }
             } catch (error) {
@@ -280,11 +290,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Fetch notifications when the dropdown is opened
+        // (This logic is correct)
         notificationsIconWrapper.parentElement.addEventListener('show.bs.dropdown', () => {
             fetchNotifications();
         });
 
         // Mark notification as read when clicked
+        // (This logic is correct)
         notificationList.addEventListener('click', (event) => {
             const link = event.target.closest('.list-group-item-action');
             if (!link) return;
@@ -307,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // --- Real-time Polling for the Notification Dot ---
+        // (This logic is correct)
         const checkForNotifications = async () => {
             const notificationDot = document.getElementById('general-notification-dot');
             if (!notificationDot) return;
@@ -326,9 +339,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Check immediately on page load, and then every 20 seconds
+        // (This logic is correct)
         checkForNotifications();
         setInterval(checkForNotifications, 20000);
     }
+
 
     // --- Logic to Fetch and Display Recommendations on Student Dashboard ---
     document.addEventListener('DOMContentLoaded', async () => {

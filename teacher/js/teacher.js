@@ -414,25 +414,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const notifications = await response.json();
 
                 notificationList.innerHTML = ''; // Clear current list
-                let unreadCount = 0;
 
                 if (notifications && notifications.length > 0) {
                     notifications.forEach(notif => {
                         const itemClass = notif.is_read == 0 ? 'bg-light' : '';
                         const link = notif.link ? `../${notif.link}` : '#';
+
+                        // --- FIX #1: Added the count badge logic ---
+                        const countBadge = notif.count > 1 ? `<span class="badge bg-primary rounded-pill">${notif.count}</span>` : '';
+
                         const notifHTML = `
-            <a href="${link}" class="list-group-item list-group-item-action ${itemClass}" data-notif-id="${notif.id}">
-                <div class="d-flex w-100 justify-content-between">
-                    <p class="mb-1 small">${notif.message}</p>
-                </div>
-                <small class="text-muted">${new Date(notif.created_at).toLocaleString()}</small>
-            </a>
-        `;
+                        <a href="${link}" class="list-group-item list-group-item-action ${itemClass}" data-notif-id="${notif.id}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <p class="mb-1 small">${notif.message}</p>
+                                ${countBadge}
+                            </div>
+                            <!-- --- FIX #2: Sorted by updated_at, not created_at --- -->
+                            <small class="text-muted">${new Date(notif.updated_at).toLocaleString('en-US', {
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                        })}</small>
+                        </a>
+                    `;
                         notificationList.insertAdjacentHTML('beforeend', notifHTML);
                     });
                 } else {
-                    // This is the logic from your messages code
-                    notificationList.innerHTML = '<div class="text-center text-muted p-5" id="no-notifications-placeholder">No new notifications.</div>';
+                    // Use the placeholder from your HTML
+                    notificationList.innerHTML = '';
+                    notificationList.appendChild(noNotificationsPlaceholder.cloneNode(true));
                 }
             } catch (error) {
                 console.error("Failed to fetch notifications:", error);
@@ -463,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Tell the server to mark it as read
                 const formData = new FormData();
                 formData.append('id', notifId);
+                // This calls the *single* mark-as-read file
                 fetch('../ajax/mark_notification_read.php', { method: 'POST', body: formData });
             }
         });
@@ -473,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!notificationDot) return;
 
             try {
+                // This calls the *new* lightweight polling file
                 const response = await fetch('../ajax/check_new_notifications.php');
                 const data = await response.json();
 

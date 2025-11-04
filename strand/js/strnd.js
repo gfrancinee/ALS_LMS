@@ -490,23 +490,50 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.classList.contains('assessment-status-toggle')) {
             const toggleSwitch = event.target;
             const assessmentId = toggleSwitch.dataset.id;
+            const isChecked = toggleSwitch.checked; // This is the new state
             const label = toggleSwitch.nextElementSibling;
+            const oldLabelText = label.textContent; // Store the old label in case of error
 
-            // Update label text immediately for better UX
-            label.textContent = toggleSwitch.checked ? 'Open' : 'Closed';
-
-            const formData = new FormData();
-            formData.append('assessment_id', assessmentId);
+            // Optimistic UI update for good UX
+            label.textContent = isChecked ? 'Open' : 'Closed';
 
             try {
-                await fetch('../ajax/toggle_assessment_status.php', { method: 'POST', body: formData });
-                // No need to do anything on success, the UI is already updated.
-                // You could add a small success toast/notification here if you want.
+                // --- UPDATED FETCH ---
+                const response = await fetch('../ajax/toggle_assessment_status.php', {
+                    method: 'POST',
+                    // 1. Set header to JSON
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // 2. Send a JSON string with the ID *and* the new state
+                    body: JSON.stringify({
+                        assessment_id: assessmentId,
+                        is_open: isChecked
+                    })
+                });
+
+                if (!response.ok) {
+                    // Handle server errors (like 500, 403)
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 3. Use the confirmed label from the server.
+                    // This handles the case where the server logic is different.
+                    label.textContent = data.new_status_label;
+                    // You could add a success toast here
+                } else {
+                    // Handle application errors (e.g., "assessment not found")
+                    throw new Error(data.error || 'Failed to update status.');
+                }
+
             } catch (error) {
-                // Revert on error
-                label.textContent = toggleSwitch.checked ? 'Closed' : 'Open';
-                toggleSwitch.checked = !toggleSwitch.checked;
-                alert('Failed to update status. Please try again.');
+                // 4. Revert on any error
+                label.textContent = oldLabelText; // Revert to the original text
+                toggleSwitch.checked = !toggleSwitch.checked; // Un-toggle the switch
+                alert(`Error: ${error.message}`);
             }
         }
     });
@@ -724,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </h2>
                         <div id="material-collapse-cat-${newCategory.id}" class="accordion-collapse collapse" data-bs-parent="#materialsAccordion">
-                            <div class="accordion-body"><ul class="list-unstyled mb-0 material-list-group"><li class="text-muted fst-italic p-3 no-materials-message">No materials in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success btn-sm me-3 btn-pill-hover text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="${newCategory.id}"><i class="bi-file-earmark-plus-fill"></i> Upload Material</button></div></div>
+                            <div class="accordion-body"><ul class="list-unstyled mb-0 material-list-group"><li class="text-muted fst-italic p-3 no-materials-message">No materials in this category yet.</li></ul><hr class="my-3"><div class="text-center"><button class="btn btn-link text-success btn-sm me-3 btn-pill-hoverr text-decoration-none upload-material-btn" data-bs-toggle="collapse" data-bs-target="#uploadMaterialContainer" data-category-id="${newCategory.id}"><i class="bi-file-earmark-plus-fill"></i> Upload Material</button></div></div>
                         </div>
                     </div>`;
                 accordionContainer.insertAdjacentHTML('beforeend', newAccordionItemHTML);
