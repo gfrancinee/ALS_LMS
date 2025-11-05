@@ -162,41 +162,63 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    // 6. --- ADDED: Listen for the Delete Confirm Button CLICK event ---
-    confirmDeleteBtn.addEventListener('click', () => {
-        const userId = confirmDeleteBtn.dataset.id;
+    // Get the modal and button elements
 
-        // Show loading state
-        confirmDeleteBtn.disabled = true;
-        confirmDeleteBtn.textContent = 'Deleting...';
+    if (confirmDeleteBtn && deleteModal) {
 
-        const formData = new FormData();
-        formData.append('id', userId);
+        // --- ADDED: Listen for the Delete Confirm Button CLICK event ---
+        confirmDeleteBtn.addEventListener('click', async () => {
+            const userId = confirmDeleteBtn.dataset.id; // Get the ID from the button
 
-        fetch('../../ajax/delete-user.php', { // Use the new AJAX file
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
+            // Show loading state
+            confirmDeleteBtn.disabled = true;
+            confirmDeleteBtn.textContent = 'Deleting...';
+
+            try {
+                // --- THIS IS THE FIX ---
+                const response = await fetch('/ALS_LMS/ajax/delete-user.php', { // 1. Fixed path and filename
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // 2. Set header to JSON
+                    },
+                    body: JSON.stringify({ id: userId }) // 3. Send data as a JSON string
+                });
+                // --- END OF FIX ---
+
+                const data = await response.json();
+
                 if (data.success) {
                     // Success! Hide modal and reload page
                     deleteModal.hide();
                     location.reload();
                 } else {
                     // Show an alert on failure
-                    alert(data.message || 'Failed to delete user.');
+                    alert(data.error || 'Failed to delete user.');
                 }
-            })
-            .catch(error => {
+
+            } catch (error) {
+                // This catches network errors or JSON parsing errors (like "Unexpected token 'I'")
                 console.error('Error deleting user:', error);
-                alert('An unexpected error occurred.');
-            })
-            .finally(() => {
-                // Reset button state
+                alert('An unexpected error occurred. Check the console.');
+
+            } finally {
+                // Reset button state regardless of success or failure
                 confirmDeleteBtn.disabled = false;
-                confirmDeleteBtn.textContent = 'Yes,';
-            });
+                confirmDeleteBtn.textContent = 'Delete';
+            }
+        });
+    }
+
+    // You also need a function to set the ID on the button when the modal is opened.
+    // This is just an example:
+    document.body.addEventListener('click', (e) => {
+        if (e.target.matches('.delete-user-btn')) { // Assume your trash can icon has this class
+            const userId = e.target.dataset.id;
+            if (confirmDeleteBtn) {
+                // Set the ID on the confirm button so we know who to delete
+                confirmDeleteBtn.dataset.id = userId;
+            }
+        }
     });
 
     // 7. Listen for ROLE dropdown changes

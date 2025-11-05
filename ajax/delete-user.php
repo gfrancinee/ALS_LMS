@@ -1,24 +1,39 @@
 <?php
-require_once '../includes/auth.php';
+// This script is built to handle AJAX requests (like from a modal)
+session_start();
 require_once '../includes/db.php';
+// require_once '../includes/auth.php'; // Make sure this file doesn't `echo` anything
+header('Content-Type: application/json');
 
-// Check if ID is passed via GET and is valid
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $id = intval($_GET['id']);
+// Security Check: Ensure an admin is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+    exit;
+}
 
-    // Prepare and execute delete query
+// 1. Read the JSON data sent from the JavaScript
+$data = json_decode(file_get_contents('php://input'), true);
+$id = $data['id'] ?? 0;
+
+if ($id > 0) {
+    // 2. Prepare and execute delete query
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
-        // Redirect with success flag
-        header("Location: admin-users.php?deleted=1");
-        exit;
+        // 3. Send a JSON success message
+        echo json_encode(['success' => true]);
     } else {
-        echo "Error deleting user: " . $conn->error;
+        // 4. Send a JSON error message
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $conn->error]);
     }
-
     $stmt->close();
 } else {
-    echo "Invalid user ID.";
+    // 5. Send a JSON error message for invalid ID
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Invalid user ID.']);
 }
+
+$conn->close();

@@ -11,41 +11,57 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($email) || empty($password)) {
         $message = "Please fill in both email and password.";
     } else {
-        $stmt = $conn->prepare("SELECT id, fname, role, password FROM users WHERE email = ?");
+        // --- FIX #1: Select the 'is_verified' column ---
+        $stmt = $conn->prepare("SELECT id, fname, role, password, is_verified FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $stmt->store_result();
-    }
 
-    if ($stmt->num_rows === 1) {
-        $stmt->bind_result($id, $fname, $role, $hashedPassword);
-        $stmt->fetch();
+        // --- FIX #2: Moved all logic inside this 'else' block ---
+        if ($stmt->num_rows === 1) {
 
-        if (password_verify($password, $hashedPassword)) {
-            $_SESSION['user_id'] = $id;
-            $_SESSION['fname'] = $fname;
-            $_SESSION['role'] = $role;
+            // --- FIX #3: Bind the new '$is_verified' variable ---
+            $stmt->bind_result($id, $fname, $role, $hashedPassword, $is_verified);
+            $stmt->fetch();
 
-            switch ($role) {
-                case 'student':
-                    header("Location: student/student.php");
-                    break;
-                case 'teacher':
-                    header("Location: teacher/teacher.php");
-                    break;
-                case 'admin':
-                    header("Location: admin/admin.php");
-                    break;
-                default:
-                    $message = "Unknown role. Access denied.";
-                    break;
+            if (password_verify($password, $hashedPassword)) {
+
+                // --- FIX #4: Add this new check for 'is_verified' ---
+                if ($is_verified == 1) {
+                    // SUCCESS! Password is correct AND account is verified
+                    $_SESSION['user_id'] = $id;
+                    $_SESSION['fname'] = $fname;
+                    $_SESSION['role'] = $role;
+
+                    switch ($role) {
+                        case 'student':
+                            header("Location: student/student.php");
+                            break;
+                        case 'teacher':
+                            header("Location: teacher/teacher.php");
+                            break;
+                        case 'admin':
+                            header("Location: admin/admin.php");
+                            break;
+                        default:
+                            $message = "Unknown role. Access denied.";
+                            break;
+                    }
+                    exit;
+                } else {
+                    // Password correct, but account not verified
+                    $message = "Your account is not verified. Please check your email or <a href='verify.php?email=" . urlencode($email) . "'>resend the code</a>.";
+                }
+                // --- END OF FIX #4 ---
+
+            } else {
+                $message = "Incorrect password.";
             }
-            exit;
         } else {
-            $message = "Incorrect password.";
+            $message = "No account found with that email.";
         }
-    } else {
-        $message = "No account found with that email.";
+        $stmt->close();
+        $conn->close();
     }
 }
 ?>
@@ -74,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <?php if ($message): ?>
                 <section id="message" role="alert" aria-live="polite" class="text-danger text-center mb-3">
-                    <?= htmlspecialchars($message) ?>
+                    <?= html_entity_decode($message) ?>
                 </section>
             <?php endif; ?>
 
