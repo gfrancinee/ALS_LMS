@@ -387,6 +387,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const typeRadios = document.querySelectorAll('.assessment-type-option');
+    const durationContainer = document.getElementById('durationContainer');
+    const attemptsContainer = document.getElementById('attemptsContainer');
+    const durationInput = document.getElementById('assessmentDuration');
+    const attemptsInput = document.getElementById('assessmentAttempts');
+
+    function toggleAssessmentFields() {
+        // Find the currently checked radio button's value
+        const selectedType = document.querySelector('input[name="type"]:checked').value;
+
+        if (selectedType === 'activity' || selectedType === 'assignment') {
+            // Hide fields and make them not required
+            durationContainer.style.display = 'none';
+            attemptsContainer.style.display = 'none';
+            durationInput.required = false;
+            attemptsInput.required = false;
+        } else {
+            // Show fields and make them required
+            durationContainer.style.display = 'block';
+            attemptsContainer.style.display = 'block';
+            durationInput.required = true;
+            attemptsInput.required = true;
+        }
+    }
+
+    // Add a 'change' event listener to all radio buttons
+    typeRadios.forEach(function (radio) {
+        radio.addEventListener('change', toggleAssessmentFields);
+    });
+
+    // Run the function once on page load to set the initial state
+    toggleAssessmentFields();
+
     // --- Handles the 'Create Assessment' form submission ---
     const createAssessmentForm = document.getElementById('createAssessmentForm');
     if (createAssessmentForm) {
@@ -408,12 +441,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    const assessment = result.assessment; // Changed from result.data to result.assessment
+                    const assessment = result.assessment;
                     const categoryId = assessment.category_id;
                     const typeCapitalized = assessment.type.charAt(0).toUpperCase() + assessment.type.slice(1);
                     const hasDescription = assessment.description && assessment.description.trim().replace(/<p>&nbsp;<\/p>/g, '').length > 0;
 
-                    // Replace your old newItemHTML variable with this one
+                    // --- UPDATE: Check if the type is 'quiz' or 'exam' ---
+                    const isTimedAssessment = (assessment.type === 'quiz' || assessment.type === 'exam');
+
                     const newItemHTML = `
 <li>
     <div class="assessment-item">
@@ -425,16 +460,20 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="fw-bold">${assessment.title}</span>
                             <span class="badge bg-light text-dark fw-normal ms-2">${typeCapitalized}</span>
                         </div>
+                        
+                        ${isTimedAssessment ? `
                         <div class="text-muted small">
                             <span class="me-3"><i class="bi bi-clock"></i> ${assessment.duration_minutes} mins</span>
                             <span><i class="bi bi-arrow-repeat"></i> ${assessment.max_attempts} attempt(s)</span>
                         </div>
+                        ` : ''}
+                        
                     </div>
                 </a>
                 ${hasDescription ? `
                 <div class="mt-2">
                     <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-${assessment.id}">
-                       Show/Hide Description
+                        Show/Hide Description
                     </button>
                 </div>` : ''}
             </div>
@@ -446,8 +485,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="dropdown">
                     <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                       <li><a class="dropdown-item text-center" href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
-                       <li><a class="dropdown-item text-center" href="view_submissions.php?assessment_id=<?= $assessment['id'] ?>"><i class="bi bi-person-check-fill me-2"></i> View Submissions</a></li>
+                        
+                        ${isTimedAssessment ? `
+                        <li><a class="dropdown-item text-center" href="/ALS_LMS/strand/manage_assessment.php?id=${assessment.id}"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
+                        ` : ''}
+
+                        <li><a class="dropdown-item text-center" href="view_submissions.php?assessment_id=${assessment.id}"><i class="bi bi-person-check-fill me-2"></i> View Submissions</a></li>
+                        
                         <li><hr class="dropdown-divider"></li>
                         <li><button class="dropdown-item text-success edit-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#editAssessmentModal" data-id="${assessment.id}"><i class="bi bi-pencil-square me-2"></i> Edit</button></li>
                         <li><button class="dropdown-item text-danger delete-assessment-btn" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal" data-id="${assessment.id}" data-title="${assessment.title}"><i class="bi bi-trash3 me-2"></i> Delete</button></li>
@@ -457,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         ${hasDescription ? `
         <div class="collapse" id="desc-${assessment.id}">
-            <div class="card card-body small text-muted mt-2">
+            <div class="small text-muted mt-2 p-3 bg-light rounded">
                 ${assessment.description} 
             </div>
         </div>` : ''}
@@ -1137,33 +1181,90 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Listeners for Edit and Delete Assessment Modals (Updated & Complete) ---
-    const editAssessmentModalEl = document.getElementById('editAssessmentModal');
-    if (editAssessmentModalEl) {
-        const editAssessmentForm = document.getElementById('editAssessmentForm');
-        const editModalInstance = new bootstrap.Modal(editAssessmentModalEl);
-        let elementToUpdate = null; // Scoped variable to hold the element being edited
+    // --- START: Replace your ENTIRE "Edit Assessment Modal" JavaScript with this ---
 
-        // This runs WHEN THE EDIT MODAL IS ABOUT TO OPEN to fill the form
+    // --- Get references to the form elements ---
+    const editAssessmentModalEl = document.getElementById('editAssessmentModal');
+    const editAssessmentForm = document.getElementById('editAssessmentForm');
+    const editDurationContainer = document.getElementById('editDurationContainer');
+    const editAttemptsContainer = document.getElementById('editAttemptsContainer');
+    const editDurationInput = document.getElementById('editAssessmentDuration');
+    const editAttemptsInput = document.getElementById('editAssessmentAttempts');
+    const editTypeRadios = document.querySelectorAll('.edit-assessment-type-option');
+    let editModalInstance = null;
+    if (editAssessmentModalEl) {
+        editModalInstance = new bootstrap.Modal(editAssessmentModalEl);
+    }
+    let elementToUpdate = null;
+
+    /**
+     * --- This is the function that hides/shows the fields ---
+     * It is now case-insensitive.
+     */
+    function toggleEditAssessmentFields(assessmentType) {
+        // Ensure it's lowercase
+        const type = (assessmentType || '').toLowerCase();
+
+        if (type === 'activity' || type === 'assignment') {
+            editDurationContainer.style.display = 'none';
+            editAttemptsContainer.style.display = 'none';
+            editDurationInput.required = false;
+            editAttemptsInput.required = false;
+        } else {
+            editDurationContainer.style.display = 'block';
+            editAttemptsContainer.style.display = 'block';
+            editDurationInput.required = true;
+            editAttemptsInput.required = true;
+        }
+    }
+
+    // --- Add 'change' listener to all radio buttons in the edit modal ---
+    editTypeRadios.forEach(radio => {
+        radio.addEventListener('change', () => toggleEditAssessmentFields(radio.value));
+    });
+
+    // This runs WHEN THE EDIT MODAL IS ABOUT TO OPEN to fill the form
+    if (editAssessmentModalEl) {
         editAssessmentModalEl.addEventListener('show.bs.modal', async function (event) {
-            elementToUpdate = event.relatedTarget.closest('.assessment-item'); // Remember which item to update
+            elementToUpdate = event.relatedTarget.closest('.assessment-item');
             const assessmentId = event.relatedTarget.dataset.id;
+
+            // 1. Clear old radio button selections
+            editTypeRadios.forEach(radio => radio.checked = false);
 
             try {
                 const response = await fetch(`../ajax/get_assessment_details.php?id=${assessmentId}`);
                 const result = await response.json();
+
                 if (result.success) {
                     const data = result.data;
+
+                    // --- THIS IS THE FIX ---
+                    // Force the type from the database (e.g., "Activity") to be lowercase
+                    const assessmentType = (data.type || '').toLowerCase();
+
+                    // Fill the form fields
                     document.getElementById('editAssessmentId').value = data.id;
                     document.getElementById('editAssessmentTitle').value = data.title;
                     tinymce.get('editAssessmentDesc').setContent(data.description || '');
                     document.getElementById('editAssessmentDuration').value = data.duration_minutes;
                     document.getElementById('editAssessmentAttempts').value = data.max_attempts;
                     document.getElementById('editAssessmentCategory').value = data.category_id;
-                    const typeRadio = document.querySelector(`#editAssessmentModal input[name="type"][value="${data.type}"]`);
-                    if (typeRadio) typeRadio.checked = true;
+
+                    // 2. Find and check the correct radio button
+                    const typeRadio = document.querySelector(`#editAssessmentModal input[name="type"][value="${assessmentType}"]`);
+                    if (typeRadio) {
+                        typeRadio.checked = true;
+                    } else {
+                        console.error('Could not find a radio button for type:', assessmentType);
+                    }
+
+                    // 3. Call the toggle function *with the lowercase type*
+                    // This correctly hides the fields *before* the modal is visible.
+                    toggleEditAssessmentFields(assessmentType);
+
                 } else {
-                    alert('Error fetching details: ' + result.error);
+                    alert('Error fetching details: ' + (result.error || 'Unknown error'));
                     event.preventDefault();
                 }
             } catch (error) {
@@ -1172,8 +1273,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 event.preventDefault();
             }
         });
+    }
 
-        // This runs WHEN YOU CLICK "SAVE CHANGES"
+    // This runs WHEN YOU CLICK "SAVE CHANGES"
+    if (editAssessmentForm) {
         editAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             tinymce.triggerSave();
@@ -1188,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (elementToUpdate) {
                     // Instantly update all the visible information on the page
                     const newTitle = formData.get('title');
-                    const newType = formData.get('type');
+                    const newType = (formData.get('type') || '').toLowerCase(); // Force lowercase
                     const newDuration = formData.get('duration_minutes');
                     const newAttempts = formData.get('max_attempts');
                     const newDescription = tinymce.get('editAssessmentDesc').getContent({ format: 'html' });
@@ -1197,16 +1300,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     elementToUpdate.querySelector('.fw-bold').textContent = newTitle;
                     elementToUpdate.querySelector('.badge').textContent = newTypeCapitalized;
 
-                    const durationSpan = elementToUpdate.querySelector('.bi-clock').parentElement;
-                    if (durationSpan) durationSpan.innerHTML = `<i class="bi bi-clock"></i> ${newDuration} mins`;
+                    // Conditionally update/hide duration and attempts spans
+                    const detailsContainer = elementToUpdate.querySelector('.text-muted.small');
 
-                    const attemptsSpan = elementToUpdate.querySelector('.bi-arrow-repeat').parentElement;
-                    if (attemptsSpan) attemptsSpan.innerHTML = `<i class="bi bi-arrow-repeat"></i> ${newAttempts} attempt(s)`;
+                    if (detailsContainer) { // Check if this container exists
+                        if (newType === 'quiz' || newType === 'exam') {
+                            // Update and show for quiz/exam
+                            detailsContainer.innerHTML = `
+                            <span class="me-3"><i class="bi bi-clock"></i> ${newDuration} mins</span>
+                            <span><i class="bi bi-arrow-repeat"></i> ${newAttempts} attempt(s)</span>
+                        `;
+                            detailsContainer.style.display = 'block'; // Or 'inline-block'
+                        } else {
+                            // Hide for activity/assignment
+                            detailsContainer.style.display = 'none';
+                        }
+                    }
 
                     // Update the hidden description content as well
-                    const descriptionDiv = elementToUpdate.querySelector('.collapse .p-3');
-                    if (descriptionDiv) {
-                        descriptionDiv.innerHTML = newDescription;
+                    const descriptionBody = elementToUpdate.querySelector('.collapse .card-body');
+                    if (descriptionBody) {
+                        descriptionBody.innerHTML = newDescription;
                     }
                 }
             } else {
@@ -1214,6 +1328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // --- END: Replacement block ---
 
     // --- Logic for the DELETE Assessment Modal ---
     const deleteAssessmentModalEl = document.getElementById('deleteAssessmentModal');

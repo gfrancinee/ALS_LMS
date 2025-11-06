@@ -19,7 +19,7 @@ if (empty($assessment_id)) {
 }
 
 // --- Fetch Assessment Details ---
-$stmt = $conn->prepare("SELECT title, description, strand_id FROM assessments WHERE id = ?");
+$stmt = $conn->prepare("SELECT title, description, strand_id, type FROM assessments WHERE id = ?");
 $stmt->bind_param("i", $assessment_id);
 $stmt->execute();
 $assessment_result = $stmt->get_result();
@@ -92,7 +92,12 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
             <hr class="mb-4">
 
             <?php if (empty($questions)): ?>
-                <p class="text-muted text-center p-4">No questions have been added to this assessment yet.</p>
+                <!-- --- MODIFICATION: Only show this message for quiz and exam --- -->
+                <?php if ($assessment['type'] === 'quiz' || $assessment['type'] === 'exam'): ?>
+                    <p class="text-muted text-center p-4">No questions have been added to this assessment yet.</p>
+                <?php endif; ?>
+                <!-- --- End of Modification --- -->
+
             <?php else: ?>
                 <form>
                     <?php foreach ($questions as $index => $q): ?>

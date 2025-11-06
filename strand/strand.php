@@ -379,6 +379,9 @@ if ($user_role === 'teacher') {
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'teacher'): ?>
                     <div class="d-flex justify-content-end mb-4">
+                        <a href="learning_strand_gradebook.php?id=<?= htmlspecialchars($strand_id) ?>" class="btn btn-success rounded-pill px-3 me-2">
+                            <i class="bi bi-bar-chart-fill me-2"></i>Summary of Scores
+                        </a>
                         <button type="button" class="btn btn-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
@@ -433,10 +436,16 @@ if ($user_role === 'teacher') {
                                                                                 <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
                                                                                 <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
                                                                             </div>
-                                                                            <div class="text-muted small">
-                                                                                <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
-                                                                                <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
-                                                                            </div>
+
+                                                                            <!-- --- MODIFICATION 1: Conditionally show duration/attempts --- -->
+                                                                            <?php if ($assessment['type'] === 'quiz' || $assessment['type'] === 'exam'): ?>
+                                                                                <div class="text-muted small">
+                                                                                    <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
+                                                                                    <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
+                                                                                </div>
+                                                                            <?php endif; ?>
+                                                                            <!-- --- End of Modification 1 --- -->
+
                                                                         </div>
                                                                     </a>
                                                                     <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
@@ -455,7 +464,13 @@ if ($user_role === 'teacher') {
                                                                     <div class="dropdown">
                                                                         <button class="btn btn-options" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                                         <ul class="dropdown-menu dropdown-menu-end">
-                                                                            <li><a class="dropdown-item" href="/ALS_LMS/strand/manage_assessment.php?id=<?= $assessment['id'] ?>"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
+
+                                                                            <!-- --- MODIFICATION 2: Conditionally show 'Manage Questions' --- -->
+                                                                            <?php if ($assessment['type'] === 'quiz' || $assessment['type'] === 'exam'): ?>
+                                                                                <li><a class="dropdown-item" href="/ALS_LMS/strand/manage_assessment.php?id=<?= $assessment['id'] ?>"><i class="bi bi-list-check me-2"></i> Manage Questions</a></li>
+                                                                            <?php endif; ?>
+                                                                            <!-- --- End of Modification 2 --- -->
+
                                                                             <li>
                                                                                 <a class="dropdown-item" href="/ALS_LMS/strand/view_submissions.php?assessment_id=<?= $assessment['id'] ?>">
                                                                                     <i class="bi bi-person-check-fill me-2"></i> View Submissions
@@ -624,13 +639,25 @@ if ($user_role === 'teacher') {
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label d-block">Type</label>
-                                    <div class="form-check form-check-inline pt-2">
-                                        <input class="form-check-input" type="radio" name="type" id="typeQuiz" value="quiz" checked>
-                                        <label class="form-check-label" for="typeQuiz">Quiz</label>
-                                    </div>
-                                    <div class="form-check form-check-inline pt-2">
-                                        <input class="form-check-input" type="radio" name="type" id="typeExam" value="exam">
-                                        <label class="form-check-label" for="typeExam">Exam</label>
+                                    <div class="d-flex flex-wrap pt-2" style="gap: 1rem;">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input assessment-type-option" type="radio" name="type" id="typeQuiz" value="quiz" checked>
+                                            <label class="form-check-label" for="typeQuiz">Quiz</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input assessment-type-option" type="radio" name="type" id="typeExam" value="exam">
+                                            <label class="form-check-label" for="typeExam">Exam</label>
+                                        </div>
+                                        <!-- Added Activity -->
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input assessment-type-option" type="radio" name="type" id="typeActivity" value="activity">
+                                            <label class="form-check-label" for="typeActivity">Activity</label>
+                                        </div>
+                                        <!-- Added Assignment -->
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input assessment-type-option" type="radio" name="type" id="typeAssignment" value="assignment">
+                                            <label class="form-check-label" for="typeAssignment">Assignment</label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -641,11 +668,13 @@ if ($user_role === 'teacher') {
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <!-- Added ID to parent div -->
+                                <div class="col-md-6 mb-3" id="durationContainer">
                                     <label for="assessmentDuration" class="form-label">Duration (minutes)</label>
                                     <input type="number" class="form-control" id="assessmentDuration" name="duration_minutes" value="60" min="1" required>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <!-- Added ID to parent div -->
+                                <div class="col-md-6 mb-3" id="attemptsContainer">
                                     <label for="assessmentAttempts" class="form-label">Max Attempts</label>
                                     <input type="number" class="form-control" id="assessmentAttempts" name="max_attempts" value="1" min="1" required>
                                 </div>
@@ -842,14 +871,28 @@ if ($user_role === 'teacher') {
                                 <input type="text" class="form-control" id="editAssessmentTitle" name="title" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Type</label>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="type" id="editTypeQuiz" value="quiz">
-                                    <label class="form-check-label" for="editTypeQuiz">Quiz</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="type" id="editTypeExam" value="exam">
-                                    <label class="form-check-label" for="editTypeExam">Exam</label>
+                                <label class="form-label d-block">Type</label>
+                                <div class="d-flex flex-wrap pt-2" style="gap: 1rem;">
+                                    <div class="form-check form-check-inline">
+                                        <!-- Added class -->
+                                        <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeQuiz" value="quiz">
+                                        <label class="form-check-label" for="editTypeQuiz">Quiz</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <!-- Added class -->
+                                        <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeExam" value="exam">
+                                        <label class="form-check-label" for="editTypeExam">Exam</label>
+                                    </div>
+                                    <!-- Added Activity -->
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeActivity" value="activity">
+                                        <label class="form-check-label" for="editTypeActivity">Activity</label>
+                                    </div>
+                                    <!-- Added Assignment -->
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeAssignment" value="assignment">
+                                        <label class="form-check-label" for="editTypeAssignment">Assignment</label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -868,11 +911,13 @@ if ($user_role === 'teacher') {
                                 <textarea class="form-control" id="editAssessmentDesc" name="description" rows="3"></textarea>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <!-- Added ID to parent div -->
+                                <div class="col-md-6 mb-3" id="editDurationContainer">
                                     <label for="editAssessmentDuration" class="form-label">Duration (mins)</label>
                                     <input type="number" class="form-control" id="editAssessmentDuration" name="duration_minutes" min="1" required>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <!-- Added ID to parent div -->
+                                <div class="col-md-6 mb-3" id="editAttemptsContainer">
                                     <label for="editAssessmentAttempts" class="form-label">Max Attempts</label>
                                     <input type="number" class="form-control" id="editAssessmentAttempts" name="max_attempts" min="1" required>
                                 </div>
