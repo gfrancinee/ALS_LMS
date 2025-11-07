@@ -752,7 +752,7 @@ if ($user_role === 'teacher') {
                         <input type="hidden" name="id" id="editMaterialId">
 
                         <div class="mb-3">
-                            <label for="editLabel" class="form-label">Material Title (Label)</label>
+                            <label for="editLabel" class="form-label">Material Title</label>
                             <input type="text" class="form-control" name="label" id="editLabel" required>
                         </div>
                         <div class="mb-3">

@@ -140,12 +140,7 @@ if (!isset($conn) || $conn->connect_error) {
                                     <a href="quiz_performance.php" class="btn btn-outline-info rounded-pill px-3">View Attempts</a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>Review Student Answers</td>
-                                <td class="text-center">
-                                    <a href="quiz_performance.php" class="btn btn-outline-secondary rounded-pill px-3">Start Review</a>
-                                </td>
-                            </tr>
+
                             <tr>
                                 <td>Latest Added: <span class="fw-bold text-success ms-2"><?php echo htmlspecialchars($recently_added_course); ?></span></td>
                                 <td class="text-center">

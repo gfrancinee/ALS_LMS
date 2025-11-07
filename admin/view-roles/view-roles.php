@@ -56,7 +56,7 @@ require_once '../../includes/auth.php';
                                 <!-- Updated: Dropdown for grade level selection -->
                                 <div class="btn-group">
                                     <button type="button" class="btn text-primary btn-sm me-3 btn-pill-hoverr dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                        View as Teacher
+                                        View as Student
                                     </button>
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" href="view-as-student.php?grade=grade_11">Grade 11</a></li>

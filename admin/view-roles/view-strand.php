@@ -282,9 +282,9 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                                         <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
                                                                         <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
                                                                         <?php if (!empty($assessment['is_open'])): ?>
-                                                                            <span class="badge bg-success ms-2">Open</span>
+                                                                            <span class="badge text-success ms-2">Open</span>
                                                                         <?php else: ?>
-                                                                            <span class="badge bg-secondary ms-2">Closed</span>
+                                                                            <span class="badge text-secondary ms-2">Closed</span>
                                                                         <?php endif; ?>
                                                                     </div>
                                                                     <div class="text-muted small">
