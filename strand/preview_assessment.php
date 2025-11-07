@@ -2,7 +2,6 @@
 session_start();
 // The '../' is important because this file is inside the 'strand' folder
 require_once '../includes/db.php';
-require_once '../includes/header.php';
 
 // --- Security Check ---
 if (!isset($_SESSION['user_id'])) {
@@ -73,93 +72,109 @@ if (!empty($question_ids)) {
 $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) . '#assessments';
 ?>
 
-<div class="container my-4">
-    <div class="back-container">
-        <a href="<?= htmlspecialchars($back_link) ?>" class="back-link <?= $back_link_class ?? '' ?>">
-            <i class="bi bi-arrow-left me-1"></i>Back
-        </a>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h3 class="mb-0"><?= htmlspecialchars($assessment['title']) ?></h3>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/ALS_LMS/strand/css/manage_assessment.css">
+</head>
+
+<body class="bg-light">
+    <div class="container my-4">
+        <div class="back-container">
+            <a href="<?= htmlspecialchars($back_link) ?>" class="back-link <?= $back_link_class ?? '' ?>">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
         </div>
-        <div class="card-body p-4">
-            <h5 class="card-title">Description/Instructions</h5>
-            <div class="p-3 mb-4 bg-light border-none rounded">
-                <?= $assessment['description'] ?>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h3 class="mb-0"><?= htmlspecialchars($assessment['title']) ?></h3>
             </div>
-            <hr class="mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title">Description/Instructions</h5>
+                <div class="p-3 mb-4 bg-light border-none rounded">
+                    <?= $assessment['description'] ?>
+                </div>
+                <hr class="mb-4">
 
-            <?php if (empty($questions)): ?>
-                <!-- --- MODIFICATION: Only show this message for quiz and exam --- -->
-                <?php if ($assessment['type'] === 'quiz' || $assessment['type'] === 'exam'): ?>
-                    <p class="text-muted text-center p-4">No questions have been added to this assessment yet.</p>
-                <?php endif; ?>
-                <!-- --- End of Modification --- -->
+                <?php if (empty($questions)): ?>
+                    <!-- --- MODIFICATION: Only show this message for quiz and exam --- -->
+                    <?php if ($assessment['type'] === 'quiz' || $assessment['type'] === 'exam'): ?>
+                        <p class="text-muted text-center p-4">No questions have been added to this assessment yet.</p>
+                    <?php endif; ?>
+                    <!-- --- End of Modification --- -->
 
-            <?php else: ?>
-                <form>
-                    <?php foreach ($questions as $index => $q): ?>
-                        <div class="mb-4">
-                            <p class="fw-bold">Question <?= $index + 1 ?>:</p>
-                            <div class="ps-2"><?= nl2br(htmlspecialchars($q['question_text'])) ?></div>
-                            <div class="ms-3 mt-3">
-                                <?php
-                                // Get the options for this specific question
-                                $options = $options_by_question[$q['id']] ?? [];
-
-                                if ($q['question_type'] === 'multiple_choice' || $q['question_type'] === 'true_false'): ?>
-                                    <?php foreach ($options as $opt): ?>
-                                        <?php
-                                        // Check if this option is the correct one
-                                        $is_correct = ($opt['is_correct'] == 1);
-                                        ?>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="q_<?= $q['id'] ?>"
-                                                <?= $is_correct ? 'checked' : '' // Pre-check the correct answer 
-                                                ?> disabled>
-                                            <label class="form-check-label <?= $is_correct ? 'text-success fw-bold' : '' // Highlight the correct answer 
-                                                                            ?>">
-                                                <?= htmlspecialchars($opt['option_text']) ?>
-
-                                            </label>
-                                        </div>
-                                    <?php endforeach; ?>
-
-                                <?php elseif (in_array($q['question_type'], ['identification', 'short_answer', 'essay'])): ?>
+                <?php else: ?>
+                    <form>
+                        <?php foreach ($questions as $index => $q): ?>
+                            <div class="mb-4">
+                                <p class="fw-bold">Question <?= $index + 1 ?>:</p>
+                                <div class="ps-2"><?= nl2br(htmlspecialchars($q['question_text'])) ?></div>
+                                <div class="ms-3 mt-3">
                                     <?php
-                                    // Find the correct answer text
-                                    $correct_answer = '';
-                                    foreach ($options as $opt) {
-                                        if ($opt['is_correct'] == 1) {
-                                            $correct_answer = $opt['option_text'];
-                                            break; // Stop after finding the first correct answer
-                                        }
-                                    }
-                                    ?>
-                                    <label class="form-label small text-muted">Correct Answer:</label>
-                                    <?php if ($q['question_type'] === 'essay'): ?>
-                                        <textarea class="form-control" rows="4" readonly><?= htmlspecialchars($correct_answer) ?></textarea>
-                                        <div class="form-text">(Note: Essay answers may vary. This is a sample correct answer, if provided.)</div>
-                                    <?php else: ?>
-                                        <input type="text" class="form-control text-success fw-bold" value="<?= htmlspecialchars($correct_answer) ?>" readonly>
-                                    <?php endif; ?>
+                                    // Get the options for this specific question
+                                    $options = $options_by_question[$q['id']] ?? [];
 
-                                <?php endif; ?>
+                                    if ($q['question_type'] === 'multiple_choice' || $q['question_type'] === 'true_false'): ?>
+                                        <?php foreach ($options as $opt): ?>
+                                            <?php
+                                            // Check if this option is the correct one
+                                            $is_correct = ($opt['is_correct'] == 1);
+                                            ?>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="q_<?= $q['id'] ?>"
+                                                    <?= $is_correct ? 'checked' : '' // Pre-check the correct answer 
+                                                    ?> disabled>
+                                                <label class="form-check-label <?= $is_correct ? 'text-success fw-bold' : '' // Highlight the correct answer 
+                                                                                ?>">
+                                                    <?= htmlspecialchars($opt['option_text']) ?>
+
+                                                </label>
+                                            </div>
+                                        <?php endforeach; ?>
+
+                                    <?php elseif (in_array($q['question_type'], ['identification', 'short_answer', 'essay'])): ?>
+                                        <?php
+                                        // Find the correct answer text
+                                        $correct_answer = '';
+                                        foreach ($options as $opt) {
+                                            if ($opt['is_correct'] == 1) {
+                                                $correct_answer = $opt['option_text'];
+                                                break; // Stop after finding the first correct answer
+                                            }
+                                        }
+                                        ?>
+                                        <label class="form-label small text-muted">Correct Answer:</label>
+                                        <?php if ($q['question_type'] === 'essay'): ?>
+                                            <textarea class="form-control" rows="4" readonly><?= htmlspecialchars($correct_answer) ?></textarea>
+                                            <div class="form-text">(Note: Essay answers may vary. This is a sample correct answer, if provided.)</div>
+                                        <?php else: ?>
+                                            <input type="text" class="form-control text-success fw-bold" value="<?= htmlspecialchars($correct_answer) ?>" readonly>
+                                        <?php endif; ?>
+
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
-                        <?php if ($index < count($questions) - 1): ?>
-                            <hr>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </form>
-            <?php endif; ?>
+                            <?php if ($index < count($questions) - 1): ?>
+                                <hr>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </form>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
-</div>
 
-<?php
-require_once '../includes/footer.php';
-$conn->close();
-?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

@@ -496,59 +496,88 @@ if ($user_role === 'teacher') {
                                                     <?php else: ?>
                                                         <div class="assessment-item">
                                                             <?php
-                                                            $attempts_left = $assessment['max_attempts'] - $assessment['attempts_taken'];
-                                                            // Check if they have a completed attempt to view
-                                                            $has_completed_attempt = isset($assessment['latest_attempt_id']) && $assessment['latest_attempt_id'] > 0;
-                                                            // Check if they can take the quiz
-                                                            $can_take_quiz = !empty($assessment['is_open']) && $attempts_left > 0;
+                                                            $assessment_type = $assessment['type'];
+                                                            $is_quiz_or_exam = ($assessment_type === 'quiz' || $assessment_type === 'exam');
+
+                                                            // Default link
+                                                            $link_href = '#';
+                                                            $link_class = 'disabled';
+                                                            $status_badge = '';
+                                                            $retake_button_html = '';
+
+                                                            if ($is_quiz_or_exam) {
+                                                                // --- LOGIC FOR QUIZ/EXAM ---
+                                                                $attempts_left = $assessment['max_attempts'] - $assessment['attempts_taken'];
+                                                                $has_completed_attempt = isset($assessment['latest_attempt_id']) && $assessment['latest_attempt_id'] > 0;
+                                                                $can_take_quiz = !empty($assessment['is_open']) && $attempts_left > 0;
+
+                                                                if ($has_completed_attempt) {
+                                                                    $link_href = 'quiz_results.php?attempt_id=' . $assessment['latest_attempt_id'];
+                                                                    $link_class = '';
+                                                                    $status_badge = "<span class=\"badge text-primary ms-2\">View Results (Score: {$assessment['latest_score']} / {$assessment['total_items']})</span>";
+
+                                                                    if ($can_take_quiz) {
+                                                                        $retake_button_html = "<div class=\"mt-2\"><a href=\"take_assessment.php?id={$assessment['id']}\" class=\"btn btn-sm btn-outline-secondary py-0\">Retake ({$attempts_left} left)</a></div>";
+                                                                    }
+                                                                } elseif ($can_take_quiz) {
+                                                                    $link_href = 'take_assessment.php?id=' . $assessment['id'];
+                                                                    $link_class = '';
+                                                                    $status_badge = '<span class="badge text-success ms-2">Open</span>';
+                                                                } elseif ($attempts_left <= 0 && $assessment['attempts_taken'] > 0) {
+                                                                    // *** UPDATED: Only show if they've actually taken it
+                                                                    $status_badge = '<span class="badge text-dark ms-2">No Attempts Left</span>';
+                                                                } elseif ($attempts_left <= 0 && $assessment['attempts_taken'] == 0) {
+                                                                    // *** NEW: Case for 0 max attempts (like our old bug)
+                                                                    $status_badge = '<span class="badge text-danger ms-2">Not Available</span>';
+                                                                } elseif (empty($assessment['is_open'])) {
+                                                                    $status_badge = '<span class="badge text-danger ms-2">Closed</span>';
+                                                                }
+                                                            } else {
+                                                                // --- LOGIC FOR ACTIVITY/ASSIGNMENT ---
+                                                                $has_submission = isset($assessment['submission_id']) && $assessment['submission_id'] > 0;
+                                                                $can_submit = !empty($assessment['is_open']);
+
+                                                                if ($has_submission) {
+                                                                    // Student has submitted, link to their submission details
+                                                                    $link_href = 'view_submission.php?submission_id=' . $assessment['submission_id'];
+                                                                    $link_class = '';
+
+                                                                    // *** UPDATED: New badge logic ***
+                                                                    if ($assessment['submission_status'] === 'graded') {
+                                                                        $status_badge = "<span class=\"badge text-primary ms-2\">Graded (Score: {$assessment['submission_score']} / {$assessment['submission_total']})</span>";
+                                                                    } else {
+                                                                        $status_badge = "<span class=\"badge text-warning ms-2\">Submitted</span>";
+                                                                    }
+                                                                } elseif ($can_submit) {
+                                                                    // Student can view/submit
+                                                                    $link_href = 'view_activity.php?id=' . $assessment['id']; // We will create this page
+                                                                    $link_class = '';
+                                                                    $status_badge = '<span class="badge text-success ms-2">Open</span>';
+                                                                } else { // Closed and no submission
+                                                                    $status_badge = '<span class="badge text-danger ms-2">Closed</span>';
+                                                                }
+                                                            }
                                                             ?>
 
-                                                            <a href="<?php
-                                                                        if ($has_completed_attempt) {
-                                                                            echo 'quiz_results.php?attempt_id=' . $assessment['latest_attempt_id'];
-                                                                        } elseif ($can_take_quiz) {
-                                                                            echo 'take_assessment.php?id=' . $assessment['id'];
-                                                                        } else {
-                                                                            echo '#';
-                                                                        }
-                                                                        ?>"
-                                                                class="assessment-item-link <?= !$can_take_quiz && !$has_completed_attempt ? 'disabled' : '' ?>">
-
+                                                            <a href="<?= $link_href ?>" class="assessment-item-link <?= $link_class ?>">
                                                                 <div class="d-flex justify-content-between align-items-center">
                                                                     <div>
                                                                         <span class="fw-bold"><?= htmlspecialchars($assessment['title']) ?></span>
                                                                         <span class="badge bg-light text-dark fw-normal ms-2"><?= ucfirst($assessment['type']) ?></span>
-
-                                                                        <?php if ($has_completed_attempt): ?>
-                                                                            <span class="badge text-primary ms-2">
-                                                                                View Results (Score: <?= $assessment['latest_score'] ?> / <?= $assessment['total_items'] ?>)
-                                                                            </span>
-
-                                                                        <?php elseif ($can_take_quiz): ?>
-                                                                            <span class="badge text-success ms-2">Open</span>
-
-                                                                        <?php elseif ($attempts_left <= 0): ?>
-                                                                            <span class="badge text-dark ms-2">Completed</span>
-
-                                                                        <?php elseif (empty($assessment['is_open'])): ?>
-                                                                            <span class="badge text-danger ms-2">Closed</span>
-                                                                        <?php endif; ?>
-
+                                                                        <?= $status_badge ?>
                                                                     </div>
-                                                                    <div class="text-muted small">
-                                                                        <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
-                                                                        <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
-                                                                    </div>
+
+                                                                    <!-- Conditionally show duration/attempts for student -->
+                                                                    <?php if ($is_quiz_or_exam): ?>
+                                                                        <div class="text-muted small">
+                                                                            <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
+                                                                            <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
+                                                                        </div>
+                                                                    <?php endif; ?>
                                                                 </div>
                                                             </a>
 
-                                                            <?php if ($has_completed_attempt && $can_take_quiz): ?>
-                                                                <div class="mt-2">
-                                                                    <a href="take_assessment.php?id=<?= $assessment['id'] ?>" class="btn btn-sm btn-outline-secondary py-0">
-                                                                        Retake (<?= $attempts_left ?> left)
-                                                                    </a>
-                                                                </div>
-                                                            <?php endif; ?>
+                                                            <?= $retake_button_html ?>
 
                                                             <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
                                                                 <div class="mt-2">

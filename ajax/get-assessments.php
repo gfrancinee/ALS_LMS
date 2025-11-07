@@ -7,8 +7,8 @@ $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? null;
 
 if (!$strand_id || !$user_id) {
-  echo '<div class="alert alert-warning">Missing required data.</div>';
-  exit;
+    echo '<div class="alert alert-warning">Missing required data.</div>';
+    exit;
 }
 
 $stmt = $conn->prepare("
@@ -24,19 +24,19 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-  echo '<div class="alert alert-info">No assessments have been created for this strand yet.</div>';
-  exit;
+    echo '<div class="alert alert-info">No assessments have been created for this strand yet.</div>';
+    exit;
 }
 
 // --- START: Replace your existing while loop with this code ---
 while ($row = $result->fetch_assoc()) {
-  $id = $row['id'];
-  $title = htmlspecialchars($row['title']);
-  $desc = htmlspecialchars($row['description']);
-  $duration = (int)$row['duration_minutes'];
-  $max_attempts = (int)$row['max_attempts'];
+    $id = $row['id'];
+    $title = htmlspecialchars($row['title']);
+    $desc = htmlspecialchars($row['description']);
+    $duration = (int)$row['duration_minutes'];
+    $max_attempts = (int)$row['max_attempts'];
 
-  echo "
+    echo "
     <div class='card mb-2'>
         <div class='card-body'>
             <div class='d-flex justify-content-between align-items-start'>
@@ -51,14 +51,14 @@ while ($row = $result->fetch_assoc()) {
             <hr>
             <div class='d-flex justify-content-between align-items-center mt-2'>";
 
-  if ($user_role === 'teacher') {
-    $status_color = $row['status'] === 'open' ? 'success' : 'secondary';
-    $toggle_action = $row['status'] === 'open' ? 'closed' : 'open';
-    $toggle_text = $row['status'] === 'open' ? 'Close' : 'Open';
-    $status_text = ucfirst($row['status']);
+    if ($user_role === 'teacher') {
+        $status_color = $row['status'] === 'open' ? 'success' : 'secondary';
+        $toggle_action = $row['status'] === 'open' ? 'closed' : 'open';
+        $toggle_text = $row['status'] === 'open' ? 'Close' : 'Open';
+        $status_text = ucfirst($row['status']);
 
-    // --- THIS TEACHER VIEW IS NOW CORRECTED ---
-    echo "
+        // --- THIS TEACHER VIEW IS NOW CORRECTED ---
+        echo "
             <div class='d-flex gap-2 align-items-center'>
                 
                 <a href='/ALS_LMS/strand/manage_assessment.php?id=$id' class='btn btn-sm btn-outline-primary'>Manage Questions</a>
@@ -98,32 +98,32 @@ while ($row = $result->fetch_assoc()) {
             </div>
             <span class='badge bg-$status_color'>$status_text</span>
         ";
-  } else { // Student View (This part was already good)
-    $attempt_count = (int)$row['attempt_count'];
-    $attempts_left = $max_attempts - $attempt_count;
+    } else { // Student View (This part was already good)
+        $attempt_count = (int)$row['attempt_count'];
+        $attempts_left = $max_attempts - $attempt_count;
 
-    $score_stmt = $conn->prepare("SELECT MAX(score) as max_score, total_items FROM quiz_attempts WHERE assessment_id = ? AND student_id = ?");
-    $score_stmt->bind_param("ii", $id, $user_id);
-    $score_stmt->execute();
-    $score_result = $score_stmt->get_result()->fetch_assoc();
-    $score_stmt->close();
+        $score_stmt = $conn->prepare("SELECT MAX(score) as max_score, total_items FROM quiz_attempts WHERE assessment_id = ? AND student_id = ?");
+        $score_stmt->bind_param("ii", $id, $user_id);
+        $score_stmt->execute();
+        $score_result = $score_stmt->get_result()->fetch_assoc();
+        $score_stmt->close();
 
-    if ($score_result && $score_result['max_score'] !== null) {
-      echo "<div><span class='badge bg-success'>Highest Score: {$score_result['max_score']} / {$score_result['total_items']}</span></div>";
+        if ($score_result && $score_result['max_score'] !== null) {
+            echo "<div><span class='badge bg-success'>Highest Score: {$score_result['max_score']} / {$score_result['total_items']}</span></div>";
+        }
+
+        if ($row['status'] === 'closed') {
+            echo "<button class='btn btn-sm btn-secondary disabled'>Assessment is Closed</button>";
+        } else if ($attempts_left <= 0) {
+            echo "<button class='btn btn-sm btn-warning disabled'>No Attempts Left</button>";
+        } else {
+            echo "<button class='btn btn-sm btn-primary start-quiz-btn' data-assessment-id='$id'>Take Assessment</button>";
+        }
+
+        echo "<span class='badge bg-info'>Attempts Left: $attempts_left</span>";
     }
 
-    if ($row['status'] === 'closed') {
-      echo "<button class='btn btn-sm btn-secondary disabled'>Quiz is Closed</button>";
-    } else if ($attempts_left <= 0) {
-      echo "<button class='btn btn-sm btn-warning disabled'>No Attempts Left</button>";
-    } else {
-      echo "<button class='btn btn-sm btn-primary start-quiz-btn' data-assessment-id='$id'>Take Quiz</button>";
-    }
-
-    echo "<span class='badge bg-info'>Attempts Left: $attempts_left</span>";
-  }
-
-  echo "
+    echo "
             </div>
         </div>
     </div>";

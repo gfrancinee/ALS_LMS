@@ -78,7 +78,7 @@ $questions_stmt->close();
             <i class="bi bi-arrow-left me-1"></i>Back
         </a>
     </div>
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm" id="manage-assessment-container" data-assessment-type="<?= htmlspecialchars($assessment['type']) ?>">
         <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
             <h3 class="mb-0">Manage: <?= htmlspecialchars($assessment['title']) ?></h3>
         </div>

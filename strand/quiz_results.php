@@ -15,7 +15,7 @@ $attempt_id = $_GET['attempt_id'] ?? 0;
 $student_id = $_SESSION['user_id'];
 
 if (!$attempt_id) {
-    echo "<div class='container mt-4'><div class='alert alert-danger'>Quiz attempt not found.</div></div>";
+    echo "<div class='container mt-4'><div class='alert alert-danger'>Assessment attempt not found.</div></div>";
     require_once '../includes/footer.php';
     exit;
 }
@@ -36,7 +36,7 @@ $attempt_details = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$attempt_details) {
-    echo "<div class='container mt-4'><div class='alert alert-danger'>Could not load your quiz results.</div></div>";
+    echo "<div class='container mt-4'><div class='alert alert-danger'>Could not load your results.</div></div>";
     require_once '../includes/footer.php';
     exit;
 }
@@ -225,7 +225,7 @@ if (!empty($wrong_question_ids_from_review)) {
         <div class="col-md-8">
             <div class="card shadow-sm border-0 text-center bg-white mt-0">
                 <div class="card-body p-5">
-                    <h1 class="card-title">Quiz Completed!</h1>
+                    <h1 class="card-title">Completed!</h1>
                     <p class="lead">You have completed the <strong><?= htmlspecialchars($attempt_details['assessment_title']) ?></strong></p>
 
                     <div class="my-4">

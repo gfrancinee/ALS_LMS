@@ -195,7 +195,7 @@ try {
     exit;
 } catch (Exception $e) {
     $conn->rollback();
-    error_log("Submit Quiz Error: " . $e->getMessage());
+    error_log("Submit Error: " . $e->getMessage());
     $_SESSION['error_message'] = "A critical error occurred while submitting your assessment. Please contact your teacher.";
     header("Location: take_assessment.php?id=" . $assessment_id);
     exit;

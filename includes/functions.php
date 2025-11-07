@@ -322,3 +322,44 @@ function create_notification($conn, $user_id, $type, $related_id, $message, $lin
 
     $stmt_check->close();
 }
+
+// You may have other functions here. Add this new function at the end of the file.
+
+/**
+ * Checks if a student is enrolled in a specific learning strand.
+ *
+ * @param mysqli $conn The database connection.
+ * @param int $student_id The ID of the student.
+ * @param int $strand_id The ID of the learning strand.
+ * @return bool True if enrolled, false otherwise.
+ */
+function isStudentEnrolled($conn, $student_id, $strand_id)
+{
+    // Check in strand_participants table
+    $stmt = $conn->prepare(
+        "SELECT 1 FROM strand_participants WHERE student_id = ? AND strand_id = ? LIMIT 1"
+    );
+    if (!$stmt) {
+        // Handle query preparation error
+        error_log("Prepare failed: (" . $conn->errno . ") " . $conn->error);
+        return false;
+    }
+
+    $stmt->bind_param("ii", $student_id, $strand_id);
+
+    if (!$stmt->execute()) {
+        // Handle query execution error
+        error_log("Execute failed: (" . $stmt->errno . ") " . $stmt->error);
+        $stmt->close();
+        return false;
+    }
+
+    $stmt->store_result();
+    $is_enrolled = $stmt->num_rows > 0;
+
+    $stmt->close();
+
+    return $is_enrolled;
+}
+
+// If your file has a closing PHP tag, make sure this function is above it.

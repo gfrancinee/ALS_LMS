@@ -44,7 +44,7 @@ $quiz_attempt_id = $attempt_stmt->insert_id;
 $attempt_stmt->close();
 
 if (empty($quiz_attempt_id)) {
-    die("Failed to create quiz attempt record. Please try again.");
+    die("Failed to create assessment attempt record. Please try again.");
 }
 
 // --- FETCH QUESTIONS & OPTIONS (EFFICIENTLY) ---
@@ -92,6 +92,20 @@ $hide_navbar = true; // Flag for header.php to hide navigation
 require_once '../includes/header.php';
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/ALS_LMS/strand/css/manage_assessment.css">
+</head>
+
 <style>
     /* Prevent user from selecting text, which can be distracting or aid cheating */
     body {
@@ -117,147 +131,148 @@ require_once '../includes/header.php';
     }
 </style>
 
-<div class="timer-bar bg-primary text-white p-2" id="timer-bar" style="position: fixed; top: 0; left: 0; width: 100%; z-index: 1031;">
-    <div class="container d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><?= htmlspecialchars($assessment['title']) ?></h5>
-        <h5 class="mb-0">Time Left: <span id="time-left"><?= $assessment['duration_minutes'] ?>:00</span></h5>
-    </div>
-</div>
-
-<div class="container mt-5 pt-5 mb-5">
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-4 p-md-5 quiz-form-container">
-
-            <form id="quiz-form" action="submit_quiz.php" method="POST">
-                <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
-                <input type="hidden" name="quiz_attempt_id" value="<?= $quiz_attempt_id ?>">
-
-                <?php foreach ($questions as $index => $q): ?>
-                    <div class="mb-4 question-block">
-                        <p class="fw-bold fs-5">Question <?= $index + 1 ?>:</p>
-                        <div class="ps-2 question-text mb-3"><?= nl2br(htmlspecialchars($q['question_text'])) ?></div>
-
-                        <div class="ms-3">
-                            <?php
-                            $question_id = $q['id'];
-                            // Get the shuffled options for this question
-                            $options = $options_by_question[$question_id] ?? [];
-
-                            switch ($q['question_type']):
-                                case 'multiple_choice':
-                                case 'true_false': // Both use radio buttons
-                                    foreach ($options as $opt): ?>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio"
-                                                name="answers[<?= $question_id ?>]"
-                                                value="<?= $opt['option_id'] ?>"
-                                                id="opt_<?= $opt['option_id'] ?>" required>
-                                            <label class="form-check-label" for="opt_<?= $opt['option_id'] ?>">
-                                                <?= htmlspecialchars($opt['option_text']) ?>
-                                            </label>
-                                        </div>
-                                    <?php endforeach;
-                                    break;
-
-                                case 'identification':
-                                case 'short_answer':
-                                    ?>
-                                    <div class_mb-3>
-                                        <label for="answer_<?= $question_id ?>" class="form-label small visually-hidden">Your Answer:</label>
-                                        <input type="text" class="form-control"
-                                            id="answer_<?= $question_id ?>"
-                                            name="answers[<?= $question_id ?>]"
-                                            placeholder="Your answer here..." required>
-                                    </div>
-                                <?php
-                                    break;
-
-                                case 'essay':
-                                ?>
-                                    <div class="mb-3">
-                                        <label for="answer_<?= $question_id ?>" class="form-label small visually-hidden">Your Answer:</label>
-                                        <textarea class="form-control"
-                                            id="answer_<?= $question_id ?>"
-                                            name="answers[<?= $question_id ?>]"
-                                            rows="5"
-                                            placeholder="Type your essay here..." required></textarea>
-                                    </div>
-                            <?php
-                                    break;
-
-                            endswitch;
-                            ?>
-                        </div>
-                    </div>
-                    <?php if ($index < count($questions) - 1): ?>
-                        <hr class="my-4">
-                    <?php endif; ?>
-                <?php endforeach; ?>
-
-                <div class="text-center mt-5">
-                    <button type="submit" class="btn btn-success rounded-pill px-3 btn-lg">Submit Assessment</button>
-                </div>
-            </form>
+<body class="bg-light">
+    <div class="timer-bar bg-primary text-white p-2" id="timer-bar" style="position: fixed; top: 0; left: 0; width: 100%; z-index: 1031;">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><?= htmlspecialchars($assessment['title']) ?></h5>
+            <h5 class="mb-0">Time Left: <span id="time-left"><?= $assessment['duration_minutes'] ?>:00</span></h5>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const timeLeftDisplay = document.getElementById('time-left');
-        const quizForm = document.getElementById('quiz-form');
-        let timeInSeconds = <?= $assessment['duration_minutes'] * 60 ?>;
+    <div class="container mt-5 pt-5 mb-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5 quiz-form-container">
 
-        // Flag to prevent double submit
-        let isSubmitting = false;
+                <form id="quiz-form" action="submit_quiz.php" method="POST">
+                    <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
+                    <input type="hidden" name="quiz_attempt_id" value="<?= $quiz_attempt_id ?>">
 
-        // --- Timer Logic ---
-        function updateTimerDisplay() {
-            let minutes = Math.floor(timeInSeconds / 60);
-            let seconds = timeInSeconds % 60;
-            seconds = seconds < 10 ? '0' + seconds : seconds;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            timeLeftDisplay.textContent = `${minutes}:${seconds}`;
-        }
+                    <?php foreach ($questions as $index => $q): ?>
+                        <div class="mb-4 question-block">
+                            <p class="fw-bold fs-5">Question <?= $index + 1 ?>:</p>
+                            <div class="ps-2 question-text mb-3"><?= nl2br(htmlspecialchars($q['question_text'])) ?></div>
 
-        const timerInterval = setInterval(() => {
-            timeInSeconds--;
-            updateTimerDisplay();
+                            <div class="ms-3">
+                                <?php
+                                $question_id = $q['id'];
+                                // Get the shuffled options for this question
+                                $options = $options_by_question[$question_id] ?? [];
 
-            if (timeInSeconds <= 0) {
-                clearInterval(timerInterval);
-                if (!isSubmitting) {
-                    isSubmitting = true;
-                    alert("Time's up! Your assessment will be submitted automatically.");
-                    quizForm.submit();
+                                switch ($q['question_type']):
+                                    case 'multiple_choice':
+                                    case 'true_false': // Both use radio buttons
+                                        foreach ($options as $opt): ?>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio"
+                                                    name="answers[<?= $question_id ?>]"
+                                                    value="<?= $opt['option_id'] ?>"
+                                                    id="opt_<?= $opt['option_id'] ?>" required>
+                                                <label class="form-check-label" for="opt_<?= $opt['option_id'] ?>">
+                                                    <?= htmlspecialchars($opt['option_text']) ?>
+                                                </label>
+                                            </div>
+                                        <?php endforeach;
+                                        break;
+
+                                    case 'identification':
+                                    case 'short_answer':
+                                        ?>
+                                        <div class_mb-3>
+                                            <label for="answer_<?= $question_id ?>" class="form-label small visually-hidden">Your Answer:</label>
+                                            <input type="text" class="form-control"
+                                                id="answer_<?= $question_id ?>"
+                                                name="answers[<?= $question_id ?>]"
+                                                placeholder="Your answer here..." required>
+                                        </div>
+                                    <?php
+                                        break;
+
+                                    case 'essay':
+                                    ?>
+                                        <div class="mb-3">
+                                            <label for="answer_<?= $question_id ?>" class="form-label small visually-hidden">Your Answer:</label>
+                                            <textarea class="form-control"
+                                                id="answer_<?= $question_id ?>"
+                                                name="answers[<?= $question_id ?>]"
+                                                rows="5"
+                                                placeholder="Type your essay here..." required></textarea>
+                                        </div>
+                                <?php
+                                        break;
+
+                                endswitch;
+                                ?>
+                            </div>
+                        </div>
+                        <?php if ($index < count($questions) - 1): ?>
+                            <hr class="my-4">
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+
+                    <div class="text-center mt-5">
+                        <button type="submit" class="btn btn-success rounded-pill px-3 btn-lg">Submit Assessment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const timeLeftDisplay = document.getElementById('time-left');
+            const quizForm = document.getElementById('quiz-form');
+            let timeInSeconds = <?= $assessment['duration_minutes'] * 60 ?>;
+
+            // Flag to prevent double submit
+            let isSubmitting = false;
+
+            // --- Timer Logic ---
+            function updateTimerDisplay() {
+                let minutes = Math.floor(timeInSeconds / 60);
+                let seconds = timeInSeconds % 60;
+                seconds = seconds < 10 ? '0' + seconds : seconds;
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                timeLeftDisplay.textContent = `${minutes}:${seconds}`;
+            }
+
+            const timerInterval = setInterval(() => {
+                timeInSeconds--;
+                updateTimerDisplay();
+
+                if (timeInSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    if (!isSubmitting) {
+                        isSubmitting = true;
+                        alert("Time's up! Your assessment will be submitted automatically.");
+                        quizForm.submit();
+                    }
                 }
-            }
-        }, 1000);
+            }, 1000);
 
-        // --- Navigation Warning ---
-        const confirmLeave = (event) => {
-            if (!isSubmitting) {
-                // Standard browser prompt
-                event.preventDefault();
-                event.returnValue = ''; // Required for most browsers
-            }
-        };
-        window.addEventListener('beforeunload', confirmLeave);
+            // --- Navigation Warning ---
+            const confirmLeave = (event) => {
+                if (!isSubmitting) {
+                    // Standard browser prompt
+                    event.preventDefault();
+                    event.returnValue = ''; // Required for most browsers
+                }
+            };
+            window.addEventListener('beforeunload', confirmLeave);
 
-        // --- Form Submission ---
-        quizForm.addEventListener('submit', () => {
-            isSubmitting = true;
-            // Remove the navigation warning *before* submitting
-            window.removeEventListener('beforeunload', confirmLeave);
+            // --- Form Submission ---
+            quizForm.addEventListener('submit', () => {
+                isSubmitting = true;
+                // Remove the navigation warning *before* submitting
+                window.removeEventListener('beforeunload', confirmLeave);
+            });
+
+            // Initial display update
+            updateTimerDisplay();
         });
+    </script>
 
-        // Initial display update
-        updateTimerDisplay();
-    });
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<?php
-// Use a minimal footer, also hiding navigation
-require_once '../includes/footer.php';
-$conn->close();
-?>
+</body>
+
+</html>

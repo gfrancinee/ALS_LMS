@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             if ($conn->errno == 1451) {
-                $response['message'] = 'Cannot delete this strand because it has associated materials or quizzes. Please remove them first.';
+                $response['message'] = 'Cannot delete this strand because it has associated materials or assessments. Please remove them first.';
             } else {
                 $response['message'] = 'Database error: ' . $stmt->error;
             }

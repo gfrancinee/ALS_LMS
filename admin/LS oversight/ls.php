@@ -135,7 +135,7 @@ if (!isset($conn) || $conn->connect_error) {
                                 </td>
                             </tr>
                             <tr>
-                                <td>View Quiz Performance Data</td>
+                                <td>View Assessment Performance Data</td>
                                 <td class="text-center">
                                     <a href="quiz_performance.php" class="btn btn-outline-info rounded-pill px-3">View Attempts</a>
                                 </td>

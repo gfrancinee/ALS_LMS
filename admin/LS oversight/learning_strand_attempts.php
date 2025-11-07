@@ -59,7 +59,7 @@ $result = $stmt->get_result();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Attempts - Admin</title>
+    <title>Assessment Attempts - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/learning_strand_attempts.css">
@@ -91,13 +91,13 @@ $result = $stmt->get_result();
                 </div>
             </div>
 
-            <p class="text-muted" style="margin-top: -1.5rem;">Quiz attempts for <?= htmlspecialchars($strand['strand_code']) ?></p>
+            <p class="text-muted" style="margin-top: -1.5rem;">Assessment Attempts for <?= htmlspecialchars($strand['strand_code']) ?></p>
 
             <table class="table mt-4">
                 <thead class="table-light">
                     <tr>
                         <th>Student Name</th>
-                        <th>Quiz Title</th>
+                        <th>Assessment Title</th>
                         <th>Score</th>
                         <th>Date Taken</th>
                         <th></th>
@@ -124,7 +124,7 @@ $result = $stmt->get_result();
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center text-muted p-4">No quiz attempts found for this strand.</td>
+                            <td colspan="5" class="text-center text-muted p-4">No assessment attempts found for this strand.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

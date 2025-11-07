@@ -1473,13 +1473,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         // If there's an error (e.g., no attempts left), show it
                         alert('Error: ' + result.message);
                         button.disabled = false;
-                        button.textContent = 'Take Quiz';
+                        button.textContent = 'Take Assessment';
                     }
                 } catch (error) {
-                    console.error('Failed to start quiz:', error);
+                    console.error('Failed to start assessment:', error);
                     alert('An error occurred. Please try again.');
                     button.disabled = false;
-                    button.textContent = 'Take Quiz';
+                    button.textContent = 'Take Assessment';
                 }
             }
 
