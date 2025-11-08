@@ -351,7 +351,7 @@ if ($unverified_result) {
                 </div>
 
                 <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button> <button type="submit" class="btn btn-success rounded-pill px-3" id="saveUserChangesBtn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button> <button type="submit" class="btn btn-primary rounded-pill px-3" id="saveUserChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>

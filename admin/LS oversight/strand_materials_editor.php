@@ -113,12 +113,12 @@ $strands_result = $conn->query("SELECT * FROM learning_strands ORDER BY strand_t
                     <input type="hidden" name="id" id="editStrandId">
 
                     <div class="mb-3">
-                        <label for="editStrandTitle" class="form-label">Strand Title</label>
+                        <label for="editStrandTitle" class="form-label">Learning Strand Title</label>
                         <input type="text" class="form-control" name="strand_title" id="editStrandTitle" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="editStrandCode" class="form-label">Strand Code</label>
+                        <label for="editStrandCode" class="form-label">Learning Strand Code</label>
                         <input type="text" class="form-control" name="strand_code" id="editStrandCode" required>
                     </div>
 
@@ -135,7 +135,7 @@ $strands_result = $conn->query("SELECT * FROM learning_strands ORDER BY strand_t
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success rounded-pill px-3" id="saveStrandChangesBtn">Save Changes</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-3" id="saveStrandChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>
