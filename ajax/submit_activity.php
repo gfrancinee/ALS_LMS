@@ -19,6 +19,13 @@ $assessment_id = (int)($_POST['assessment_id'] ?? 0);
 $submission_text = trim($_POST['submission_text'] ?? '');
 $submission_file_path = null;
 
+// --- START: UPDATED VARIABLES ---
+$action = $_POST['action'] ?? 'add'; // 'add' or 'edit'
+$submission_id = (int)($_POST['submission_id'] ?? 0);
+$remove_file = isset($_POST['remove_file']) && $_POST['remove_file'] == '1';
+// --- END: UPDATED VARIABLES ---
+
+
 // Double-check session ID matches form ID
 if ($student_id !== (int)$_SESSION['user_id']) {
     echo json_encode(['success' => false, 'error' => 'Session mismatch. Please refresh and try again.']);
@@ -32,27 +39,21 @@ if (empty($assessment_id) || empty($student_id)) {
 
 // Check if at least one submission type is present
 if (empty($submission_text) && (!isset($_FILES['submission_file']) || $_FILES['submission_file']['error'] == UPLOAD_ERR_NO_FILE)) {
-    echo json_encode(['success' => false, 'error' => 'Please upload a file or write a submission.']);
-    exit;
+    // If they are editing, they might just be removing a file
+    if ($action !== 'edit' || !$remove_file) {
+        echo json_encode(['success' => false, 'error' => 'Please upload a file or write a submission.']);
+        exit;
+    }
 }
 
 // --- 2. Check if already submitted ---
-// (We set this up to be editable, but for now, let's just insert a new one)
-// TODO: Add logic here to UPDATE an existing submission if you want it to be editable.
-// For now, we will assume one submission only.
-$stmt_check = $conn->prepare("SELECT id FROM activity_submissions WHERE assessment_id = ? AND student_id = ?");
-$stmt_check->bind_param("ii", $assessment_id, $student_id);
-$stmt_check->execute();
-$result_check = $stmt_check->get_result();
-if ($result_check->num_rows > 0) {
-    // We are blocking a second submission for now
-    echo json_encode(['success' => false, 'error' => 'You have already submitted this activity.']);
-    exit;
-}
-$stmt_check->close();
+// (This block is now removed to allow editing)
+// $stmt_check = $conn->prepare("SELECT id FROM activity_submissions WHERE assessment_id = ? AND student_id = ?");
+// ... (block removed) ...
 
 
 // --- 3. Handle File Upload (if one exists) ---
+$new_file_uploaded = false;
 if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] == UPLOAD_ERR_OK) {
 
     // Define a safe upload directory
@@ -69,37 +70,84 @@ if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] == 
     // Create a unique, safe filename
     // Format: sub_[assessmentID]_[studentID]_[timestamp].ext
     $safe_filename = 'sub_' . $assessment_id . '_' . $student_id . '_' . time() . '.' . $file_ext;
-    $submission_file_path = $upload_dir . $safe_filename;
+    $full_upload_path = $upload_dir . $safe_filename; // Full path for move_uploaded_file
 
-    if (move_uploaded_file($file_tmp_name, $submission_file_path)) {
+    if (move_uploaded_file($file_tmp_name, $full_upload_path)) {
         // File moved successfully
         // We will store the *relative path* in the DB, not the full server path
         $submission_file_path = 'uploads/submissions/' . $safe_filename;
+        $new_file_uploaded = true;
     } else {
         echo json_encode(['success' => false, 'error' => 'Failed to upload file. Check directory permissions.']);
         exit;
     }
 }
 
-// --- 4. Get Total Points for the assessment (if available) ---
-// We need this to store with the submission for easy grading later
-$stmt_points = $conn->prepare("SELECT total_points FROM assessments WHERE id = ?");
-$stmt_points->bind_param("i", $assessment_id);
-$stmt_points->execute();
-$result_points = $stmt_points->get_result();
-$assessment_data = $result_points->fetch_assoc();
-// Use total_points from assessment, or default to 0 if not set
-$total_points = $assessment_data['total_points'] ?? 0;
-$stmt_points->close();
+// --- 4. Get Existing Submission Data (if editing) ---
+$existing_submission = null;
+if ($action === 'edit' && !empty($submission_id)) {
+    $stmt_check = $conn->prepare("SELECT submission_file FROM activity_submissions WHERE id = ? AND student_id = ?");
+    $stmt_check->bind_param("ii", $submission_id, $student_id);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+    if ($result_check->num_rows == 0) {
+        echo json_encode(['success' => false, 'error' => 'Submission not found or you do not own it.']);
+        exit;
+    }
+    $existing_submission = $result_check->fetch_assoc();
+    $stmt_check->close();
+}
 
 
-// --- 5. Insert into Database ---
-$stmt = $conn->prepare(
-    "INSERT INTO activity_submissions (assessment_id, student_id, submission_text, submission_file, total_points, status) 
-     VALUES (?, ?, ?, ?, ?, 'submitted')"
-);
-$stmt->bind_param("iissi", $assessment_id, $student_id, $submission_text, $submission_file_path, $total_points);
+// --- 5. Database Operation (INSERT or UPDATE) ---
 
+if ($action === 'edit') {
+    // --- UPDATE existing submission ---
+
+    // Determine the final file path
+    $final_file_path = $existing_submission['submission_file']; // Start with the old file
+
+    if ($new_file_uploaded) {
+        // A new file was uploaded, delete the old one
+        if (!empty($existing_submission['submission_file']) && file_exists('../' . $existing_submission['submission_file'])) {
+            unlink('../' . $existing_submission['submission_file']);
+        }
+        $final_file_path = $submission_file_path; // Use the new file path
+    } elseif ($remove_file) {
+        // No new file, but "Remove" was checked
+        if (!empty($existing_submission['submission_file']) && file_exists('../' . $existing_submission['submission_file'])) {
+            unlink('../' . $existing_submission['submission_file']);
+        }
+        $final_file_path = null; // Set to null
+    }
+    // If no new file and "Remove" not checked, $final_file_path remains the old file path
+
+    $stmt = $conn->prepare(
+        "UPDATE activity_submissions 
+         SET submission_text = ?, submission_file = ?, submitted_at = NOW(), status = 'submitted' 
+         WHERE id = ? AND student_id = ?"
+    );
+    $stmt->bind_param("ssii", $submission_text, $final_file_path, $submission_id, $student_id);
+} else {
+    // --- INSERT new submission ---
+
+    // Get Total Points for the assessment (if available)
+    $stmt_points = $conn->prepare("SELECT total_points FROM assessments WHERE id = ?");
+    $stmt_points->bind_param("i", $assessment_id);
+    $stmt_points->execute();
+    $result_points = $stmt_points->get_result();
+    $assessment_data = $result_points->fetch_assoc();
+    $total_points = $assessment_data['total_points'] ?? 0;
+    $stmt_points->close();
+
+    $stmt = $conn->prepare(
+        "INSERT INTO activity_submissions (assessment_id, student_id, submission_text, submission_file, total_points, status) 
+         VALUES (?, ?, ?, ?, ?, 'submitted')"
+    );
+    $stmt->bind_param("iissi", $assessment_id, $student_id, $submission_text, $submission_file_path, $total_points);
+}
+
+// --- 6. Execute and Respond ---
 if ($stmt->execute()) {
     echo json_encode(['success' => true]);
 } else {
