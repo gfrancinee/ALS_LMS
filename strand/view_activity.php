@@ -67,8 +67,8 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
     <title>View Activity: <?= htmlspecialchars($assessment['title']) ?></title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tiny.cloud/1/7xskvh2bu8gio6eivhdb9jhxvgebwjuh180l3ct3sqza4vh5/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
         .back-link {
@@ -280,6 +280,23 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Initialize TinyMCE
+        tinymce.init({
+            selector: '#submissionText', // Targets your textarea
+            plugins: 'lists link image media table code help wordcount',
+            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image media | code help',
+            menubar: false,
+            height: 300,
+            setup: function(editor) {
+                // This pre-fills the editor with existing content if the form is for editing
+                // It runs when the editor is created (even if hidden)
+                editor.on('init', function() {
+                    const initialContent = document.getElementById('submissionText').value;
+                    editor.setContent(initialContent);
+                });
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             // Form elements
             const submissionFormContainer = document.getElementById('submissionFormContainer');
@@ -291,10 +308,10 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
 
             // Display elements
             const submissionDisplayContainer = document.getElementById('submissionDisplayContainer');
-            const readyToSubmitContainer = document.getElementById('readyToSubmitContainer'); // The "Add Submission" button's container
+            const readyToSubmitContainer = document.getElementById('readyToSubmitContainer');
 
             // Buttons
-            const showSubmissionFormBtn = document.getElementById('showSubmissionFormBtn'); // The "Add Submission" button
+            const showSubmissionFormBtn = document.getElementById('showSubmissionFormBtn');
             const cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
             const editSubmissionBtn = document.getElementById('editSubmissionBtn');
             const deleteSubmissionBtn = document.getElementById('deleteSubmissionBtn');
@@ -302,38 +319,44 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
             // --- Show "Add" Form Logic ---
             if (showSubmissionFormBtn) {
                 showSubmissionFormBtn.addEventListener('click', () => {
-                    formAction.value = 'add'; // Set action to 'add'
+                    formAction.value = 'add';
                     submitBtn.textContent = 'Submit';
                     submissionFormTitle.textContent = 'Add Submission';
 
-                    if (readyToSubmitContainer) readyToSubmitContainer.style.display = 'none'; // Hide button
-                    if (submissionFormContainer) submissionFormContainer.style.display = 'block'; // Show form
+                    // Clear the TinyMCE editor
+                    tinymce.get('submissionText').setContent('');
+
+                    if (readyToSubmitContainer) readyToSubmitContainer.style.display = 'none';
+                    if (submissionFormContainer) submissionFormContainer.style.display = 'block';
                 });
             }
 
             // --- Show "Edit" Form Logic ---
             if (editSubmissionBtn) {
                 editSubmissionBtn.addEventListener('click', () => {
-                    formAction.value = 'edit'; // Set action to 'edit'
+                    formAction.value = 'edit';
                     submitBtn.textContent = 'Update Submission';
                     submissionFormTitle.textContent = 'Edit Your Submission';
 
-                    if (submissionDisplayContainer) submissionDisplayContainer.style.display = 'none'; // Hide display
-                    if (submissionFormContainer) submissionFormContainer.style.display = 'block'; // Show form
+                    // The 'setup' function already pre-filled the editor
+                    // We just need to show it.
+
+                    if (submissionDisplayContainer) submissionDisplayContainer.style.display = 'none';
+                    if (submissionFormContainer) submissionFormContainer.style.display = 'block';
                 });
             }
 
             // --- Hide Form / Cancel Logic ---
             if (cancelSubmitBtn) {
                 cancelSubmitBtn.addEventListener('click', () => {
-                    if (submissionFormContainer) submissionFormContainer.style.display = 'none'; // Hide form
-                    if (submissionError) submissionError.style.display = 'none'; // Hide errors
+                    if (submissionFormContainer) submissionFormContainer.style.display = 'none';
+                    if (submissionError) submissionError.style.display = 'none';
 
                     // Show the correct container again
                     if (formAction.value === 'edit') {
-                        if (submissionDisplayContainer) submissionDisplayContainer.style.display = 'block'; // Show display
+                        if (submissionDisplayContainer) submissionDisplayContainer.style.display = 'block';
                     } else {
-                        if (readyToSubmitContainer) readyToSubmitContainer.style.display = 'block'; // Show "Add" button
+                        if (readyToSubmitContainer) readyToSubmitContainer.style.display = 'block';
                     }
                 });
             }
@@ -343,14 +366,17 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                 submissionForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
-                    const fileInput = document.getElementById('submissionFile');
-                    const textInput = document.getElementById('submissionText');
+                    // *** Call triggerSave() to update the underlying textarea ***
+                    tinymce.triggerSave();
 
-                    // Validation: Check if text, a new file, or an existing file (not marked for removal) is present
+                    const fileInput = document.getElementById('submissionFile');
+                    // Get the textarea, which now has the TinyMCE content
+                    const textInput = document.getElementById('submissionText');
                     const removeFileCheckbox = document.getElementById('removeFile');
                     const hasExistingFile = document.querySelector('a[href*="../uploads/submissions/"]');
                     const isRemovingFile = removeFileCheckbox ? removeFileCheckbox.checked : false;
 
+                    // *** Use textInput.value (which was updated by triggerSave) ***
                     if (fileInput.files.length === 0 && textInput.value.trim() === '' && (!hasExistingFile || isRemovingFile)) {
                         submissionError.textContent = 'Please upload a file or write a submission.';
                         submissionError.style.display = 'block';
@@ -361,19 +387,17 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                     submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${formAction.value === 'edit' ? 'Updating...' : 'Submitting...'}`;
                     submissionError.style.display = 'none';
 
+                    // This FormData will now correctly include the TinyMCE content
                     const formData = new FormData(submissionForm);
-                    // The 'action' (add/edit) and 'submission_id' are already in the form
 
                     try {
                         const response = await fetch('../ajax/submit_activity.php', {
                             method: 'POST',
                             body: formData
                         });
-
                         const result = await response.json();
-
                         if (result.success) {
-                            window.location.reload(); // Easiest way to show updated state
+                            window.location.reload();
                         } else {
                             submissionError.textContent = result.error || 'An unknown error occurred.';
                             submissionError.style.display = 'block';
@@ -396,22 +420,17 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                     if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
                         return;
                     }
-
                     const submissionId = deleteSubmissionBtn.dataset.submissionId;
-
                     try {
                         const formData = new FormData();
                         formData.append('submission_id', submissionId);
-
                         const response = await fetch('../ajax/delete_activity_submission.php', {
                             method: 'POST',
                             body: formData
                         });
-
                         const result = await response.json();
-
                         if (result.success) {
-                            window.location.reload(); // Reload to show the "Add Submission" button again
+                            window.location.reload();
                         } else {
                             alert('Error: ' + (result.error || 'Could not delete submission.'));
                         }

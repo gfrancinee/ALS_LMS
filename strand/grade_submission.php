@@ -212,7 +212,7 @@ require_once '../includes/header.php'; // Adjust path if needed
 
                 <div class="mt-4 text-end">
                     <button type="submit" class="btn btn-success rounded-pill px-3 btn-md">
-                        <i class="bi bi-check-circle-fill me-2"></i>Save Grades & Update Total Score
+                        <i class="bi bi-check-circle-fill me-2"></i>Save Grades
                     </button>
                 </div>
             </form>
