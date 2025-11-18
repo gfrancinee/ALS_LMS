@@ -18,20 +18,24 @@ $teacher_id = $_SESSION['user_id'];
 $strand_id = $_POST['strand_id'] ?? 0;
 $category_id = empty($_POST['category_id']) ? null : $_POST['category_id'];
 
-// --- START: BUG FIX ---
-// The form disables duration/attempts for activities, so $_POST will be empty.
-// We must check the type here to prevent using the old ?? 60 default.
+// --- START: UPDATED LOGIC ---
+// This logic correctly reads total_points for non-quiz types
 
 $duration_minutes = 0; // Default to 0 for all types
 $max_attempts = 0; // Default to 0 for all types
+$total_points = 0; // Default to 0 for all types
 
-// *ONLY* if the type is a quiz or exam, read the values from the form.
+// *ONLY* if the type is a quiz or exam, read the duration/attempts
 if ($type === 'quiz' || $type === 'exam') {
-    // These fields are enabled in the form, so they will be in $_POST
     $duration_minutes = $_POST['duration_minutes'] ?? 60;
     $max_attempts = $_POST['max_attempts'] ?? 1;
+    // total_points remains 0 for quizzes, as it's calculated from questions
+} else {
+    // This is for 'activity', 'assignment', or 'project'
+    // duration_minutes and max_attempts remain 0
+    $total_points = $_POST['total_points'] ?? 20; // Read the total_points value from the form
 }
-// --- END: BUG FIX ---
+// --- END: UPDATED LOGIC ---
 
 
 // Validation
@@ -41,12 +45,12 @@ if (empty($title) || empty($strand_id)) {
     exit;
 }
 
-// SQL Statement
+// --- UPDATED: SQL Statement (added total_points) ---
 $stmt = $conn->prepare(
-    "INSERT INTO assessments (title, type, category_id, description, duration_minutes, max_attempts, teacher_id, strand_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO assessments (title, type, category_id, description, duration_minutes, max_attempts, total_points, teacher_id, strand_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 );
-// Bind the variables
-$stmt->bind_param("ssisiiii", $title, $type, $category_id, $description, $duration_minutes, $max_attempts, $teacher_id, $strand_id);
+// --- UPDATED: Bind the variables (added 'i' for total_points and $total_points) ---
+$stmt->bind_param("ssisiiiii", $title, $type, $category_id, $description, $duration_minutes, $max_attempts, $total_points, $teacher_id, $strand_id);
 
 // Execute and respond
 if ($stmt->execute()) {
@@ -59,8 +63,9 @@ if ($stmt->execute()) {
         'category_id' => $category_id,
         'type' => htmlspecialchars($type),
         'description' => $description, // Keep original for TinyMCE display
-        'duration_minutes' => $duration_minutes, // Now sends 0 for activities
-        'max_attempts' => $max_attempts         // Now sends 0 for activities
+        'duration_minutes' => $duration_minutes,
+        'max_attempts' => $max_attempts,
+        'total_points' => $total_points // --- UPDATED: Send back total_points ---
     ];
 
     // Use 'assessment' as the key to match the JavaScript

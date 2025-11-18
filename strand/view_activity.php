@@ -41,6 +41,7 @@ if (!isStudentEnrolled($conn, $student_id, $assessment['strand_id'])) {
 // 5. Check for Existing Submission
 $submission = null;
 $stmt_sub = $conn->prepare(
+    // Note: SELECT * will automatically pick up 'original_filename' if you ran the SQL command
     "SELECT * FROM activity_submissions 
      WHERE assessment_id = ? AND student_id = ?"
 );
@@ -188,8 +189,14 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                                 <?php if (!empty($submission['submission_file'])): ?>
                                     <label class="form-label fw-bold">Submitted File:</label>
                                     <div>
+                                        <?php
+                                        // LOGIC UPDATE 1: Check for original filename
+                                        $display_filename = !empty($submission['original_filename'])
+                                            ? $submission['original_filename']
+                                            : basename($submission['submission_file']);
+                                        ?>
                                         <a href="../<?= htmlspecialchars($submission['submission_file']) ?>" target="_blank" class="submission-file-link">
-                                            <i class="bi bi-paperclip me-2"></i><?= basename(htmlspecialchars($submission['submission_file'])) ?>
+                                            <i class="bi bi-paperclip me-2"></i><?= htmlspecialchars($display_filename) ?>
                                         </a>
                                     </div>
                                 <?php endif; ?>
@@ -248,7 +255,13 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                                 <?php if ($has_submitted && !empty($submission['submission_file'])): ?>
                                     <div class="mb-2">
                                         Current file:
-                                        <a href="../<?= htmlspecialchars($submission['submission_file']) ?>" target="_blank"><?= basename(htmlspecialchars($submission['submission_file'])) ?></a>
+                                        <?php
+                                        // LOGIC UPDATE 2: Check for original filename in the edit form too
+                                        $edit_display_filename = !empty($submission['original_filename'])
+                                            ? $submission['original_filename']
+                                            : basename($submission['submission_file']);
+                                        ?>
+                                        <a href="../<?= htmlspecialchars($submission['submission_file']) ?>" target="_blank"><?= htmlspecialchars($edit_display_filename) ?></a>
                                         <div class="form-check form-check-inline ms-3">
                                             <input class="form-check-input" type="checkbox" id="removeFile" name="remove_file" value="1">
                                             <label class="form-check-label" for="removeFile">Remove file</label>

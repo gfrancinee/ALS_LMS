@@ -390,64 +390,62 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("TinyMCE script not loaded.");
     }
 
-    // This script controls the form logic
-    document.addEventListener('DOMContentLoaded', () => {
-        // Get all the elements for the CREATE form
-        const durationContainer = document.getElementById('durationContainer');
-        const attemptsContainer = document.getElementById('attemptsContainer');
-        const totalPointsContainer = document.getElementById('totalPointsContainer'); // New field
+    // Get all the elements for the CREATE form
+    const durationContainer = document.getElementById('durationContainer');
+    const attemptsContainer = document.getElementById('attemptsContainer');
+    const totalPointsContainer = document.getElementById('totalPointsContainer'); // New field
 
-        const durationInput = document.getElementById('assessmentDuration');
-        const attemptsInput = document.getElementById('assessmentAttempts');
-        const totalPointsInput = document.getElementById('assessmentTotalPoints'); // New field
+    const durationInput = document.getElementById('assessmentDuration');
+    const attemptsInput = document.getElementById('assessmentAttempts');
+    const totalPointsInput = document.getElementById('assessmentTotalPoints'); // New field
 
-        const allRadios = document.querySelectorAll('.assessment-type-option');
+    const allRadios = document.querySelectorAll('.assessment-type-option');
 
-        function toggleCreateAssessmentFields() {
-            const selectedTypeInput = document.querySelector('#createAssessmentForm input[name="type"]:checked');
-            if (!selectedTypeInput) return;
+    function toggleCreateAssessmentFields() {
+        const selectedTypeInput = document.querySelector('#createAssessmentForm input[name="type"]:checked');
+        if (!selectedTypeInput) return;
 
-            const selectedType = selectedTypeInput.value;
+        const selectedType = selectedTypeInput.value;
 
-            // Check if it's a quiz or exam
-            if (selectedType === 'quiz' || selectedType === 'exam') {
-                // Show Quiz fields
-                durationContainer.style.display = 'block';
-                attemptsContainer.style.display = 'block';
-                durationInput.required = true;
-                durationInput.disabled = false;
-                attemptsInput.required = true;
-                attemptsInput.disabled = false;
+        // Check if it's a quiz or exam
+        if (selectedType === 'quiz' || selectedType === 'exam') {
+            // Show Quiz fields
+            durationContainer.style.display = 'block';
+            attemptsContainer.style.display = 'block';
+            durationInput.required = true;
+            durationInput.disabled = false;
+            attemptsInput.required = true;
+            attemptsInput.disabled = false;
 
-                // Hide Activity fields
-                totalPointsContainer.style.display = 'none';
-                totalPointsInput.required = false;
-                totalPointsInput.disabled = true;
+            // Hide Activity fields
+            totalPointsContainer.style.display = 'none';
+            totalPointsInput.required = false;
+            totalPointsInput.disabled = true;
 
-            } else { // This is for 'activity', 'assignment', or 'project'
-                // Hide Quiz fields
-                durationContainer.style.display = 'none';
-                attemptsContainer.style.display = 'none';
-                durationInput.required = false;
-                durationInput.disabled = true;
-                attemptsInput.required = false;
-                attemptsInput.disabled = true;
+        } else { // This is for 'activity', 'assignment', or 'project'
+            // Hide Quiz fields
+            durationContainer.style.display = 'none';
+            attemptsContainer.style.display = 'none';
+            durationInput.required = false;
+            durationInput.disabled = true;
+            attemptsInput.required = false;
+            attemptsInput.disabled = true;
 
-                // Show Activity fields
-                totalPointsContainer.style.display = 'block';
-                totalPointsInput.required = true;
-                totalPointsInput.disabled = false;
-            }
+            // Show Activity fields
+            totalPointsContainer.style.display = 'block';
+            totalPointsInput.required = true;
+            totalPointsInput.disabled = false;
         }
+    }
 
-        // Add a 'change' event listener to every radio button
-        allRadios.forEach(radio => {
-            radio.addEventListener('change', toggleCreateAssessmentFields);
-        });
-
-        // Run it once on page load to set the default state (for Quiz)
-        toggleCreateAssessmentFields();
+    // Add a 'change' event listener to every radio button
+    allRadios.forEach(radio => {
+        radio.addEventListener('change', toggleCreateAssessmentFields);
     });
+
+    // Run it once on page load to set the default state (for Quiz)
+    toggleCreateAssessmentFields();
+
 
     // --- Handles the 'Create Assessment' form submission ---
     const createAssessmentForm = document.getElementById('createAssessmentForm');
@@ -1210,87 +1208,138 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- START: Replace your ENTIRE "Edit Assessment Modal" JavaScript with this ---
+    // --- START: Replace your "Edit Assessment Modal" JavaScript with this ---
 
     // --- Get references to the form elements ---
     const editAssessmentModalEl = document.getElementById('editAssessmentModal');
     const editAssessmentForm = document.getElementById('editAssessmentForm');
     const editDurationContainer = document.getElementById('editDurationContainer');
     const editAttemptsContainer = document.getElementById('editAttemptsContainer');
+    const editTotalPointsContainer = document.getElementById('editTotalPointsContainer');
     const editDurationInput = document.getElementById('editAssessmentDuration');
     const editAttemptsInput = document.getElementById('editAssessmentAttempts');
+    const editTotalPointsInput = document.getElementById('editAssessmentTotalPoints');
     const editTypeRadios = document.querySelectorAll('.edit-assessment-type-option');
     let editModalInstance = null;
     if (editAssessmentModalEl) {
         editModalInstance = new bootstrap.Modal(editAssessmentModalEl);
     }
-    let elementToUpdate = null;
+    let elementToUpdate = null; // This will store the list item we are editing
 
     /**
      * --- This is the function that hides/shows the fields ---
-     * It is now case-insensitive.
      */
-    function toggleEditAssessmentFields(assessmentType) {
-        // Ensure it's lowercase
-        const type = (assessmentType || '').toLowerCase();
+    function toggleEditAssessmentFields() {
+        if (!editAssessmentForm) return;
 
-        if (type === 'activity' || type === 'assignment') {
-            editDurationContainer.style.display = 'none';
-            editAttemptsContainer.style.display = 'none';
-            editDurationInput.required = false;
-            editAttemptsInput.required = false;
-        } else {
-            editDurationContainer.style.display = 'block';
-            editAttemptsContainer.style.display = 'block';
-            editDurationInput.required = true;
-            editAttemptsInput.required = true;
+        const selectedTypeInput = editAssessmentForm.querySelector('input[name="type"]:checked');
+        if (!selectedTypeInput) return;
+
+        const selectedType = selectedTypeInput.value;
+
+        if (selectedType === 'quiz' || selectedType === 'exam') {
+            // Show Quiz fields
+            if (editDurationContainer) editDurationContainer.style.display = 'block';
+            if (editAttemptsContainer) editAttemptsContainer.style.display = 'block';
+            if (editDurationInput) {
+                editDurationInput.required = true;
+                editDurationInput.disabled = false;
+            }
+            if (editAttemptsInput) {
+                editAttemptsInput.required = true;
+                editAttemptsInput.disabled = false;
+            }
+            // Hide Activity/Project fields
+            if (editTotalPointsContainer) editTotalPointsContainer.style.display = 'none';
+            if (editTotalPointsInput) {
+                editTotalPointsInput.required = false;
+                editTotalPointsInput.disabled = true;
+            }
+        } else { // This is for 'activity', 'assignment', or 'project'
+            // Hide Quiz fields
+            if (editDurationContainer) editDurationContainer.style.display = 'none';
+            if (editAttemptsContainer) editAttemptsContainer.style.display = 'none';
+            if (editDurationInput) {
+                editDurationInput.required = false;
+                editDurationInput.disabled = true;
+            }
+            if (editAttemptsInput) {
+                editAttemptsInput.required = false;
+                editAttemptsInput.disabled = true;
+            }
+            // Show Activity/Project fields
+            if (editTotalPointsContainer) editTotalPointsContainer.style.display = 'block';
+            if (editTotalPointsInput) {
+                editTotalPointsInput.required = true;
+                editTotalPointsInput.disabled = false;
+            }
         }
     }
 
     // --- Add 'change' listener to all radio buttons in the edit modal ---
-    editTypeRadios.forEach(radio => {
-        radio.addEventListener('change', () => toggleEditAssessmentFields(radio.value));
-    });
+    if (editTypeRadios.length > 0) {
+        editTypeRadios.forEach(radio => {
+            radio.addEventListener('change', () => toggleEditAssessmentFields());
+        });
+    }
 
-    // This runs WHEN THE EDIT MODAL IS ABOUT TO OPEN to fill the form
+    // --- THIS IS THE CORRECTED MODAL LIFECYCLE ---
+
     if (editAssessmentModalEl) {
+        // This runs WHEN THE MODAL IS ABOUT TO OPEN
         editAssessmentModalEl.addEventListener('show.bs.modal', async function (event) {
-            elementToUpdate = event.relatedTarget.closest('.assessment-item');
+            // Store the <li> element, which is the parent
+            elementToUpdate = event.relatedTarget.closest('li');
             const assessmentId = event.relatedTarget.dataset.id;
 
-            // 1. Clear old radio button selections
             editTypeRadios.forEach(radio => radio.checked = false);
 
             try {
                 const response = await fetch(`../ajax/get_assessment_details.php?id=${assessmentId}`);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
                     const data = result.data;
-
-                    // --- THIS IS THE FIX ---
-                    // Force the type from the database (e.g., "Activity") to be lowercase
                     const assessmentType = (data.type || '').toLowerCase();
 
-                    // Fill the form fields
+                    // 1. Fill the form fields (except TinyMCE)
                     document.getElementById('editAssessmentId').value = data.id;
                     document.getElementById('editAssessmentTitle').value = data.title;
-                    tinymce.get('editAssessmentDesc').setContent(data.description || '');
                     document.getElementById('editAssessmentDuration').value = data.duration_minutes;
                     document.getElementById('editAssessmentAttempts').value = data.max_attempts;
                     document.getElementById('editAssessmentCategory').value = data.category_id;
+                    if (editTotalPointsInput) {
+                        editTotalPointsInput.value = data.total_points;
+                    }
 
                     // 2. Find and check the correct radio button
                     const typeRadio = document.querySelector(`#editAssessmentModal input[name="type"][value="${assessmentType}"]`);
                     if (typeRadio) {
                         typeRadio.checked = true;
-                    } else {
-                        console.error('Could not find a radio button for type:', assessmentType);
                     }
 
-                    // 3. Call the toggle function *with the lowercase type*
-                    // This correctly hides the fields *before* the modal is visible.
-                    toggleEditAssessmentFields(assessmentType);
+                    // 3. Call the toggle function to set the field visibility
+                    toggleEditAssessmentFields();
+
+                    // 4. Initialize TinyMCE
+                    if (typeof tinymce !== 'undefined') {
+                        tinymce.init({
+                            selector: '#editAssessmentDesc',
+                            plugins: 'lists link image media table code help wordcount',
+                            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image media | code help',
+                            menubar: false,
+                            height: 250,
+                            setup: function (editor) {
+                                editor.on('init', function () {
+                                    editor.setContent(data.description || '');
+                                });
+                            }
+                        });
+                    }
 
                 } else {
                     alert('Error fetching details: ' + (result.error || 'Unknown error'));
@@ -1302,13 +1351,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 event.preventDefault();
             }
         });
+
+        // Clean up the editor when the modal is hidden
+        editAssessmentModalEl.addEventListener('hidden.bs.modal', function () {
+            if (typeof tinymce !== 'undefined' && tinymce.get('editAssessmentDesc')) {
+                tinymce.get('editAssessmentDesc').remove();
+            }
+        });
     }
 
     // This runs WHEN YOU CLICK "SAVE CHANGES"
     if (editAssessmentForm) {
         editAssessmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            tinymce.triggerSave();
+
+            if (typeof tinymce !== 'undefined' && tinymce.get('editAssessmentDesc')) {
+                tinymce.get('editAssessmentDesc').save();
+            }
 
             const formData = new FormData(editAssessmentForm);
             const response = await fetch('../ajax/update_assessment.php', { method: 'POST', body: formData });
@@ -1317,47 +1376,53 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) {
                 editModalInstance.hide();
 
+                // --- *** START: UPDATED NO-RELOAD LOGIC (WITH SAFETY CHECKS) *** ---
                 if (elementToUpdate) {
-                    // Instantly update all the visible information on the page
+                    // Get all the new values from the form
                     const newTitle = formData.get('title');
-                    const newType = (formData.get('type') || '').toLowerCase(); // Force lowercase
+                    const newType = (formData.get('type') || '').toLowerCase();
                     const newDuration = formData.get('duration_minutes');
                     const newAttempts = formData.get('max_attempts');
-                    const newDescription = tinymce.get('editAssessmentDesc').getContent({ format: 'html' });
+                    const newDescription = formData.get('description');
                     const newTypeCapitalized = newType.charAt(0).toUpperCase() + newType.slice(1);
 
-                    elementToUpdate.querySelector('.fw-bold').textContent = newTitle;
-                    elementToUpdate.querySelector('.badge').textContent = newTypeCapitalized;
+                    // Find elements *safely*
+                    const titleSpan = elementToUpdate.querySelector('.fw-bold');
+                    if (titleSpan) {
+                        titleSpan.textContent = newTitle;
+                    }
 
-                    // Conditionally update/hide duration and attempts spans
+                    const badgeSpan = elementToUpdate.querySelector('.badge');
+                    if (badgeSpan) {
+                        badgeSpan.textContent = newTypeCapitalized;
+                    }
+
+                    const descriptionDiv = elementToUpdate.querySelector('.collapse .small.text-muted');
+                    if (descriptionDiv) {
+                        descriptionDiv.innerHTML = newDescription;
+                    }
+
                     const detailsContainer = elementToUpdate.querySelector('.text-muted.small');
-
-                    if (detailsContainer) { // Check if this container exists
+                    if (detailsContainer) {
                         if (newType === 'quiz' || newType === 'exam') {
-                            // Update and show for quiz/exam
                             detailsContainer.innerHTML = `
                             <span class="me-3"><i class="bi bi-clock"></i> ${newDuration} mins</span>
                             <span><i class="bi bi-arrow-repeat"></i> ${newAttempts} attempt(s)</span>
                         `;
-                            detailsContainer.style.display = 'block'; // Or 'inline-block'
+                            detailsContainer.style.display = 'block';
                         } else {
-                            // Hide for activity/assignment
                             detailsContainer.style.display = 'none';
                         }
                     }
-
-                    // Update the hidden description content as well
-                    const descriptionBody = elementToUpdate.querySelector('.collapse .card-body');
-                    if (descriptionBody) {
-                        descriptionBody.innerHTML = newDescription;
-                    }
                 }
+                // --- *** END: UPDATED NO-RELOAD LOGIC *** ---
+
             } else {
                 alert('Error: ' + (result.error || 'Could not save changes.'));
             }
         });
     }
-    // --- END: Replacement block ---
+    // --- *** END: "EDIT" MODAL LOGIC *** ---
 
     // --- Logic for the DELETE Assessment Modal ---
     const deleteAssessmentModalEl = document.getElementById('deleteAssessmentModal');

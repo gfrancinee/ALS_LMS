@@ -17,6 +17,7 @@ if (!isset($_GET['submission_id']) || empty($_GET['submission_id'])) {
 $submission_id = (int)$_GET['submission_id'];
 
 // 3. Fetch Submission Details (and verify teacher owns it)
+// Note: s.* will automatically fetch 'original_filename' if you added the column
 $stmt = $conn->prepare(
     "SELECT s.*, u.fname, u.lname, a.title as assessment_title, a.strand_id, a.total_points as assessment_total_points
      FROM activity_submissions s
@@ -96,8 +97,14 @@ require_once '../includes/header.php';
 
                 <?php if (!empty($submission['submission_file'])): ?>
                     <h6 class="text-muted">Submitted File:</h6>
+                    <?php
+                    // UPDATE: Check for original filename
+                    $display_filename = !empty($submission['original_filename'])
+                        ? $submission['original_filename']
+                        : basename($submission['submission_file']);
+                    ?>
                     <a href="../<?= htmlspecialchars($submission['submission_file']) ?>" target="_blank" class="submission-file-link">
-                        <i class="bi bi-paperclip me-2"></i><?= basename(htmlspecialchars($submission['submission_file'])) ?>
+                        <i class="bi bi-paperclip me-2"></i><?= htmlspecialchars($display_filename) ?>
                     </a>
                 <?php endif; ?>
 

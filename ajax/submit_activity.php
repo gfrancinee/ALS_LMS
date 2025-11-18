@@ -23,6 +23,8 @@ $submission_file_path = null;
 $action = $_POST['action'] ?? 'add'; // 'add' or 'edit'
 $submission_id = (int)($_POST['submission_id'] ?? 0);
 $remove_file = isset($_POST['remove_file']) && $_POST['remove_file'] == '1';
+// --- NEW: Variable to hold the original file name ---
+$original_filename = null;
 // --- END: UPDATED VARIABLES ---
 
 
@@ -48,7 +50,6 @@ if (empty($submission_text) && (!isset($_FILES['submission_file']) || $_FILES['s
 
 // --- 2. Check if already submitted ---
 // (This block is now removed to allow editing)
-// $stmt_check = $conn->prepare("SELECT id FROM activity_submissions WHERE assessment_id = ? AND student_id = ?");
 // ... (block removed) ...
 
 
@@ -66,6 +67,9 @@ if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] == 
     $file_tmp_name = $_FILES['submission_file']['tmp_name'];
     $file_name = basename($_FILES['submission_file']['name']);
     $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+    // --- NEW: Capture the original filename ---
+    $original_filename = $file_name;
 
     // Create a unique, safe filename
     // Format: sub_[assessmentID]_[studentID]_[timestamp].ext
@@ -86,7 +90,8 @@ if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] == 
 // --- 4. Get Existing Submission Data (if editing) ---
 $existing_submission = null;
 if ($action === 'edit' && !empty($submission_id)) {
-    $stmt_check = $conn->prepare("SELECT submission_file FROM activity_submissions WHERE id = ? AND student_id = ?");
+    // --- UPDATED: Also fetch the original_filename ---
+    $stmt_check = $conn->prepare("SELECT submission_file, original_filename FROM activity_submissions WHERE id = ? AND student_id = ?");
     $stmt_check->bind_param("ii", $submission_id, $student_id);
     $stmt_check->execute();
     $result_check = $stmt_check->get_result();
@@ -106,6 +111,8 @@ if ($action === 'edit') {
 
     // Determine the final file path
     $final_file_path = $existing_submission['submission_file']; // Start with the old file
+    // --- NEW: Get the old original filename ---
+    $final_original_filename = $existing_submission['original_filename'];
 
     if ($new_file_uploaded) {
         // A new file was uploaded, delete the old one
@@ -113,21 +120,27 @@ if ($action === 'edit') {
             unlink('../' . $existing_submission['submission_file']);
         }
         $final_file_path = $submission_file_path; // Use the new file path
+        // --- NEW: Use the new original filename ---
+        $final_original_filename = $original_filename;
     } elseif ($remove_file) {
         // No new file, but "Remove" was checked
         if (!empty($existing_submission['submission_file']) && file_exists('../' . $existing_submission['submission_file'])) {
             unlink('../' . $existing_submission['submission_file']);
         }
         $final_file_path = null; // Set to null
+        // --- NEW: Set original filename to null as well ---
+        $final_original_filename = null;
     }
-    // If no new file and "Remove" not checked, $final_file_path remains the old file path
+    // If no new file and "Remove" not checked, $final_file_path and $final_original_filename remain the old values
 
+    // --- UPDATED: Added original_filename = ? ---
     $stmt = $conn->prepare(
         "UPDATE activity_submissions 
-         SET submission_text = ?, submission_file = ?, submitted_at = NOW(), status = 'submitted' 
+         SET submission_text = ?, submission_file = ?, original_filename = ?, submitted_at = NOW(), status = 'submitted' 
          WHERE id = ? AND student_id = ?"
     );
-    $stmt->bind_param("ssii", $submission_text, $final_file_path, $submission_id, $student_id);
+    // --- UPDATED: Added 's' for the new string ---
+    $stmt->bind_param("sssii", $submission_text, $final_file_path, $final_original_filename, $submission_id, $student_id);
 } else {
     // --- INSERT new submission ---
 
@@ -140,11 +153,13 @@ if ($action === 'edit') {
     $total_points = $assessment_data['total_points'] ?? 0;
     $stmt_points->close();
 
+    // --- UPDATED: Added original_filename column ---
     $stmt = $conn->prepare(
-        "INSERT INTO activity_submissions (assessment_id, student_id, submission_text, submission_file, total_points, status) 
-         VALUES (?, ?, ?, ?, ?, 'submitted')"
+        "INSERT INTO activity_submissions (assessment_id, student_id, submission_text, submission_file, original_filename, total_points, status) 
+         VALUES (?, ?, ?, ?, ?, ?, 'submitted')"
     );
-    $stmt->bind_param("iissi", $assessment_id, $student_id, $submission_text, $submission_file_path, $total_points);
+    // --- UPDATED: Added 's' and the new variable ---
+    $stmt->bind_param("iisssi", $assessment_id, $student_id, $submission_text, $submission_file_path, $original_filename, $total_points);
 }
 
 // --- 6. Execute and Respond ---

@@ -726,82 +726,6 @@ if ($user_role === 'teacher') {
                         </form>
                     </div>
                 </div>
-
-                <!-- This script block should be included on the page that loads this snippet -->
-                <script>
-                    // Initialize TinyMCE
-                    // This assumes the TinyMCE script is loaded in your main header or footer
-                    if (typeof tinymce !== 'undefined') {
-                        tinymce.init({
-                            selector: '#assessmentDesc',
-                            plugins: 'lists link image media table code help wordcount',
-                            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image media | code help',
-                            menubar: false,
-                            height: 250
-                        });
-                    } else {
-                        console.error("TinyMCE script not loaded.");
-                    }
-
-                    // This script controls the form logic
-                    document.addEventListener('DOMContentLoaded', () => {
-                        // Get all the elements for the CREATE form
-                        const durationContainer = document.getElementById('durationContainer');
-                        const attemptsContainer = document.getElementById('attemptsContainer');
-                        const totalPointsContainer = document.getElementById('totalPointsContainer'); // New field
-
-                        const durationInput = document.getElementById('assessmentDuration');
-                        const attemptsInput = document.getElementById('assessmentAttempts');
-                        const totalPointsInput = document.getElementById('assessmentTotalPoints'); // New field
-
-                        const allRadios = document.querySelectorAll('.assessment-type-option');
-
-                        function toggleCreateAssessmentFields() {
-                            const selectedTypeInput = document.querySelector('#createAssessmentForm input[name="type"]:checked');
-                            if (!selectedTypeInput) return;
-
-                            const selectedType = selectedTypeInput.value;
-
-                            // Check if it's a quiz or exam
-                            if (selectedType === 'quiz' || selectedType === 'exam') {
-                                // Show Quiz fields
-                                durationContainer.style.display = 'block';
-                                attemptsContainer.style.display = 'block';
-                                durationInput.required = true;
-                                durationInput.disabled = false;
-                                attemptsInput.required = true;
-                                attemptsInput.disabled = false;
-
-                                // Hide Activity fields
-                                totalPointsContainer.style.display = 'none';
-                                totalPointsInput.required = false;
-                                totalPointsInput.disabled = true;
-
-                            } else { // This is for 'activity', 'assignment', or 'project'
-                                // Hide Quiz fields
-                                durationContainer.style.display = 'none';
-                                attemptsContainer.style.display = 'none';
-                                durationInput.required = false;
-                                durationInput.disabled = true;
-                                attemptsInput.required = false;
-                                attemptsInput.disabled = true;
-
-                                // Show Activity fields
-                                totalPointsContainer.style.display = 'block';
-                                totalPointsInput.required = true;
-                                totalPointsInput.disabled = false;
-                            }
-                        }
-
-                        // Add a 'change' event listener to every radio button
-                        allRadios.forEach(radio => {
-                            radio.addEventListener('change', toggleCreateAssessmentFields);
-                        });
-
-                        // Run it once on page load to set the default state (for Quiz)
-                        toggleCreateAssessmentFields();
-                    });
-                </script>
             </div>
 
             <!-- Participants Tab -->
@@ -970,7 +894,6 @@ if ($user_role === 'teacher') {
             </div>
         </div>
 
-        <!-- Edit Assessment Modal -->
         <div class="modal fade" id="editAssessmentModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -989,24 +912,24 @@ if ($user_role === 'teacher') {
                                 <label class="form-label d-block">Type</label>
                                 <div class="d-flex flex-wrap pt-2" style="gap: 1rem;">
                                     <div class="form-check form-check-inline">
-                                        <!-- Added class -->
                                         <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeQuiz" value="quiz">
                                         <label class="form-check-label" for="editTypeQuiz">Quiz</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <!-- Added class -->
                                         <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeExam" value="exam">
                                         <label class="form-check-label" for="editTypeExam">Exam</label>
                                     </div>
-                                    <!-- Added Activity -->
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeActivity" value="activity">
                                         <label class="form-check-label" for="editTypeActivity">Activity</label>
                                     </div>
-                                    <!-- Added Assignment -->
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeAssignment" value="assignment">
                                         <label class="form-check-label" for="editTypeAssignment">Assignment</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input edit-assessment-type-option" type="radio" name="type" id="editTypeProject" value="project">
+                                        <label class="form-check-label" for="editTypeProject">Project</label>
                                     </div>
                                 </div>
                             </div>
@@ -1026,15 +949,17 @@ if ($user_role === 'teacher') {
                                 <textarea class="form-control" id="editAssessmentDesc" name="description" rows="3"></textarea>
                             </div>
                             <div class="row">
-                                <!-- Added ID to parent div -->
                                 <div class="col-md-6 mb-3" id="editDurationContainer">
                                     <label for="editAssessmentDuration" class="form-label">Duration (mins)</label>
                                     <input type="number" class="form-control" id="editAssessmentDuration" name="duration_minutes" min="1" required>
                                 </div>
-                                <!-- Added ID to parent div -->
                                 <div class="col-md-6 mb-3" id="editAttemptsContainer">
                                     <label for="editAssessmentAttempts" class="form-label">Max Attempts</label>
                                     <input type="number" class="form-control" id="editAssessmentAttempts" name="max_attempts" min="1" required>
+                                </div>
+                                <div class="col-md-6 mb-3" id="editTotalPointsContainer" style="display: none;">
+                                    <label for="editAssessmentTotalPoints" class="form-label">Total Points</label>
+                                    <input type="number" class="form-control" id="editAssessmentTotalPoints" name="total_points" value="20" min="1">
                                 </div>
                             </div>
                         </div>
@@ -1046,6 +971,7 @@ if ($user_role === 'teacher') {
                 </div>
             </div>
         </div>
+
 
         <!-- Delete assessment Modal -->
         <div class="modal fade" id="deleteAssessmentModal" tabindex="-1" aria-hidden="true">
