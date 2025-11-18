@@ -16,8 +16,7 @@ if (!isset($_GET['submission_id']) || empty($_GET['submission_id'])) {
 }
 $submission_id = (int)$_GET['submission_id'];
 
-// 3. Fetch Submission Details (and verify teacher owns it)
-// Note: s.* will automatically fetch 'original_filename' if you added the column
+// 3. Fetch Submission Details
 $stmt = $conn->prepare(
     "SELECT s.*, u.fname, u.lname, a.title as assessment_title, a.strand_id, a.total_points as assessment_total_points
      FROM activity_submissions s
@@ -43,6 +42,7 @@ $back_link = 'view_submissions.php?assessment_id=' . ($submission['assessment_id
 $page_title = "Grade Submission";
 require_once '../includes/header.php';
 ?>
+
 <style>
     body {
         background-color: #f8f9fa;
@@ -63,7 +63,41 @@ require_once '../includes/header.php';
     .submission-file-link:hover {
         background-color: #dde2e6;
     }
+
+    /* Floating Modern Alert CSS */
+    .floating-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        min-width: 300px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        border-radius: 50px;
+        border: none;
+        text-align: center;
+        animation: slideDown 0.5s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            top: -100px;
+            opacity: 0;
+        }
+
+        to {
+            top: 20px;
+            opacity: 1;
+        }
+    }
 </style>
+
+<?php if (isset($_GET['graded'])): ?>
+    <div id="autoDismissAlert" class="alert alert-success floating-alert d-flex align-items-center justify-content-center gap-2" role="alert">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <span class="fw-medium">Graded successfully!</span>
+    </div>
+<?php endif; ?>
 
 <div class="container my-5">
     <div>
@@ -78,7 +112,6 @@ require_once '../includes/header.php';
                     For: <strong><?= htmlspecialchars($submission['assessment_title']) ?></strong>
                 </p>
             </div>
-
         </div>
 
         <div class="card shadow-sm border-0">
@@ -98,7 +131,6 @@ require_once '../includes/header.php';
                 <?php if (!empty($submission['submission_file'])): ?>
                     <h6 class="text-muted">Submitted File:</h6>
                     <?php
-                    // UPDATE: Check for original filename
                     $display_filename = !empty($submission['original_filename'])
                         ? $submission['original_filename']
                         : basename($submission['submission_file']);
@@ -157,6 +189,18 @@ require_once '../includes/header.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // --- Auto Dismiss Alert Logic ---
+        const alertElement = document.getElementById('autoDismissAlert');
+        if (alertElement) {
+            setTimeout(function() {
+                alertElement.style.transition = "opacity 0.5s ease";
+                alertElement.style.opacity = "0";
+                setTimeout(function() {
+                    alertElement.remove();
+                }, 500);
+            }, 5000);
+        }
+
         const gradeForm = document.getElementById('grade-form');
         const gradeView = document.getElementById('grade-view');
         const editGradeBtn = document.querySelector('.edit-grade-btn');
@@ -196,7 +240,10 @@ require_once '../includes/header.php';
                     const result = await response.json();
 
                     if (result.success) {
-                        window.location.reload(); // Reload to show the updated grade
+                        // *** UPDATED: Reload with ?graded=1 to trigger floating alert ***
+                        const url = new URL(window.location);
+                        url.searchParams.set('graded', '1');
+                        window.location = url;
                     } else {
                         alert('Error: ' + (result.error || 'Could not save grade.'));
                         submitButton.disabled = false;

@@ -228,10 +228,13 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                 </div>
             </div>
 
-            <!-- Assessments Tab -->
             <div class="tab-pane fade" id="assessments" role="tabpanel">
                 <?php if ($is_teacher_view): ?>
                     <div class="d-flex justify-content-end mb-4">
+                        <button type="button" class="btn btn-success rounded-pill px-3 me-2 read-only-overlay" disabled>
+                            <i class="bi bi-bar-chart-fill me-2"></i>Summary of Scores
+                        </button>
+
                         <button type="button" class="btn btn-success rounded-pill px-3 read-only-overlay" data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
                             <i class="bi bi-folder-plus me-2"></i>Manage Categories
                         </button>
@@ -287,16 +290,26 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                                             <span class="badge text-secondary ms-2">Closed</span>
                                                                         <?php endif; ?>
                                                                     </div>
-                                                                    <div class="text-muted small">
-                                                                        <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
-                                                                        <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
-                                                                    </div>
+
+                                                                    <?php if ($assessment['type'] === 'quiz' || $assessment['type'] === 'exam'): ?>
+                                                                        <div class="text-muted small">
+                                                                            <span class="me-3"><i class="bi bi-clock"></i> <?= $assessment['duration_minutes'] ?> mins</span>
+                                                                            <span><i class="bi bi-arrow-repeat"></i> <?= $assessment['max_attempts'] ?> attempt(s)</span>
+                                                                        </div>
+                                                                    <?php endif; ?>
+
                                                                 </div>
+
                                                                 <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
                                                                     <div class="mt-2">
                                                                         <button class="btn btn-sm py-0 btn-toggle-desc" type="button" data-bs-toggle="collapse" data-bs-target="#desc-<?= $assessment['id'] ?>">
                                                                             Show/Hide Description
                                                                         </button>
+                                                                    </div>
+                                                                    <div class="collapse" id="desc-<?= $assessment['id'] ?>">
+                                                                        <div class="small text-muted mt-2 p-3 bg-light rounded">
+                                                                            <?= $assessment['description'] ?>
+                                                                        </div>
                                                                     </div>
                                                                 <?php endif; ?>
                                                             </div>
@@ -310,7 +323,11 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                                     <div class="dropdown">
                                                                         <button class="btn btn-options read-only-overlay" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                                         <ul class="dropdown-menu dropdown-menu-end">
-                                                                            <li><button class="dropdown-item read-only-overlay" disabled><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+
+                                                                            <?php if ($assessment['type'] === 'quiz' || $assessment['type'] === 'exam'): ?>
+                                                                                <li><button class="dropdown-item read-only-overlay" disabled><i class="bi bi-list-check me-2"></i> Manage Questions</button></li>
+                                                                            <?php endif; ?>
+
                                                                             <li><button class="dropdown-item read-only-overlay" disabled><i class="bi bi-person-check-fill me-2"></i> View Submissions</button></li>
                                                                             <li>
                                                                                 <hr class="dropdown-divider">
@@ -322,13 +339,6 @@ $grade_param = ($strand['grade_level'] === 'Grade 11') ? 'grade_11' : 'grade_12'
                                                                 </div>
                                                             <?php endif; ?>
                                                         </div>
-                                                        <?php if (!empty(trim(strip_tags($assessment['description'])))): ?>
-                                                            <div class="collapse" id="desc-<?= $assessment['id'] ?>">
-                                                                <div class="small text-muted mt-2 p-3 bg-light rounded">
-                                                                    <?= $assessment['description'] ?>
-                                                                </div>
-                                                            </div>
-                                                        <?php endif; ?>
                                                     </div>
                                                 </li>
                                             <?php endforeach; ?>

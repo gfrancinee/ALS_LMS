@@ -86,6 +86,9 @@ while ($row = $result_data->fetch_assoc()) {
 }
 $stmt_data->close();
 $conn->close();
+
+// CORRECT: Use the $strand_id variable we got from the URL at the top of the file
+$back_link = '/ALS_LMS/strand/strand.php?id=' . $strand_id . '#assessments';
 ?>
 
 <!DOCTYPE html>
@@ -205,7 +208,7 @@ $conn->close();
         .badge-exam {
             background-color: #f0f9ff;
             color: #0c4a6e;
-            border: 1px solid #0ea5e9;
+
         }
 
         .badge-activity {
@@ -246,9 +249,8 @@ $conn->close();
         }
 
         .status-needs-grading {
-            background-color: #fff7ed;
             color: #c2410c;
-            border: 1px solid #fdba74;
+
         }
 
         .status-needs-grading:hover {
@@ -266,11 +268,12 @@ $conn->close();
             text-decoration: none;
             font-weight: 500;
             transition: color 0.2s ease-in-out;
-            margin-right: 2rem;
+            margin-right: 1rem;
+
         }
 
         .back-link:hover {
-            color: blue;
+            color: green;
         }
     </style>
 </head>
@@ -278,13 +281,17 @@ $conn->close();
 <body>
 
     <div class="container-fluid px-4 py-4">
+
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold mb-1">Gradebook</h2>
+            <div class="mx-3">
+                <h2 class="mb-1">Student's Summary of Scores</h2>
                 <p class="text-muted mb-0">View and manage student performance.</p>
             </div>
-            <a href="strand.php?id=<?= $strand_id ?>" class="back-link <?= $back_link_class ?>"> <i class="bi bi-arrow-left me-1"></i>Back
-            </a>
+            <div class="back-container text-end mb-3">
+                <a href="<?= htmlspecialchars($back_link) ?>" class="back-link <?= $back_link_class ?? '' ?>">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+            </div>
         </div>
 
         <div class="gradebook-card bg-white">
@@ -304,7 +311,7 @@ $conn->close();
                         <thead>
                             <tr>
                                 <th>
-                                    <div class="py-2 text-secondary text-uppercase small fw-bold">Student Name</div>
+                                    <div class="py-2 text-dark text-uppercase small fw-bold">Student Name</div>
                                 </th>
                                 <?php foreach ($assessments as $a): ?>
                                     <?php
@@ -366,7 +373,7 @@ $conn->close();
                                                     if ($status == 'finished' || $status == 'submitted' || $status == 'graded') {
                                                         echo '<span class="score-val">' . (float)$score . '</span>';
                                                     } else {
-                                                        echo '<span class="badge bg-light text-secondary fw-normal">In Progress</span>';
+                                                        echo '<span class="badge text-secondary fw-normal">In Progress</span>';
                                                     }
                                                 } else {
                                                     // ACTIVITY/ASSIGNMENT: 

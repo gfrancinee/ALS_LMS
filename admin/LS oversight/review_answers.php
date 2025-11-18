@@ -237,7 +237,7 @@ $conn->close();
                             Summary
                         </div>
                         <div class="card-body text-center">
-                            <h5 class="card-title">Current Score</h5>
+                            <h5 class="card-title">Score</h5>
                             <p class="display-4 fw-light" id="current-score-display"><?= $attempt_details['score'] ?></p>
                             <p class="fs-5 text-muted">out of <?= $attempt_details['total_items'] ?> total points</p>
                             <hr>

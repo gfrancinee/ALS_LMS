@@ -28,27 +28,48 @@ if ($strand_result->num_rows === 0) {
 $strand = $strand_result->fetch_assoc();
 
 
-// --- THIS IS THE CORRECTED SQL QUERY (Line 42) ---
-$sql = "SELECT
-            a.id AS attempt_id, 
-            a.score, 
-            a.total_items, 
-            a.submitted_at, -- Using submitted_at from your table
-            u.fname, 
-            u.lname,
-            assess.title AS quiz_title -- Getting title from 'assessments' table
-        FROM quiz_attempts a
-        JOIN users u ON a.student_id = u.id -- FIXED: a.student_id
-        JOIN assessments assess ON a.assessment_id = assess.id -- FIXED: 'assessments' & 'assessment_id'
-        WHERE u.role = 'student' AND assess.strand_id = ? -- FIXED: assess.strand_id
-        ORDER BY a.submitted_at DESC"; // Using submitted_at from your table
+// --- UPDATED SQL QUERY: Combines Quizzes AND Activities/Assignments/Projects ---
+$sql = "SELECT * FROM (
+            -- Part 1: Quiz & Exam Attempts
+            SELECT
+                a.id AS attempt_id, 
+                a.score, 
+                a.total_items, 
+                a.submitted_at, 
+                u.fname, 
+                u.lname,
+                assess.title AS quiz_title,
+                assess.type AS assessment_type
+            FROM quiz_attempts a
+            JOIN users u ON a.student_id = u.id 
+            JOIN assessments assess ON a.assessment_id = assess.id 
+            WHERE u.role = 'student' AND assess.strand_id = ?
+
+            UNION ALL
+
+            -- Part 2: Activity, Assignment, & Project Submissions
+            SELECT
+                s.id AS attempt_id,
+                s.score,
+                assess.total_points AS total_items, -- Use total_points for activities
+                s.submitted_at,
+                u.fname,
+                u.lname,
+                assess.title AS quiz_title,
+                assess.type AS assessment_type
+            FROM activity_submissions s
+            JOIN users u ON s.student_id = u.id
+            JOIN assessments assess ON s.assessment_id = assess.id
+            WHERE u.role = 'student' AND assess.strand_id = ?
+        ) AS combined_results
+        ORDER BY quiz_title ASC, submitted_at DESC";
 
 $stmt = $conn->prepare($sql);
 if ($stmt === false) {
-    // This will catch the error if 'assessments' is also the wrong name
     die("SQL Error: " . $conn->error);
 }
-$stmt->bind_param("i", $strand_id);
+// We bind the ID twice because there are two ? placeholders now (one for each query in the UNION)
+$stmt->bind_param("ii", $strand_id, $strand_id);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -98,6 +119,7 @@ $result = $stmt->get_result();
                     <tr>
                         <th>Student Name</th>
                         <th>Assessment Title</th>
+                        <th>Type</th>
                         <th>Score</th>
                         <th>Date Taken</th>
                         <th></th>
@@ -110,13 +132,26 @@ $result = $stmt->get_result();
                                 <td><?= htmlspecialchars($attempt['fname'] . ' ' . $attempt['lname']) ?></td>
                                 <td><?= htmlspecialchars($attempt['quiz_title']) ?></td>
                                 <td>
+                                    <span class="badge text-secondary"><?= ucfirst($attempt['assessment_type']) ?></span>
+                                </td>
+                                <td>
                                     <span class="fw-bold"><?= htmlspecialchars($attempt['score']) ?></span> / <?= htmlspecialchars($attempt['total_items']) ?>
                                 </td>
                                 <td>
                                     <?= date_format(date_create($attempt['submitted_at']), 'M d, Y, g:i A') ?>
                                 </td>
                                 <td>
-                                    <a href="view_single_attempt.php?id=<?= $attempt['attempt_id'] ?>" class="btn text-primary btn-sm me-3 btn-pill-hover">
+                                    <?php
+                                    // Determine link based on type
+                                    $link = '#';
+                                    if ($attempt['assessment_type'] == 'quiz' || $attempt['assessment_type'] == 'exam') {
+                                        $link = "view_single_attempt.php?id=" . $attempt['attempt_id'];
+                                    } else {
+                                        // Assuming you have a file to view/grade assignments (adjust filename if needed)
+                                        $link = "view_activity_submission.php?id=" . $attempt['attempt_id'];
+                                    }
+                                    ?>
+                                    <a href="<?= $link ?>" class="btn text-primary btn-sm me-3 btn-pill-hover">
                                         View Details
                                     </a>
                                 </td>
@@ -124,7 +159,7 @@ $result = $stmt->get_result();
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center text-muted p-4">No assessment attempts found for this strand.</td>
+                            <td colspan="6" class="text-center text-muted p-4">No assessment attempts found for this strand.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

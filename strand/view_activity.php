@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../includes/db.php';
-require_once '../includes/functions.php'; // We need this for isStudentEnrolled
+require_once '../includes/functions.php';
 
 // 1. Check if user is a student
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
@@ -9,39 +9,38 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
-// 2. Get Assessment ID from URL
+// 2. Get Assessment ID
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die('Error: Assessment ID is required.');
 }
 $assessment_id = (int)$_GET['id'];
 $student_id = (int)$_SESSION['user_id'];
 
-// 3. Fetch Assessment Details (Activity/Assignment)
+// 3. Fetch Assessment Details
 $stmt = $conn->prepare(
     "SELECT a.*, ls.strand_title 
      FROM assessments a
      JOIN learning_strands ls ON a.strand_id = ls.id
-     WHERE a.id = ? AND (a.type = 'activity' OR a.type = 'assignment')"
+     WHERE a.id = ? AND (a.type = 'activity' OR a.type = 'assignment' OR a.type = 'project')"
 );
 $stmt->bind_param("i", $assessment_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows == 0) {
-    die('Error: Activity not found or it is not an activity/assignment.');
+    die('Error: Activity not found.');
 }
 $assessment = $result->fetch_assoc();
 $stmt->close();
 
-// 4. Check if student is enrolled in this strand
+// 4. Check Enrollment
 if (!isStudentEnrolled($conn, $student_id, $assessment['strand_id'])) {
     die('Error: You are not enrolled in this learning strand.');
 }
 
-// 5. Check for Existing Submission
+// 5. Check Submission
 $submission = null;
 $stmt_sub = $conn->prepare(
-    // Note: SELECT * will automatically pick up 'original_filename' if you ran the SQL command
     "SELECT * FROM activity_submissions 
      WHERE assessment_id = ? AND student_id = ?"
 );
@@ -55,7 +54,6 @@ $stmt_sub->close();
 
 $is_open = !empty($assessment['is_open']);
 $has_submitted = ($submission !== null);
-
 $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) . '#assessments';
 
 ?>
@@ -83,6 +81,33 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
             color: blue;
         }
 
+        /* Floating Modern Alert CSS */
+        .floating-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            min-width: 350px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 50px;
+            border: none;
+            text-align: center;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                top: -100px;
+                opacity: 0;
+            }
+
+            to {
+                top: 20px;
+                opacity: 1;
+            }
+        }
+
         .submission-file-link {
             display: inline-block;
             padding: 0.5rem 1rem;
@@ -102,17 +127,10 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
             background-color: transparent;
             border: none;
             color: #6c757d;
-            /* Light icon color */
             transition: all 0.2s ease-in-out;
-
-            /* Make it a circle */
             border-radius: 50%;
             width: 40px;
-            /* Set fixed width */
             height: 40px;
-            /* Set fixed height */
-
-            /* Center the icon inside */
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -121,21 +139,25 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
 
         .btn-icon-edit:hover {
             background-color: #198754;
-            /* Bootstrap Green */
             color: #ffffff;
-            /* White icon on hover */
         }
 
         .btn-icon-delete:hover {
             background-color: #dc3545;
-            /* Bootstrap Red */
             color: #ffffff;
-            /* White icon on hover */
         }
     </style>
 </head>
 
 <body class="bg-light">
+
+    <?php if (isset($_GET['submitted'])): ?>
+        <div id="autoDismissAlert" class="alert alert-success floating-alert d-flex align-items-center justify-content-center gap-2" role="alert">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <span class="fw-medium">Submitted successfully!</span>
+        </div>
+    <?php endif; ?>
+
     <div class="container my-4">
         <div class="d-flex justify-content-end mb-3">
             <a href="<?= htmlspecialchars($back_link) ?>" class="back-link">
@@ -158,27 +180,32 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
 
                 <div class="submission-status-area">
                     <?php if ($has_submitted): ?>
-
                         <div id="submissionDisplayContainer">
-                            <?php if ($submission['status'] === 'graded'): ?>
-                                <div class="alert alert-primary" role="alert">
-                                    <h4 class="alert-heading">Graded</h4>
-                                    <p>Your submission has been graded by your teacher.</p>
-                                    <hr>
-                                    <p class="mb-0"><strong>Score:</strong> <?= htmlspecialchars($submission['score']) ?> / <?= htmlspecialchars($submission['total_points']) ?></p>
-                                    <?php if (!empty($submission['feedback'])): ?>
-                                        <p class="mt-2 mb-0"><strong>Feedback:</strong> <?= nl2br(htmlspecialchars($submission['feedback'])) ?></p>
-                                    <?php endif; ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="alert alert-warning border-0" role="alert">
-                                    <h4 class="alert-heading">Submitted</h4>
-                                    <p>You submitted this on <?= date('F j, Y, g:i a', strtotime($submission['submitted_at'])) ?>. It's awaiting grading.</p>
-                                </div>
-                            <?php endif; ?>
 
                             <div class="card card-body border-light-subtle shadow-sm mb-4">
-                                <h5 class="mb-3">Your Submission</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">Your Submission</h5>
+
+                                    <?php if ($submission['status'] === 'graded'): ?>
+                                        <span class="badge text-primary p-2">
+                                            Score: <?= htmlspecialchars($submission['score']) ?> / <?= htmlspecialchars($submission['total_points']) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge text-success p-2">
+                                            <i class="bi bi-check2-circle me-1"></i>Submitted
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <?php if ($submission['status'] === 'graded' && !empty($submission['feedback'])): ?>
+                                    <div class="alert alert-light border-0 mb-3">
+                                        <strong><i class="bi bi-chat-quote-fill me-2 text-muted"></i>Teacher's Feedback:</strong>
+                                        <div class="mt-1 ms-4">
+                                            <?= nl2br(htmlspecialchars($submission['feedback'])) ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
                                 <?php if (!empty($submission['submission_text'])): ?>
                                     <label class="form-label fw-bold">Submitted Text:</label>
                                     <div class="p-3 mb-3 bg-white rounded border">
@@ -190,7 +217,6 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                                     <label class="form-label fw-bold">Submitted File:</label>
                                     <div>
                                         <?php
-                                        // LOGIC UPDATE 1: Check for original filename
                                         $display_filename = !empty($submission['original_filename'])
                                             ? $submission['original_filename']
                                             : basename($submission['submission_file']);
@@ -218,14 +244,14 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                                 <?php endif; ?>
                             </div>
                         </div>
+
                     <?php elseif (!$is_open): ?>
                         <div class="alert alert-danger" role="alert">
                             <h4 class="alert-heading">Closed</h4>
                             <p>This activity is closed and is no longer accepting submissions.</p>
                         </div>
 
-                    <?php else: // STATE 4: READY TO SUBMIT 
-                    ?>
+                    <?php else: ?>
                         <div id="readyToSubmitContainer">
                             <button type="button" class="btn btn-primary rounded-pill px-3" id="showSubmissionFormBtn">
                                 <i class="bi bi-plus-circle me-1"></i> Add Submission
@@ -234,19 +260,13 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                     <?php endif; ?>
                 </div>
 
-                <?php
-                // Show form if:
-                // 1. We are in "Ready to Submit" state (State 4)
-                // 2. We have submitted, it's not graded, and it's open (State 2)
-                $can_show_form = (!$has_submitted && $is_open) || ($has_submitted && $submission['status'] !== 'graded' && $is_open);
-                ?>
+                <?php $can_show_form = (!$has_submitted && $is_open) || ($has_submitted && $submission['status'] !== 'graded' && $is_open); ?>
                 <?php if ($can_show_form): ?>
                     <div id="submissionFormContainer" class="card card-body border-light-subtle shadow-sm mb-4" style="display: none;">
                         <h4 class="mb-3" id="submissionFormTitle">Add Submission</h4>
                         <form id="submissionForm" action="../ajax/submit_activity.php" method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="assessment_id" value="<?= $assessment_id ?>">
                             <input type="hidden" name="student_id" value="<?= $student_id ?>">
-
                             <input type="hidden" name="action" id="formAction" value="add">
                             <input type="hidden" name="submission_id" id="submissionId" value="<?= $has_submitted ? $submission['id'] : '' ?>">
 
@@ -256,7 +276,6 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                                     <div class="mb-2">
                                         Current file:
                                         <?php
-                                        // LOGIC UPDATE 2: Check for original filename in the edit form too
                                         $edit_display_filename = !empty($submission['original_filename'])
                                             ? $submission['original_filename']
                                             : basename($submission['submission_file']);
@@ -267,14 +286,13 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                                             <label class="form-check-label" for="removeFile">Remove file</label>
                                         </div>
                                     </div>
-                                    <div class="form-text">Uploading a new file will replace the current one.</div>
                                 <?php endif; ?>
                                 <input class="form-control" type="file" id="submissionFile" name="submission_file">
                             </div>
 
                             <div class="mb-3">
                                 <label for="submissionText" class="form-label">Or Write Your Submission</label>
-                                <textarea class="form-control" id="submissionText" name="submission_text" rows="8" placeholder="You can type your answer or add a link here..."><?= $has_submitted ? htmlspecialchars($submission['submission_text']) : '' ?></textarea>
+                                <textarea class="form-control" id="submissionText" name="submission_text" rows="8"><?= $has_submitted ? htmlspecialchars($submission['submission_text']) : '' ?></textarea>
                             </div>
 
                             <div id="submissionError" class="alert alert-danger mt-3" style="display: none;"></div>
@@ -293,16 +311,13 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Initialize TinyMCE
         tinymce.init({
-            selector: '#submissionText', // Targets your textarea
+            selector: '#submissionText',
             plugins: 'lists link image media table code help wordcount',
             toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image media | code help',
             menubar: false,
             height: 300,
             setup: function(editor) {
-                // This pre-fills the editor with existing content if the form is for editing
-                // It runs when the editor is created (even if hidden)
                 editor.on('init', function() {
                     const initialContent = document.getElementById('submissionText').value;
                     editor.setContent(initialContent);
@@ -311,61 +326,56 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Form elements
+            // --- Auto Dismiss Alert Logic ---
+            const alertElement = document.getElementById('autoDismissAlert');
+            if (alertElement) {
+                setTimeout(function() {
+                    alertElement.style.transition = "opacity 0.5s ease";
+                    alertElement.style.opacity = "0";
+                    setTimeout(function() {
+                        alertElement.remove();
+                    }, 500);
+                }, 5000);
+            }
+
             const submissionFormContainer = document.getElementById('submissionFormContainer');
             const submissionForm = document.getElementById('submissionForm');
             const submitBtn = document.getElementById('submitBtn');
             const submissionError = document.getElementById('submissionError');
             const formAction = document.getElementById('formAction');
             const submissionFormTitle = document.getElementById('submissionFormTitle');
-
-            // Display elements
             const submissionDisplayContainer = document.getElementById('submissionDisplayContainer');
             const readyToSubmitContainer = document.getElementById('readyToSubmitContainer');
-
-            // Buttons
             const showSubmissionFormBtn = document.getElementById('showSubmissionFormBtn');
             const cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
             const editSubmissionBtn = document.getElementById('editSubmissionBtn');
             const deleteSubmissionBtn = document.getElementById('deleteSubmissionBtn');
 
-            // --- Show "Add" Form Logic ---
             if (showSubmissionFormBtn) {
                 showSubmissionFormBtn.addEventListener('click', () => {
                     formAction.value = 'add';
                     submitBtn.textContent = 'Submit';
                     submissionFormTitle.textContent = 'Add Submission';
-
-                    // Clear the TinyMCE editor
                     tinymce.get('submissionText').setContent('');
-
                     if (readyToSubmitContainer) readyToSubmitContainer.style.display = 'none';
                     if (submissionFormContainer) submissionFormContainer.style.display = 'block';
                 });
             }
 
-            // --- Show "Edit" Form Logic ---
             if (editSubmissionBtn) {
                 editSubmissionBtn.addEventListener('click', () => {
                     formAction.value = 'edit';
                     submitBtn.textContent = 'Update Submission';
                     submissionFormTitle.textContent = 'Edit Your Submission';
-
-                    // The 'setup' function already pre-filled the editor
-                    // We just need to show it.
-
                     if (submissionDisplayContainer) submissionDisplayContainer.style.display = 'none';
                     if (submissionFormContainer) submissionFormContainer.style.display = 'block';
                 });
             }
 
-            // --- Hide Form / Cancel Logic ---
             if (cancelSubmitBtn) {
                 cancelSubmitBtn.addEventListener('click', () => {
                     if (submissionFormContainer) submissionFormContainer.style.display = 'none';
                     if (submissionError) submissionError.style.display = 'none';
-
-                    // Show the correct container again
                     if (formAction.value === 'edit') {
                         if (submissionDisplayContainer) submissionDisplayContainer.style.display = 'block';
                     } else {
@@ -374,22 +384,16 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                 });
             }
 
-            // --- Form Submission (Handles BOTH Add and Edit) ---
             if (submissionForm) {
                 submissionForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
-
-                    // *** Call triggerSave() to update the underlying textarea ***
                     tinymce.triggerSave();
-
                     const fileInput = document.getElementById('submissionFile');
-                    // Get the textarea, which now has the TinyMCE content
                     const textInput = document.getElementById('submissionText');
                     const removeFileCheckbox = document.getElementById('removeFile');
                     const hasExistingFile = document.querySelector('a[href*="../uploads/submissions/"]');
                     const isRemovingFile = removeFileCheckbox ? removeFileCheckbox.checked : false;
 
-                    // *** Use textInput.value (which was updated by triggerSave) ***
                     if (fileInput.files.length === 0 && textInput.value.trim() === '' && (!hasExistingFile || isRemovingFile)) {
                         submissionError.textContent = 'Please upload a file or write a submission.';
                         submissionError.style.display = 'block';
@@ -400,7 +404,6 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                     submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${formAction.value === 'edit' ? 'Updating...' : 'Submitting...'}`;
                     submissionError.style.display = 'none';
 
-                    // This FormData will now correctly include the TinyMCE content
                     const formData = new FormData(submissionForm);
 
                     try {
@@ -410,7 +413,11 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                         });
                         const result = await response.json();
                         if (result.success) {
-                            window.location.reload();
+                            // *** UPDATED RELOAD LOGIC ***
+                            // Reloads page with ?submitted=1 to trigger the floating alert
+                            const url = new URL(window.location);
+                            url.searchParams.set('submitted', '1');
+                            window.location = url;
                         } else {
                             submissionError.textContent = result.error || 'An unknown error occurred.';
                             submissionError.style.display = 'block';
@@ -427,12 +434,9 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
                 });
             }
 
-            // --- Delete Submission Logic ---
             if (deleteSubmissionBtn) {
                 deleteSubmissionBtn.addEventListener('click', async () => {
-                    if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
-                        return;
-                    }
+                    if (!confirm('Are you sure you want to delete this submission?')) return;
                     const submissionId = deleteSubmissionBtn.dataset.submissionId;
                     try {
                         const formData = new FormData();

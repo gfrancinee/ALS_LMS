@@ -88,4 +88,44 @@ h2 {
     color: #000;
     border-radius: 50rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+}
+
+/* Floating Modern Alert */
+.floating-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    min-width: 350px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 50px;
+    border: none;
+    /* No border as requested */
+    text-align: center;
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        top: -100px;
+        opacity: 0;
+    }
+
+    to {
+        top: 20px;
+        opacity: 1;
+    }
+}
+
+
+.form-control:focus {
+    color: #212529;
+    background-color: #fff;
+    border: 2px solid #dc3545 !important;
+    /* Red Border, 2px width */
+    outline: 0;
+    box-shadow: none !important;
+    /* Removes the default Bootstrap blue glow */
 }
