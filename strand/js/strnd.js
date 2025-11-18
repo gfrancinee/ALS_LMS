@@ -1,15 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Initialize TinyMCE ---
-    tinymce.init({
-        selector: '#assessmentDesc', // Targets the 'Description' textarea
-        plugins: 'lists link autoresize code',
-        toolbar: 'undo redo | bold italic underline | bullist numlist | link | code',
-        menubar: false,
-        statusbar: false,
-        height: 250,
-        autoresize_bottom_margin: 20
-    });
+
 
     // Add this to initialize the editor in the Edit modal
     tinymce.init({
@@ -387,38 +378,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const typeRadios = document.querySelectorAll('.assessment-type-option');
-    const durationContainer = document.getElementById('durationContainer');
-    const attemptsContainer = document.getElementById('attemptsContainer');
-    const durationInput = document.getElementById('assessmentDuration');
-    const attemptsInput = document.getElementById('assessmentAttempts');
-
-    function toggleAssessmentFields() {
-        // Find the currently checked radio button's value
-        const selectedType = document.querySelector('input[name="type"]:checked').value;
-
-        if (selectedType === 'activity' || selectedType === 'assignment') {
-            // Hide fields and make them not required
-            durationContainer.style.display = 'none';
-            attemptsContainer.style.display = 'none';
-            durationInput.required = false;
-            attemptsInput.required = false;
-        } else {
-            // Show fields and make them required
-            durationContainer.style.display = 'block';
-            attemptsContainer.style.display = 'block';
-            durationInput.required = true;
-            attemptsInput.required = true;
-        }
+    if (typeof tinymce !== 'undefined') {
+        tinymce.init({
+            selector: '#assessmentDesc',
+            plugins: 'lists link image media table code help wordcount',
+            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image media | code help',
+            menubar: false,
+            height: 250
+        });
+    } else {
+        console.error("TinyMCE script not loaded.");
     }
 
-    // Add a 'change' event listener to all radio buttons
-    typeRadios.forEach(function (radio) {
-        radio.addEventListener('change', toggleAssessmentFields);
-    });
+    // This script controls the form logic
+    document.addEventListener('DOMContentLoaded', () => {
+        // Get all the elements for the CREATE form
+        const durationContainer = document.getElementById('durationContainer');
+        const attemptsContainer = document.getElementById('attemptsContainer');
+        const totalPointsContainer = document.getElementById('totalPointsContainer'); // New field
 
-    // Run the function once on page load to set the initial state
-    toggleAssessmentFields();
+        const durationInput = document.getElementById('assessmentDuration');
+        const attemptsInput = document.getElementById('assessmentAttempts');
+        const totalPointsInput = document.getElementById('assessmentTotalPoints'); // New field
+
+        const allRadios = document.querySelectorAll('.assessment-type-option');
+
+        function toggleCreateAssessmentFields() {
+            const selectedTypeInput = document.querySelector('#createAssessmentForm input[name="type"]:checked');
+            if (!selectedTypeInput) return;
+
+            const selectedType = selectedTypeInput.value;
+
+            // Check if it's a quiz or exam
+            if (selectedType === 'quiz' || selectedType === 'exam') {
+                // Show Quiz fields
+                durationContainer.style.display = 'block';
+                attemptsContainer.style.display = 'block';
+                durationInput.required = true;
+                durationInput.disabled = false;
+                attemptsInput.required = true;
+                attemptsInput.disabled = false;
+
+                // Hide Activity fields
+                totalPointsContainer.style.display = 'none';
+                totalPointsInput.required = false;
+                totalPointsInput.disabled = true;
+
+            } else { // This is for 'activity', 'assignment', or 'project'
+                // Hide Quiz fields
+                durationContainer.style.display = 'none';
+                attemptsContainer.style.display = 'none';
+                durationInput.required = false;
+                durationInput.disabled = true;
+                attemptsInput.required = false;
+                attemptsInput.disabled = true;
+
+                // Show Activity fields
+                totalPointsContainer.style.display = 'block';
+                totalPointsInput.required = true;
+                totalPointsInput.disabled = false;
+            }
+        }
+
+        // Add a 'change' event listener to every radio button
+        allRadios.forEach(radio => {
+            radio.addEventListener('change', toggleCreateAssessmentFields);
+        });
+
+        // Run it once on page load to set the default state (for Quiz)
+        toggleCreateAssessmentFields();
+    });
 
     // --- Handles the 'Create Assessment' form submission ---
     const createAssessmentForm = document.getElementById('createAssessmentForm');
