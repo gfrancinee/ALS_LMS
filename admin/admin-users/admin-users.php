@@ -2,7 +2,7 @@
 require_once '../../includes/auth.php';
 require_once '../../includes/db.php';
 
-// --- ADDED: DATA FETCHING FOR DASHBOARD ---
+// --- DATA FETCHING FOR DASHBOARD ---
 $stats = [
     'total_users' => 0,
     'total_students' => 0,
@@ -18,18 +18,18 @@ if ($result) {
         } elseif ($row['role'] == 'teacher') {
             $stats['total_teachers'] = (int)$row['count'];
         }
-        // This counts all users including admins
         $stats['total_users'] += (int)$row['count'];
     }
     $result->free();
 }
-// Count unverified users
-$unverified_result = $conn->query("SELECT COUNT(*) as count FROM users WHERE is_verified = 0 AND role != 'admin'");
+// Count unverified users (Email Pending OR Admin LRN Pending)
+$unverified_result = $conn->query("SELECT COUNT(*) as count FROM users 
+                                   WHERE (is_verified = 0 OR (role = 'student' AND is_admin_verified = 0)) 
+                                   AND role != 'admin'");
 if ($unverified_result) {
     $stats['unverified_users'] = (int)$unverified_result->fetch_assoc()['count'];
     $unverified_result->free();
 }
-// --- END: DATA FETCHING ---
 ?>
 
 <!DOCTYPE html>
@@ -42,7 +42,6 @@ if ($unverified_result) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/admin-users.css">
-
 </head>
 
 <body>
@@ -97,6 +96,7 @@ if ($unverified_result) {
                 </div>
             </div>
         </div>
+
         <ul class="nav nav-tabs mb-3" id="userTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">All</button>
@@ -122,6 +122,7 @@ if ($unverified_result) {
                             <th>Full Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>LRN</th>
                             <th>Grade Level</th>
                             <th>Status</th>
                             <th class="text-center"></th>
@@ -129,33 +130,54 @@ if ($unverified_result) {
                     </thead>
                     <tbody>
                         <?php
-                        // UPDATED: Query now hides admins and selects new columns
-                        $allQuery = "SELECT id, fname, lname, email, role, is_verified, grade_level 
-                                      FROM users 
-                                      WHERE role != 'admin' 
-                                      ORDER BY role, lname";
+                        $allQuery = "SELECT id, fname, lname, email, role, is_verified, is_admin_verified, grade_level, lrn 
+                                     FROM users 
+                                     WHERE role != 'admin' 
+                                     ORDER BY role, lname";
                         $allResult = $conn->query($allQuery);
 
                         if ($allResult->num_rows > 0) {
                             while ($row = $allResult->fetch_assoc()) {
-                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level']))) : 'N/A';
+
+                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level']))
+                                    ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level'])))
+                                    : '';
+
+                                $lrn_display = ($row['role'] == 'student' && !empty($row['lrn']))
+                                    ? htmlspecialchars($row['lrn'])
+                                    : '';
+
+                                // --- STATUS LOGIC ---
+                                $status_badge = '';
+
+                                if ($row['is_verified'] == 0) {
+                                    // Email not verified (Both roles)
+                                    $status_badge = '<span class="badge text-danger">Unverified Email</span>';
+                                } elseif ($row['role'] == 'student' && $row['is_admin_verified'] == 0) {
+                                    // Student Email verified, but LRN Pending
+                                    $status_badge = '<span class=" badge text-warning">Partially Verified</span>';
+                                } else {
+                                    // Teachers (Email verified) OR Students (Both verified)
+                                    $status_badge = '<span class="badge text-success">Verified</span>';
+                                }
+
                                 echo '<tr>
                                     <td>' . htmlspecialchars($row['fname'] . ' ' . $row['lname']) . '</td>
                                     <td>' . htmlspecialchars($row['email']) . '</td>
                                     <td>' . htmlspecialchars(ucfirst($row['role'])) . '</td>
+                                    <td>' . $lrn_display . '</td>
                                     <td>' . $grade_level_display . '</td>
-                                    <td>' . ($row['is_verified'] ? '<span class="badge text-success">Verified</span>' : '<span class="badge text-warning">Unverified</span>') . '</td>
+                                    <td>' . $status_badge . '</td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
-                                            ' . (!$row['is_verified'] ? '<button class="btn btn-sm btn-primary verify-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Verify User"><i class="bi bi-check-circle"></i></button>' : '') . '
-                                            <button class="btn btn-sm btn-success rounded-pill px-3 edit-btn" data-id="' . $row['id'] . '" title="Edit User"><i class="bi bi-pencil-square"></i></button>
+                                            <button class="btn btn-sm btn-primary rounded-pill px-3 edit-btn" data-id="' . $row['id'] . '" data-lrn="' . htmlspecialchars($row['lrn'] ?? '') . '" title="Edit User"><i class="bi bi-pencil-square"></i></button>
                                             <button class="btn btn-sm btn-danger rounded-pill px-3 delete-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Delete User"><i class="bi bi-trash3"></i></button>
                                         </div>
                                     </td>
                                 </tr>';
                             }
                         } else {
-                            echo "<tr><td colspan='6' class='text-center'>No users found.</td></tr>";
+                            echo "<tr><td colspan='7' class='text-center'>No users found.</td></tr>";
                         }
                         ?>
                     </tbody>
@@ -174,24 +196,25 @@ if ($unverified_result) {
                     </thead>
                     <tbody>
                         <?php
-                        // UPDATED: Query now selects new columns
-                        $teacherQuery = "SELECT id, fname, lname, email, role, is_verified 
-                                           FROM users 
-                                           WHERE role = 'teacher' 
-                                           ORDER BY lname";
+                        $teacherQuery = "SELECT id, fname, lname, email, role, is_verified FROM users WHERE role = 'teacher' ORDER BY lname";
                         $teacherResult = $conn->query($teacherQuery);
 
                         if ($teacherResult->num_rows > 0) {
                             while ($row = $teacherResult->fetch_assoc()) {
+
+                                // Teachers don't have "Partially Verified", only Email check
+                                $status_badge = ($row['is_verified'] == 1)
+                                    ? '<span class="badge text-success">Verified</span>'
+                                    : '<span class="badge text-danger">Unverified</span>';
+
                                 echo "<tr>
                                     <td>{$row['fname']} {$row['lname']}</td>
                                     <td>{$row['email']}</td>
-                                    <td>" . ($row['is_verified'] ? '<span class="badge text-success">Verified</span>' : '<span class="badge text-warning">Unverified</span>') . "</td>
+                                    <td>{$status_badge}</td>
                                     <td class='text-center'>
                                         <div class='d-flex justify-content-center gap-2'>
-                                            " . (!$row['is_verified'] ? '<button class="btn btn-sm btn-success verify-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Verify User"><i class="bi bi-check-circle"></i></button>' : '') . "
                                             <button class='btn btn-sm btn-primary rounded-pill px-3 edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
-                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger rounded-pill px-3' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
+                                            <button class='btn btn-sm btn-danger rounded-pill px-3 delete-btn' data-id='{$row['id']}' data-email='" . htmlspecialchars($row['email']) . "' title='Delete User'><i class='bi bi-trash3'></i></button>
                                         </div>
                                     </td>
                                 </tr>";
@@ -210,6 +233,7 @@ if ($unverified_result) {
                         <tr>
                             <th>Full Name</th>
                             <th>Email</th>
+                            <th>LRN</th>
                             <th>Grade Level</th>
                             <th>Status</th>
                             <th class="text-center"></th>
@@ -217,32 +241,45 @@ if ($unverified_result) {
                     </thead>
                     <tbody>
                         <?php
-                        // UPDATED: Query now selects new columns
-                        $studentQuery = "SELECT id, fname, lname, email, role, is_verified, grade_level 
-                                           FROM users 
-                                           WHERE role = 'student' 
-                                           ORDER BY lname";
+                        $studentQuery = "SELECT id, fname, lname, email, role, is_verified, is_admin_verified, grade_level, lrn 
+                                         FROM users 
+                                         WHERE role = 'student' 
+                                         ORDER BY lname";
                         $studentResult = $conn->query($studentQuery);
 
                         if ($studentResult->num_rows > 0) {
                             while ($row = $studentResult->fetch_assoc()) {
-                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level']))) : 'N/A';
+                                $grade_level_display = !empty($row['grade_level']) ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level']))) : 'N/A';
+                                $lrn_display = !empty($row['lrn']) ? htmlspecialchars($row['lrn']) : '<span class="text-muted fst-italic">None</span>';
+
+                                // --- STUDENT STATUS LOGIC ---
+                                $status_badge = '';
+
+                                if ($row['is_verified'] == 0) {
+                                    $status_badge = '<span class="badge text-danger">Unverified Email</span>';
+                                } elseif ($row['is_admin_verified'] == 0) {
+                                    // "Partially Verified" logic
+                                    $status_badge = '<span class="badge text-warning">Partially Verified</span>';
+                                } else {
+                                    $status_badge = '<span class="badge text-success">Verified</span>';
+                                }
+
                                 echo "<tr>
                                     <td>{$row['fname']} {$row['lname']}</td>
                                     <td>{$row['email']}</td>
+                                    <td>{$lrn_display}</td>
                                     <td>{$grade_level_display}</td>
-                                    <td>" . ($row['is_verified'] ? '<span class="badge text-success">Verified</span>' : '<span class="badge text-warning">Unverified</span>') . "</td>
+                                    <td>{$status_badge}</td>
                                     <td class='text-center'>
                                         <div class='d-flex justify-content-center gap-2'>
-                                            " . (!$row['is_verified'] ? '<button class="btn btn-sm btn-success verify-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Verify User"><i class="bi bi-check-circle"></i></button>' : '') . "
-                                            <button class='btn btn-sm btn-primary rounded-pill px-3 edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
-                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger rounded-pill px-3' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
+                                            <button class='btn btn-sm btn-primary rounded-pill px-3 edit-btn' data-id='{$row['id']}' data-lrn='" . htmlspecialchars($row['lrn'] ?? '') . "' title='Edit User'><i class='bi bi-pencil-square'></i></button>
+                                            <button class='btn btn-sm btn-danger rounded-pill px-3 delete-btn' data-id='{$row['id']}' data-email='" . htmlspecialchars($row['email']) . "' title='Delete User'><i class='bi bi-trash3'></i></button>
                                         </div>
                                     </td>
                                 </tr>";
                             }
                         } else {
-                            echo "<tr><td colspan='5' class='text-center'>No students found.</td></tr>";
+                            echo "<tr><td colspan='6' class='text-center'>No students found.</td></tr>";
                         }
                         ?>
                     </tbody>
@@ -256,43 +293,72 @@ if ($unverified_result) {
                             <th>Full Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>LRN</th>
                             <th>Grade Level</th>
+                            <th>Status</th>
                             <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $unverifiedQuery = "SELECT id, fname, lname, email, role, is_verified, grade_level 
+                        // UPDATED SQL: Fetch Email Unverified OR Student Pending Admin
+                        $unverifiedQuery = "SELECT id, fname, lname, email, role, is_verified, is_admin_verified, grade_level, lrn 
                                             FROM users 
-                                            WHERE is_verified = 0 AND role != 'admin'
+                                            WHERE (is_verified = 0 OR (role = 'student' AND is_admin_verified = 0))
+                                            AND role != 'admin'
                                             ORDER BY lname";
                         $unverifiedResult = $conn->query($unverifiedQuery);
 
                         if ($unverifiedResult->num_rows > 0) {
                             while ($row = $unverifiedResult->fetch_assoc()) {
-                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level'])) ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level']))) : 'N/A';
-                                echo "<tr>
-                                    <td>{$row['fname']} {$row['lname']}</td>
-                                    <td>{$row['email']}</td>
-                                    <td>" . htmlspecialchars(ucfirst($row['role'])) . "</td>
-                                    <td>{$grade_level_display}</td>
-                                    <td class='text-center'>
-                                        <div class='d-flex justify-content-center gap-2'>
-                                            <button class='btn btn-sm btn-success verify-btn' data-id='{$row['id']}' data-email='{$row['email']}' title='Verify User'><i class='bi bi-check-circle'></i></button>
-                                            <button class='btn btn-sm btn-primary rounded-pill px-3 edit-btn' data-id='{$row['id']}' title='Edit User'><i class='bi bi-pencil-square'></i></button>
-                                            <a href='delete-user.php?id={$row['id']}' class='btn btn-sm btn-danger rounded-pill px-3' onclick='return confirm(\"Delete this user?\")' title='Delete User'><i class='bi bi-trash3'></i></a>
+
+                                // Format Data
+                                $grade_level_display = ($row['role'] == 'student' && !empty($row['grade_level']))
+                                    ? htmlspecialchars(ucfirst(str_replace('_', ' ', $row['grade_level'])))
+                                    : '';
+
+                                $lrn_display = ($row['role'] == 'student' && !empty($row['lrn']))
+                                    ? htmlspecialchars($row['lrn'])
+                                    : '<span class="text-muted fst-italic">None</span>';
+
+                                // Determine Status Badge
+                                $status_badge = '';
+                                if ($row['is_verified'] == 0) {
+                                    $status_badge = '<span class="badge text-warning">Unverified Email</span>';
+                                } elseif ($row['role'] == 'student' && $row['is_admin_verified'] == 0) {
+                                    $status_badge = '<span class="badge text-info">Pending Approval</span>';
+                                }
+
+                                echo '<tr>
+                                    <td>' . htmlspecialchars($row['fname'] . ' ' . $row['lname']) . '</td>
+                                    <td>' . htmlspecialchars($row['email']) . '</td>
+                                    <td>' . htmlspecialchars(ucfirst($row['role'])) . '</td>
+                                    <td>' . $lrn_display . '</td>
+                                    <td>' . $grade_level_display . '</td>
+                                    <td>' . $status_badge . '</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button class="btn btn-sm btn-success verify-btn" 
+        data-id="' . $row['id'] . '" 
+        data-email="' . htmlspecialchars($row['email']) . '" 
+        data-lrn="' . htmlspecialchars($row['lrn'] ?? 'N/A') . '" 
+        title="Approve/Verify">
+    <i class="bi bi-check-circle"></i>
+</button>
+                                            
+                                            <button class="btn btn-sm btn-primary rounded-pill px-3 edit-btn" data-id="' . $row['id'] . '" data-lrn="' . htmlspecialchars($row['lrn'] ?? '') . '" title="Edit User"><i class="bi bi-pencil-square"></i></button>
+                                            <button class="btn btn-sm btn-danger rounded-pill px-3 delete-btn" data-id="' . $row['id'] . '" data-email="' . htmlspecialchars($row['email']) . '" title="Delete User"><i class="bi bi-trash3"></i></button>
                                         </div>
                                     </td>
-                                </tr>";
+                                </tr>';
                             }
                         } else {
-                            echo "<tr><td colspan='5' class='text-center'>No unverified users found.</td></tr>";
+                            echo "<tr><td colspan='7' class='text-center p-4 text-muted'>No pending verifications found.</td></tr>";
                         }
                         ?>
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
 
@@ -334,10 +400,14 @@ if ($unverified_result) {
                         <label for="editGradeLevel" class="form-label">Grade Level</label>
                         <select class="form-select" name="grade_level" id="editGradeLevel">
                             <option value="">N/A</option>
-
                             <option value="grade_11">Grade 11</option>
                             <option value="grade_12">Grade 12</option>
                         </select>
+                    </div>
+
+                    <div class="mb-3" id="editLrnGroup" style="display: none;">
+                        <label for="editLrn" class="form-label">LRN</label>
+                        <input type="text" class="form-control" name="lrn" id="editLrn" maxlength="12" placeholder="12-Digit LRN">
                     </div>
 
                     <div class="mb-3">
@@ -347,26 +417,29 @@ if ($unverified_result) {
                     </div>
 
                     <div id="editUserError" class="alert alert-danger" style="display: none;"></div>
-
                 </div>
 
                 <div class="modal-footer bg-white">
-                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button> <button type="submit" class="btn btn-primary rounded-pill px-3" id="saveUserChangesBtn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-3" id="saveUserChangesBtn">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="modal fade" id="verifyUserModal" tabindex="-1" aria-labelledby="verifyUserModalLabel" aria-hidden="true">
+    <div class="modal fade" id="verifyUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-white">
-                    <h5 class="modal-title" id="verifyUserModalLabel">Manually Verify User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">Verify User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to manually verify this user?</p>
-                    <p><strong>Email:</strong> <span id="verifyUserEmail" class="text-muted"></span></p>
+                    <p>Are you sure you want to verify this user?</p>
+
+                    <p class="mb-1"><strong>Email:</strong> <span id="verifyUserEmail" class="text-muted"></span></p>
+
+                    <p><strong>LRN:</strong> <span id="verifyUserLrn" class="text-muted fw-bold"></span></p>
                 </div>
                 <div class="modal-footer bg-white">
                     <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
@@ -376,12 +449,12 @@ if ($unverified_result) {
         </div>
     </div>
 
-    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-white">
-                    <h5 class="modal-title" id="deleteUserModalLabel">Delete User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">Delete User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to permanently delete this user?</p>
@@ -397,6 +470,7 @@ if ($unverified_result) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/admin-user.js" defer></script>
+
 
 </body>
 

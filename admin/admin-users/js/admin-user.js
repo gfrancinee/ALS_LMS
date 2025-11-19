@@ -3,12 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Modal Instances ---
     const editModalEl = document.getElementById('editUserModal');
     const verifyModalEl = document.getElementById('verifyUserModal');
-    const deleteModalEl = document.getElementById('deleteUserModal'); // ADDED
+    const deleteModalEl = document.getElementById('deleteUserModal');
 
     // Create Bootstrap Modal instances
     const editModal = new bootstrap.Modal(editModalEl);
     const verifyModal = new bootstrap.Modal(verifyModalEl);
-    const deleteModal = new bootstrap.Modal(deleteModalEl); // ADDED
+    const deleteModal = new bootstrap.Modal(deleteModalEl);
 
     // --- Form Elements ---
     const editUserForm = document.getElementById('editUserForm');
@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const verifyUserEmail = document.getElementById('verifyUserEmail');
     const confirmVerifyBtn = document.getElementById('confirmVerifyBtn');
 
-    // --- ADDED: Delete Modal Elements ---
     const deleteUserEmail = document.getElementById('deleteUserEmail');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
@@ -37,6 +36,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
+    document.getElementById('editRole').addEventListener('change', function () {
+        const lrnGroup = document.getElementById('editLrnGroup');
+        if (this.value === 'student') {
+            lrnGroup.style.display = 'block';
+        } else {
+            lrnGroup.style.display = 'none';
+        }
+        // Also toggle grade level using your helper
+        toggleGradeLevelField(this.value);
+    });
+
+    // When modal opens, ensure LRN field visibility is correct based on current role
+    editModalEl.addEventListener('shown.bs.modal', function () {
+        const role = document.getElementById('editRole').value;
+        const lrnGroup = document.getElementById('editLrnGroup');
+        if (role === 'student') {
+            lrnGroup.style.display = 'block';
+        } else {
+            lrnGroup.style.display = 'none';
+        }
+    });
 
     // 1. Listen for clicks on ALL .edit-btn buttons
     document.querySelectorAll('.edit-btn').forEach(button => {
@@ -60,7 +80,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.querySelector('#editEmail').value = data.email;
                     document.querySelector('#editRole').value = data.role;
                     document.querySelector('#editGradeLevel').value = data.grade_level || '';
+
+                    // --- ADDED: Populate LRN ---
+                    if (document.querySelector('#editLrn')) {
+                        document.querySelector('#editLrn').value = data.lrn || '';
+                    }
+
+                    // Update visibility for both Grade and LRN
                     toggleGradeLevelField(data.role);
+                    const lrnGroup = document.getElementById('editLrnGroup');
+                    if (lrnGroup) {
+                        lrnGroup.style.display = (data.role === 'student') ? 'block' : 'none';
+                    }
+
                     editModal.show();
                 })
                 .catch(error => {
@@ -70,18 +102,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 2. Listen for clicks on ALL .verify-btn buttons
     document.querySelectorAll('.verify-btn').forEach(button => {
         button.addEventListener('click', () => {
             const userId = button.getAttribute('data-id');
             const userEmail = button.getAttribute('data-email');
-            verifyUserEmail.textContent = userEmail;
-            confirmVerifyBtn.dataset.id = userId;
+            // NEW: Get LRN
+            const userLrn = button.getAttribute('data-lrn') || 'N/A';
+
+            // Update Modal Content
+            document.getElementById('verifyUserEmail').textContent = userEmail;
+
+            // NEW: Update LRN in Modal
+            const lrnSpan = document.getElementById('verifyUserLrn');
+            if (lrnSpan) {
+                lrnSpan.textContent = userLrn;
+                // Optional: Color code it if missing
+                if (userLrn === 'N/A' || userLrn === '') {
+                    lrnSpan.innerHTML = '<span class="text-danger fst-italic">No LRN provided</span>';
+                }
+            }
+
+            document.getElementById('confirmVerifyBtn').dataset.id = userId;
             verifyModal.show();
         });
     });
 
-    // 3. --- ADDED: Listen for clicks on ALL .delete-btn buttons ---
+    // 3. Listen for clicks on ALL .delete-btn buttons
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', () => {
             const userId = button.getAttribute('data-id');
@@ -162,66 +208,43 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    // Get the modal and button elements
-
-    if (confirmDeleteBtn && deleteModal) {
-
-        // --- ADDED: Listen for the Delete Confirm Button CLICK event ---
+    // 6. Listen for the Delete Confirm Button CLICK event
+    if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', async () => {
-            const userId = confirmDeleteBtn.dataset.id; // Get the ID from the button
-
-            // Show loading state
+            const userId = confirmDeleteBtn.dataset.id;
             confirmDeleteBtn.disabled = true;
             confirmDeleteBtn.textContent = 'Deleting...';
 
             try {
-                // --- THIS IS THE FIX ---
-                const response = await fetch('/ALS_LMS/ajax/delete-user.php', { // 1. Fixed path and filename
+                const response = await fetch('../../ajax/delete-user.php', { // Kept your path style
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json' // 2. Set header to JSON
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ id: userId }) // 3. Send data as a JSON string
+                    body: JSON.stringify({ id: userId })
                 });
-                // --- END OF FIX ---
 
                 const data = await response.json();
 
                 if (data.success) {
-                    // Success! Hide modal and reload page
                     deleteModal.hide();
                     location.reload();
                 } else {
-                    // Show an alert on failure
                     alert(data.error || 'Failed to delete user.');
                 }
 
             } catch (error) {
-                // This catches network errors or JSON parsing errors (like "Unexpected token 'I'")
                 console.error('Error deleting user:', error);
                 alert('An unexpected error occurred. Check the console.');
 
             } finally {
-                // Reset button state regardless of success or failure
                 confirmDeleteBtn.disabled = false;
                 confirmDeleteBtn.textContent = 'Delete';
             }
         });
     }
 
-    // You also need a function to set the ID on the button when the modal is opened.
-    // This is just an example:
-    document.body.addEventListener('click', (e) => {
-        if (e.target.matches('.delete-user-btn')) { // Assume your trash can icon has this class
-            const userId = e.target.dataset.id;
-            if (confirmDeleteBtn) {
-                // Set the ID on the confirm button so we know who to delete
-                confirmDeleteBtn.dataset.id = userId;
-            }
-        }
-    });
-
-    // 7. Listen for ROLE dropdown changes
+    // 7. Listen for ROLE dropdown changes (You already had this logic, ensuring it's hooked up)
     editRoleSelect.addEventListener('change', () => {
         toggleGradeLevelField(editRoleSelect.value);
     });

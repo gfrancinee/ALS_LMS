@@ -79,55 +79,62 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 
 <body>
-    <div class="container-fluid d-flex justify-content-center align-items-center vh-100 p-0">
+    <div class="login-wrapper">
+        <main class="login-card">
 
-        <main class="login-container bg-white" style="max-width: 450px; width: 100%;">
-            <header class="mb-4 text-center">
-                <h1 id="font">
-                    <span>A</span><span>L</span><span>S</span> Learning Management System
-                </h1>
+            <header class="text-center">
+                <div class="brand-title">
+                    <h1 id="font">
+                        <span>A</span><span>L</span><span>S</span> LMS
+                    </h1>
+                </div>
+                <p class="brand-subtitle">Sign in to your account</p>
             </header>
 
             <?php if ($message): ?>
-                <section id="message" role="alert" aria-live="polite" class="text-danger text-center mb-3">
-                    <?= html_entity_decode($message) ?>
-                </section>
+                <div id="message" role="alert" aria-live="polite" class="alert alert-modern d-flex align-items-center p-3 mb-4">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    <span><?= html_entity_decode($message) ?></span>
+                </div>
             <?php endif; ?>
 
             <form id="loginForm" method="POST" novalidate>
-                <div class="email">
+                <div class="form-group email">
                     <label for="email" class="form-label">Email Address</label>
                     <input
                         type="email"
                         id="email"
                         name="email"
                         class="form-control"
+                        placeholder="name@example.com"
                         required />
-                    <div class="error-message" id="emailError" aria-live="assertive"></div>
+                    <div class="error-message text-danger small mt-1" id="emailError" aria-live="assertive"></div>
                 </div>
 
-                <div class="password">
+                <div class="form-group password">
                     <label for="password" class="form-label">Password</label>
                     <input
                         type="password"
                         id="password"
                         name="password"
                         class="form-control"
+                        placeholder="Enter your password"
                         required />
-                    <div class="error-message" id="passwordError" aria-live="assertive"></div>
+                    <div class="error-message text-danger small mt-1" id="passwordError" aria-live="assertive"></div>
                 </div>
 
-                <div class="submit mb-3">
-                    <button id="loginBtn" type="submit" class="btn w-100 btn-primary rounded-pill px-3 btn-md">
+                <div class="submit mt-4">
+                    <button id="loginBtn" type="submit" class="btn w-100 btn-primary rounded-pill btn-login">
                         <span class="btn-text">Log In</span>
-                        <span class="spinner-border spinner-border-sm text-light" role="status" style="display:none;"></span>
+                        <span class="spinner-border spinner-border-sm text-light ms-2" role="status" style="display:none;"></span>
                     </button>
                 </div>
             </form>
 
-            <div class="register-link text-center mt-3">
-                <p>Not yet registered? <a href="register.php">Register</a></p>
+            <div class="register-link text-center mt-4">
+                <p class="register-text">Don't have an account? <a href="register.php">Create Account</a></p>
             </div>
+
         </main>
     </div>
 </body>

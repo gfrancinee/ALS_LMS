@@ -3,7 +3,7 @@
 date_default_timezone_set('Asia/Manila');
 
 session_start();
-require_once 'includes/db.php'; // This now sets the DB connection timezone too
+require_once 'includes/db.php';
 
 $error_message = '';
 $success_message = '';
@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($code) || empty($email)) {
         $error_message = "Please enter the 6-digit code.";
     } else {
-        // This query now works correctly because NOW() uses the connection timezone
-        $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > NOW()");
+        // --- UPDATE 1: Also fetch the 'role' to give the right success message ---
+        $stmt = $conn->prepare("SELECT id, is_verified, role FROM users WHERE email = ? AND verification_code = ? AND code_expires_at > NOW()");
 
         if ($stmt === false) {
             $error_message = "Database error. Please try again later.";
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $stmt->get_result();
 
             if ($result->num_rows === 1) {
-                // SUCCESS! Code is correct and valid.
+                // SUCCESS! Code is correct.
                 $user_data = $result->fetch_assoc();
                 $stmt->close();
 
@@ -36,43 +36,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error_message = "This account is already verified. You can log in.";
                 } else {
                     $stmt_update = $conn->prepare("UPDATE users SET is_verified = 1, verification_code = NULL, code_expires_at = NULL WHERE email = ?");
-                    if ($stmt_update) { // Check if prepare succeeded
+                    if ($stmt_update) {
                         $stmt_update->bind_param("s", $email);
                         $stmt_update->execute();
                         $stmt_update->close();
-                        $success_message = "Verification Successful! You can now log in.";
+
+                        // --- UPDATE 2: Custom Message based on Role ---
+                        if ($user_data['role'] === 'student') {
+                            // Student: Email is good, but wait for Admin
+                            $success_message = "Email Verified! Your account is now pending for Admin Approval (LRN Check).";
+                        } else {
+                            // Teacher: Good to go
+                            $success_message = "Verification Successful! You can now log in.";
+                        }
                     } else {
                         $error_message = "Database error updating account.";
-                        error_log("Prepare failed (stmt_update): " . $conn->error);
                     }
                 }
             } else {
-                // FAILED! Code is wrong or expired.
+                // FAILED!
                 $stmt->close();
-
-                $stmt_check_user = $conn->prepare("SELECT id FROM users WHERE email = ?");
-
-                if ($stmt_check_user === false) {
-                    $error_message = "Database error checking user.";
-                    error_log("Prepare failed (stmt_check_user): " . $conn->error);
-                } else {
-                    $stmt_check_user->bind_param("s", $email);
-                    $stmt_check_user->execute();
-                    $check_result = $stmt_check_user->get_result(); // Store result before closing
-
-                    if ($check_result->num_rows > 0) {
-                        $error_message = "Invalid or expired verification code. Please try again or resend.";
-                    } else {
-                        $error_message = "Invalid email address.";
-                    }
-                    $stmt_check_user->close();
-                }
+                $error_message = "Invalid or expired verification code.";
             }
         }
     }
 } // End of POST request handling
 
-// Close connection if it's still open (moved outside POST block)
 if (isset($conn) && $conn instanceof mysqli) {
     $conn->close();
 }
@@ -96,68 +85,181 @@ if (isset($conn) && $conn instanceof mysqli) {
         .cooldown {
             color: grey;
         }
+
+        /* Custom CSS for the Modern Success Modal */
+        .modal-content.shadow-lg {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+            /* Slightly stronger shadow */
+        }
+
+        .success-icon {
+            width: 60px;
+            /* Size of the circular icon */
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .success-icon i {
+            font-size: 2.5rem !important;
+            /* Adjust icon size */
+        }
+
+        /* Optional: Center button text */
+        .modal-footer {
+            justify-content: center;
+        }
+
+        /* For the new rounded-pill button if not already defined by Bootstrap */
+        .btn.rounded-pill {
+            border-radius: 50rem;
+            /* Makes it truly pill-shaped */
+        }
+
+        body.verify-page {
+            background-color: #f0f2f5;
+            /* Soft gray background */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .verify-card {
+            background: #ffffff;
+            border-radius: 20px;
+            /* Modern rounded corners */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            /* Soft, deep shadow */
+            padding: 3rem 2.5rem;
+            border: none;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background-color: #e7f1ff;
+            /* Light blue background */
+            color: #0d6efd;
+            /* Primary blue icon */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            font-size: 2.5rem;
+        }
+
+        .verification-input {
+            text-align: center;
+            font-size: 2rem;
+            letter-spacing: 0.75rem;
+            font-weight: 600;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            height: 60px;
+            transition: all 0.3s ease;
+        }
+
+        .verification-input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        }
+
+        .btn-verify {
+            padding: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .btn-verify:active {
+            transform: scale(0.98);
+        }
+
+        #resendLink {
+            text-decoration: none;
+            font-weight: 500;
+        }
     </style>
 </head>
 
 <body class="verify-page">
     <main class="container d-flex justify-content-center align-items-center min-vh-100">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
 
-                <div class="verify-container">
+        <div class="verify-card">
+            <div class="icon-circle">
+                <i class="bi bi-envelope-check-fill"></i>
+            </div>
 
-                    <header>
-                        <h1 class="text-center">Verify Your Account</h1>
-                        <p class="text-center text-muted">
-                            A 6-digit code was sent to <br><strong><?= htmlspecialchars($user_email) ?></strong>
-                        </p>
-                    </header>
+            <header class="mb-4">
+                <h2 class="text-center fw-bold mb-2">Verify Your Email</h2>
+                <p class="text-center text-muted small">
+                    We've sent a 6-digit code to<br>
+                    <span class="text-dark fw-semibold"><?= htmlspecialchars($user_email) ?></span>
+                </p>
+            </header>
 
-                    <form id="verifyForm" method="POST" action="verify.php?email=<?= urlencode($user_email) ?>">
-                        <input type="hidden" name="email" value="<?= htmlspecialchars($user_email) ?>">
+            <form id="verifyForm" method="POST" action="verify.php?email=<?= urlencode($user_email) ?>">
+                <input type="hidden" name="email" value="<?= htmlspecialchars($user_email) ?>">
 
-                        <?php if ($error_message): ?>
-                            <div class="alert alert-danger text-center"><?= $error_message ?></div>
-                        <?php endif; ?>
-
-                        <div class="mb-3">
-                            <label for="verification_code" class="form-label">Verification Code</label>
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="form-control" id="verification_code" name="verification_code" required maxlength="6"
-                                style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;" autofocus>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            Verify
-                        </button>
-                    </form>
-
-                    <div class="text-center mt-3">
-                        <p>Didn't get a code? <a href="#" id="resendLink" data-email="<?= htmlspecialchars($user_email) ?>">Resend code</a></p>
-                        <p id="resendFeedback"></p>
+                <?php if ($error_message): ?>
+                    <div class="alert alert-danger text-center border-0 shadow-sm rounded-3 small mb-4">
+                        <i class="bi bi-exclamation-circle me-1"></i> <?= $error_message ?>
                     </div>
+                <?php endif; ?>
+
+                <div class="mb-4">
+                    <input type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        autocomplete="one-time-code"
+                        class="form-control verification-input"
+                        id="verification_code"
+                        name="verification_code"
+                        required
+                        maxlength="6"
+                        placeholder="000000"
+                        autofocus>
                 </div>
 
+                <button type="submit" class="btn btn-primary w-100 rounded-pill btn-verify">
+                    Verify Account
+                </button>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="small text-muted mb-1">Didn't receive the code?</p>
+                <a href="#" id="resendLink" data-email="<?= htmlspecialchars($user_email) ?>">Resend Code</a>
+                <p id="resendFeedback" class="mt-2 small"></p>
             </div>
         </div>
+
     </main>
 
-    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Verification Successful!</h5>
-                </div>
-                <div class="modal-body">
-                    <p>Your account is now verified. You can log in.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="goLoginBtn">Log In</button>
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-5">
+                    <div class="d-flex justify-content-center align-items-center mb-3">
+                        <div class="success-icon p-2 rounded-circle bg-success text-white">
+                            <i class="bi bi-check-circle-fill fs-2"></i>
+                        </div>
+                    </div>
+                    <h4 class="modal-title mb-3" id="successModalLabel">Success!</h4>
+                    <p class="mb-4">Email Verified! Your account is now pending Admin Approval (LRN Check).</p>
+                    <button type="button" class="btn btn-success rounded-pill px-4 py-2" onclick="window.location.href='login.php'">
+                        Go to Login
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             // Show success modal if PHP set the message
@@ -173,7 +275,7 @@ if (isset($conn) && $conn instanceof mysqli) {
                 });
             }
 
-            // --- Resend Code Logic ---
+            // --- Resend Code Logic (Uses your existing ajax/resend_code.php) ---
             const resendLink = document.getElementById('resendLink');
             const resendFeedback = document.getElementById('resendFeedback');
             let cooldownTimer = null;
@@ -182,8 +284,7 @@ if (isset($conn) && $conn instanceof mysqli) {
             if (resendLink) {
                 resendLink.addEventListener('click', async (e) => {
                     e.preventDefault();
-
-                    if (cooldownTimer) return; // Do nothing if in cooldown
+                    if (cooldownTimer) return;
 
                     const email = resendLink.dataset.email;
                     resendFeedback.textContent = 'Sending...';
@@ -191,8 +292,7 @@ if (isset($conn) && $conn instanceof mysqli) {
                     resendLink.classList.add('disabled');
 
                     try {
-                        // This path MUST be correct
-                        const response = await fetch('ajax/resend_code.php', {
+                        const response = await fetch('ajax/resend_code.php', { // This file calls your existing PHP
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -208,7 +308,7 @@ if (isset($conn) && $conn instanceof mysqli) {
                             resendFeedback.textContent = data.message;
                             resendFeedback.className = 'text-success';
 
-                            // Start cooldown timer
+                            // Cooldown Timer
                             let secondsLeft = cooldownSeconds;
                             resendLink.textContent = `Resend code (${secondsLeft}s)`;
                             cooldownTimer = setInterval(() => {
@@ -223,15 +323,12 @@ if (isset($conn) && $conn instanceof mysqli) {
                                     resendFeedback.textContent = '';
                                 }
                             }, 1000);
-
                         } else {
                             resendFeedback.textContent = data.message || 'Failed to resend code.';
                             resendFeedback.className = 'text-danger';
                             resendLink.classList.remove('disabled');
                         }
-
                     } catch (error) {
-                        console.error('Resend error:', error);
                         resendFeedback.textContent = 'An error occurred. Please try again.';
                         resendFeedback.className = 'text-danger';
                         resendLink.classList.remove('disabled');

@@ -12,8 +12,8 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $id = intval($_GET['id']);
 
 try {
-    // --- THIS IS THE UPDATED LINE ---
-    $stmt = $conn->prepare("SELECT id, fname, lname, email, role, grade_level FROM users WHERE id = ?");
+    // --- ADDED: 'lrn' to the SELECT list ---
+    $stmt = $conn->prepare("SELECT id, fname, lname, email, role, grade_level, lrn FROM users WHERE id = ?");
 
     $stmt->bind_param("i", $id);
     $stmt->execute();

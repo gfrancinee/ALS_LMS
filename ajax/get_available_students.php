@@ -46,11 +46,14 @@ if ($required_grade_level === 'Grade 11') {
 
 // Updated: This query finds all users with the 'student' role
 // who match the strand's grade level AND are NOT already in this specific strand.
+// ADDED: Check for email verification AND admin LRN verification
 $stmt = $conn->prepare("
     SELECT id, fname, lname, grade_level
     FROM users 
     WHERE role = 'student' 
     AND grade_level = ?
+    AND is_verified = 1 
+    AND is_admin_verified = 1
     AND id NOT IN (
         SELECT student_id FROM strand_participants WHERE strand_id = ?
     )

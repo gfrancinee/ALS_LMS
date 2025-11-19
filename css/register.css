@@ -3,7 +3,9 @@ body {
     background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
         url('../img/classroom.jpg');
     /* <-- Or your preferred image */
-
+    background-color: #f4f7f6;
+    /* Soft neutral background */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -29,72 +31,87 @@ body::-webkit-scrollbar {
 }
 
 
-/* === 2. REGISTER CONTAINER === */
 .register-container {
-    width: 600px;
-    max-width: 100%;
-    height: auto;
-    /* This makes it fit the content */
-
+    background: #ffffff;
     padding: 2.5rem;
-
-    background-color: #ffffff;
-    border-radius: 1rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-
-    animation: popUp 0.3s ease-out;
-
-    /* These margins add space at the top and bottom */
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-
-    /* This adds space from the right edge of the screen */
-
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 700px;
+    /* Wider container for grid */
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    margin-top: 30px;
+    margin-bottom: 30px;
 }
 
-.form-control {
-    border-radius: 0.5rem;
-    border-width: 0.5px;
-    border-color: #d4d4d4;
-    /* This is the key: the border exists but is transparent, preventing layout shifts on click */
-    background-color: #ffffff;
-    /* A light gray background to define the input area */
-    transition: border-color 0.20s ease-in-out, background-color 0.15s ease-in-out;
+h1.register-title {
+    font-weight: 700;
+    color: #333;
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
 }
 
-/* === 3. FORM & FOCUS STYLES === */
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.4rem;
+}
+
+.form-control,
+.form-select {
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
 .form-control:focus,
 .form-select:focus {
+    background-color: #fff;
     border-color: #dc3545;
-    /* Standard blue to match the button */
-    border-width: 2px;
     box-shadow: none;
-    /* Remove the glow */
 }
 
-@keyframes popUp {
+.btn-register {
+    padding: 0.8rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 50px;
+    /* Pill shape */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
+/* Split layout helper */
+.row-gap-3 {
+    row-gap: 1rem;
+}
+
+/* === REGISTER FORM TRANSITION === */
+
+@keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: scale(0.8);
+        transform: translateY(20px);
+        /* Starts 20px lower */
     }
 
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0);
+        /* Slides into place */
     }
 }
 
-
-h1 {
-    font-family: Helvetica;
-    font-size: 2rem;
-}
-
-a {
-    text-decoration: none;
-}
-
-.form-label {
-    font-size: small;
-    margin-bottom: 2.5px;
+/* Apply the new animation to the register container */
+.register-container {
+    /* 0.5s is smoother than 0.3s, and ease-out makes it settle gently */
+    animation: fadeInUp 0.5s ease-out;
 }

@@ -7,7 +7,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-header('Content-Type: application/json'); // Tell the browser we are sending JSON
+header('Content-Type: application/json');
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -19,7 +19,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/ALS_LMS/includes/db.php';
 $response = [
     "status" => "error",
     "message" => "An unknown error occurred.",
-    "errors" => [] // For field-specific errors
+    "errors" => []
 ];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -31,7 +31,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirmPassword'] ?? '';
     $role = $_POST['role'] ?? '';
-    $gradeLevel = trim($_POST['gradeLevel'] ?? ''); // Added: Get grade level
+
+    // --- NEW FIELDS ---
+    $gradeLevel = trim($_POST['gradeLevel'] ?? '');
+    $lrn = trim($_POST['lrn'] ?? '');
+    $isAdminVerified = 0; // Default to 0
 
     // --- Start Validation ---
     if (empty($fname)) $response["errors"]["fname"] = "Firstname is required.";
@@ -42,9 +46,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($password)) $response["errors"]["password"] = "Password is required.";
     if (empty($role)) $response["errors"]["role"] = "Role is required.";
 
-    // Added: Validate grade level for students
-    if ($role === 'student' && empty($gradeLevel)) {
-        $response["errors"]["gradeLevel"] = "Grade level is required for students.";
+    // STUDENT SPECIFIC VALIDATION
+    if ($role === 'student') {
+        if (empty($gradeLevel)) {
+            $response["errors"]["gradeLevel"] = "Grade level is required for students.";
+        }
+        // Validate LRN (Must be exactly 12 digits)
+        if (empty($lrn)) {
+            $response["errors"]["lrn"] = "LRN is required.";
+        } elseif (!preg_match('/^[0-9]{12}$/', $lrn)) {
+            $response["errors"]["lrn"] = "LRN must be exactly 12 digits.";
+        }
+
+        $isAdminVerified = 0; // Students are Pending by default
+    } else {
+        // Teachers are Auto-Verified (or handled differently)
+        $isAdminVerified = 1;
+        $gradeLevel = NULL; // Ensure NULL for teachers
+        $lrn = NULL;        // Ensure NULL for teachers
     }
 
     if ($password !== $confirmPassword) {
@@ -57,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $response["errors"]["password"] = "Password must be at least 6 characters.";
     }
 
-    // If there are any errors, stop and send them back
+    // Return errors if any
     if (!empty($response["errors"])) {
         $response["message"] = "Please fix the errors below.";
         echo json_encode($response);
@@ -74,32 +93,42 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($check_result->num_rows > 0) {
         $response["errors"]["email"] = "This email is already registered.";
     } else {
+        // Optional: Check if LRN already exists (to prevent duplicates)
+        if ($role === 'student') {
+            $lrn_check = $conn->prepare("SELECT id FROM users WHERE lrn = ?");
+            $lrn_check->bind_param("s", $lrn);
+            $lrn_check->execute();
+            if ($lrn_check->get_result()->num_rows > 0) {
+                $response["errors"]["lrn"] = "This LRN is already registered.";
+                echo json_encode($response);
+                exit;
+            }
+        }
+
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // --- THIS IS THE NEW LOGIC ---
         // 1. Generate a 6-digit code and expiration time
         $verification_code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $expires_at = date('Y-m-d H:i:s', strtotime('+15 minutes')); // Code is valid for 15 minutes
+        $expires_at = date('Y-m-d H:i:s', strtotime('+30 minutes'));
 
-        // Added: Set grade level to NULL for teachers, or use the provided value for students
-        $gradeLevelValue = ($role === 'student') ? $gradeLevel : NULL;
-
-        // 2. Insert the user with the new code and grade level
+        // 2. Insert the user
+        // UPDATED SQL: Added `lrn` and `is_admin_verified`
         $insert_stmt = $conn->prepare(
-            "INSERT INTO users (fname, lname, address, email, phone, password, role, grade_level, verification_code, code_expires_at, is_verified) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"
+            "INSERT INTO users (fname, lname, address, email, phone, password, role, grade_level, lrn, is_admin_verified, verification_code, code_expires_at, is_verified) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"
         );
-        $insert_stmt->bind_param("ssssssssss", $fname, $lname, $address, $email, $phone, $hashedPassword, $role, $gradeLevelValue, $verification_code, $expires_at);
+        // Type string updated: "sssssssssiss" (added string for lrn, int for is_admin_verified)
+        $insert_stmt->bind_param("sssssssssiss", $fname, $lname, $address, $email, $phone, $hashedPassword, $role, $gradeLevel, $lrn, $isAdminVerified, $verification_code, $expires_at);
 
         if ($insert_stmt->execute()) {
             $mail = new PHPMailer(true);
             try {
-                // --- Server settings (using your provided details) ---
+                // --- Server settings ---
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
                 $mail->Username   = 'als.learning.management.system@gmail.com';
-                $mail->Password   = 'cojk uoaw yjmm imcd'; // Your App Password
+                $mail->Password   = 'cojk uoaw yjmm imcd';
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                 $mail->Port       = 465;
 
@@ -110,18 +139,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // --- Content ---
                 $mail->isHTML(true);
                 $mail->Subject = 'Your ALS Verification Code';
-                // 3. Email the 6-digit code
                 $mail->Body    = "Hi $fname,<br><br>Thank you for registering! Your verification code is:<br><br><h1 style='font-size: 32px; letter-spacing: 5px; text-align: center;'>$verification_code</h1><br>This code will expire in 15 minutes.";
                 $mail->AltBody = "Your verification code is: $verification_code. This code will expire in 15 minutes.";
 
                 $mail->send();
 
-                // 4. Send a new status to the JavaScript
-                $response["status"] = "success_code_sent"; // This is the new status
+                // 4. Send status back
+                $response["status"] = "success_code_sent";
                 $response["message"] = "Registration successful! Please check your email for a verification code.";
-                $response["email"] = $email; // Send the email back
+                $response["email"] = $email;
             } catch (Exception $e) {
-                $response["message"] = "Registration succeeded, but the verification email could not be sent. Please contact support. Mailer Error: " . $mail->ErrorInfo;
+                $response["message"] = "Registration succeeded, but the verification email could not be sent. Mailer Error: " . $mail->ErrorInfo;
             }
         } else {
             $response["message"] = "Database error: " . $insert_stmt->error;
@@ -132,4 +160,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $conn->close();
-echo json_encode($response); // Send the JSON response back to the JavaScript
+echo json_encode($response);
