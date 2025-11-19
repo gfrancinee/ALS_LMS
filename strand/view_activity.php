@@ -67,7 +67,7 @@ $back_link = '/ALS_LMS/strand/strand.php?id=' . ($assessment['strand_id'] ?? 0) 
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <script src="https://cdn.tiny.cloud/1/7xskvh2bu8gio6eivhdb9jhxvgebwjuh180l3ct3sqza4vh5/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.tiny.cloud/1/9936xft73irpm4pgttgwipsbj5lt3506l1lcwr7g518gp4h1/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
         .back-link {

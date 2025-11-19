@@ -1,9 +1,21 @@
 // FINAL COMPLETE CODE for js/teacher.js
 document.addEventListener('DOMContentLoaded', () => {
 
-    if (document.querySelector('textarea#description-editor')) {
+    // 1. For Create Modal
+    if (document.querySelector('#create-description-editor')) {
         tinymce.init({
-            selector: 'textarea#description-editor',
+            selector: '#create-description-editor',
+            plugins: 'lists link image emoticons table code wordcount',
+            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code',
+            height: 300,
+            menubar: false
+        });
+    }
+
+    // 2. For Edit Modal
+    if (document.querySelector('#edit-description-editor')) {
+        tinymce.init({
+            selector: '#edit-description-editor',
             plugins: 'lists link image emoticons table code wordcount',
             toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code',
             height: 300,
@@ -258,6 +270,10 @@ document.addEventListener('DOMContentLoaded', () => {
         createStrandForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
+            if (tinymce.get('create-description-editor')) {
+                tinymce.get('create-description-editor').save();
+            }
+
             fetch('../ajax/create-strand.php', {
                 method: 'POST',
                 body: new FormData(createStrandForm)
@@ -283,49 +299,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 1. Handle "Show Modal" Event
     const editStrandModal = document.getElementById('editStrandModal');
     if (editStrandModal) {
         editStrandModal.addEventListener('show.bs.modal', function (event) {
+            // Get the button that triggered the modal
             const button = event.relatedTarget;
-            editStrandModal.querySelector('#edit-strand-id').value = button.getAttribute('data-strand-id');
-            editStrandModal.querySelector('#edit-strand-title').value = button.getAttribute('data-title');
-            editStrandModal.querySelector('#edit-strand-code').value = button.getAttribute('data-code');
-            editStrandModal.querySelector('#edit-grade-level').value = button.getAttribute('data-grade');
 
-            // Get description directly
+            // Extract info from data-* attributes
+            const id = button.getAttribute('data-strand-id');
+            const title = button.getAttribute('data-title');
+            const code = button.getAttribute('data-code');
+            const grade = button.getAttribute('data-grade');
+
+            // Get the description (safely escaped from PHP)
             const description = button.getAttribute('data-desc') || '';
 
-            console.log('=== DEBUG INFO ===');
-            console.log('Description:', description);
+            // Update standard form fields
+            editStrandModal.querySelector('#edit-strand-id').value = id;
+            editStrandModal.querySelector('#edit-strand-title').value = title;
+            editStrandModal.querySelector('#edit-strand-code').value = code;
+            editStrandModal.querySelector('#edit-grade-level').value = grade;
 
-            // Get the TinyMCE editor instance (should already be initialized)
-            const editor = tinymce.get('description-editor');
-
-            if (editor) {
-                // Editor exists, just update the content
-                editor.setContent(description);
-                console.log('TinyMCE content updated');
-            } else {
-                // Fallback: set textarea value directly
-                const textarea = editStrandModal.querySelector('#description-editor');
-                if (textarea) {
-                    textarea.value = description;
-                }
-                console.log('TinyMCE not found, set textarea value');
+            const textarea = editStrandModal.querySelector('#edit-description-editor');
+            if (textarea) {
+                textarea.value = description;
             }
 
-            console.log('==================');
+            setTimeout(() => {
+                const editor = tinymce.get('edit-description-editor'); // Target new ID
+                if (editor) {
+                    editor.setContent(description);
+                }
+            }, 100);
         });
     }
-
+    // 2. Handle Form Submission
     const editStrandForm = document.getElementById('editStrandForm');
     if (editStrandForm) {
         editStrandForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // Added: Sync TinyMCE content before submitting
-            if (tinymce.get('description-editor')) {
-                tinymce.get('description-editor').save();
+            if (tinymce.get('edit-description-editor')) {
+                tinymce.get('edit-description-editor').save();
             }
 
             fetch('../ajax/edit-strand.php', {
@@ -334,13 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })
                 .then(response => response.json())
                 .then(data => {
-                    // FIXED: Check for success status
                     if (data.status === 'success') {
-                        // REMOVED alert(data.message) here
-                        // Reload the page immediately so PHP can display the session message
+                        // Reload page to see changes
                         location.reload();
                     } else {
-                        // Keep alert for error messages
                         alert(data.message);
                     }
                 })
@@ -350,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         });
     }
+
 
     const deleteStrandModal = document.getElementById('deleteStrandModal');
     if (deleteStrandModal) {

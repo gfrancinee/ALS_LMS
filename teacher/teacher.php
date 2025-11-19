@@ -57,7 +57,7 @@ if ($currentUser) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="css/teacher.css" />
-    <script src="https://cdn.tiny.cloud/1/7xskvh2bu8gio6eivhdb9jhxvgebwjuh180l3ct3sqza4vh5/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.tiny.cloud/1/9936xft73irpm4pgttgwipsbj5lt3506l1lcwr7g518gp4h1/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
     <script src="js/teacher.js" defer></script>
 </head>
 
@@ -264,7 +264,7 @@ if ($currentUser) {
 
                         <div class="mb-3">
                             <label for="description-editor" class="form-label">Description</label>
-                            <textarea id="description-editor" name="description"></textarea>
+                            <textarea id="create-description-editor" name="description"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -301,7 +301,7 @@ if ($currentUser) {
                     </div>
                     <div class="mb-3">
                         <label for="description-editor" class="form-label">Description</label>
-                        <textarea id="description-editor" name="description"></textarea>
+                        <textarea id="edit-description-editor" name="description"></textarea>
                     </div>
                     <input type="hidden" name="strand_id" id="editStrandIdInput" value="">
                 </div>
