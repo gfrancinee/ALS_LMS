@@ -619,6 +619,7 @@ body::-webkit-scrollbar {
         /* Dynamic Width */
         width: 85vw !important;
         max-width: 200px !important;
+        max-height: 200px !important;
 
         margin: 0 !important;
         border-radius: 12px !important;
@@ -629,14 +630,15 @@ body::-webkit-scrollbar {
 
     #notifications-dropdown {
         position: fixed !important;
-        top: 17rem !important;
-        left: 19% !important;
+        top: 14rem !important;
+        left: 39% !important;
 
         transform: translateX(-50%) !important;
 
         /* Dynamic Width */
         width: 85vw !important;
-        max-width: 350px !important;
+        max-width: 200px !important;
+        max-height: 200px !important;
 
         margin: 0 !important;
         border-radius: 12px !important;
