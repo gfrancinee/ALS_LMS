@@ -92,7 +92,7 @@ if ($currentUser) {
                     </div>
                     <hr class="my-2">
                 </div>
-                <div class="list-group list-group-flush" id="conversation-list" style="max-height: 400px; overflow-y: auto;">
+                <div class="list-group list-group-flush" id="conversation-list">
                     <div class="text-center text-muted p-5" id="no-messages-placeholder">
                         No messages yet.
                     </div>

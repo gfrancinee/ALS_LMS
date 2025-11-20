@@ -175,92 +175,95 @@ body {
     animation: fadeInUp 0.5s ease-out;
 }
 
-@media screen and (max-width: 768px) {
+@media screen and (min-width: 768px) and (max-width: 991px) {
     body {
         height: auto;
         min-height: 100vh;
-        /* Ensure background covers everything */
-        background-size: cover;
-        background-position: center;
         background-attachment: scroll;
+        /* Smoother scrolling */
     }
 
     .login-wrapper {
-        /* FORCE CENTER ALIGNMENT */
-        min-height: 100vh;
-        display: flex;
-        align-items: center !important;
-        /* Vertical Center */
-        justify-content: center !important;
-        /* Horizontal Center */
-        padding: 20px;
-        /* Keep some breathing room on edges */
+        padding: 30px;
     }
 
     .login-card {
-        max-width: 100%;
-        /* Allow it to fit smaller screens */
         padding: 2rem;
-    }
-
-    /* CRITICAL FOR IPHONES: Prevents zooming on input focus */
-    .form-control {
-        font-size: 16px !important;
-        padding: 0.7rem 1rem;
+        /* Slightly less padding than desktop */
+        max-width: 400px;
     }
 }
 
-/* --- 2. SMARTPHONES (iPhone 13/14/15, Samsung Galaxy, Pixel) --- 
-   Target: Width 576px and below */
-@media screen and (max-width: 576px) {
+/* --------------------------------------------------------------------------
+   2. MOBILE PHONES (Max 767px)
+   Target: Covers the 360px to 430px range (iPhone 13/14/15, Samsung, etc.)
+   -------------------------------------------------------------------------- */
+@media screen and (max-width: 767px) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        background-attachment: scroll;
+        /* Fix for mobile browsers */
+        padding-bottom: 20px;
+    }
+
     .login-wrapper {
         padding: 15px;
-        /* Slightly tighter edges */
+        align-items: center;
+        /* Keep vertically centered */
     }
 
     .login-card {
         padding: 1.5rem;
-        /* Compact padding inside card */
+        /* Compact padding */
+        width: 95%;
+        /* Use most of screen width */
+        max-width: 100%;
         border-radius: 12px;
     }
 
     .brand-title h1 {
-        font-size: 1.75rem;
+        font-size: 1.4rem;
+        /* Smaller title */
     }
 
     .brand-subtitle {
         font-size: 0.85rem;
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* CRITICAL: Prevents iOS Zoom on Input Focus */
+    .form-control {
+        font-size: 16px !important;
+        padding: 0.7rem 0.8rem;
     }
 
     .btn-login {
-        padding: 0.75rem;
+        padding: 0.7rem;
         font-size: 1rem;
     }
 }
 
-/* --- 3. SMALL IPHONES (iPhone SE, iPhone 8, Older Androids) --- 
-   Target: Width 375px and below */
-@media screen and (max-width: 375px) {
+@media screen and (max-width: 360px) {
     .login-wrapper {
         padding: 10px;
-        /* Minimal edge padding */
     }
 
     .login-card {
         padding: 1.25rem;
-        /* Very compact card */
+        max-width: 350px;
+        /* Even tighter padding */
     }
 
     .brand-title h1 {
-        font-size: 1.5rem;
-    }
-
-    .form-group {
-        margin-bottom: 1rem;
+        font-size: 1.25rem;
     }
 
     .form-label {
+        font-size: 0.8rem;
+    }
+
+    .register-text {
         font-size: 0.8rem;
     }
 }
