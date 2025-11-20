@@ -102,27 +102,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $message_type = 'danger';
         }
 
-        // Handle avatar upload (Unchanged)
+        // Handle avatar upload
         if ($has_file_upload) {
-            $uploadDir = __DIR__ . "/uploads/avatars/";
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
+            // Check File Size (10MB = 10 * 1024 * 1024 bytes)
+            if ($_FILES["avatar_image"]["size"] > 10485760) {
+                $message = "File is too large. Maximum limit is 10MB.";
+                $message_type = 'danger';
+            } else {
+                $uploadDir = __DIR__ . "/uploads/avatars/";
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
 
-            $file_extension = pathinfo($_FILES["avatar_image"]["name"], PATHINFO_EXTENSION);
-            $file_name = "user_" . $user_id . "_" . time() . "." . $file_extension;
-            $target_file_system = $uploadDir . $file_name;
-            $target_file_db = "uploads/avatars/" . $file_name;
+                $file_extension = pathinfo($_FILES["avatar_image"]["name"], PATHINFO_EXTENSION);
+                $file_name = "user_" . $user_id . "_" . time() . "." . $file_extension;
+                $target_file_system = $uploadDir . $file_name;
+                $target_file_db = "uploads/avatars/" . $file_name;
 
-            if (move_uploaded_file($_FILES["avatar_image"]["tmp_name"], $target_file_system)) {
-                $stmt = $conn->prepare("UPDATE users SET avatar_url = ? WHERE id = ?");
-                $stmt->bind_param("si", $target_file_db, $user_id);
-                $stmt->execute();
-                if ($message_type !== 'danger') {
-                    $message = "Profile updated successfully!";
-                    if ($requires_reverification) {
-                        $message .= " (Note: LRN changed. Admin re-verification required.)";
+                if (move_uploaded_file($_FILES["avatar_image"]["tmp_name"], $target_file_system)) {
+                    $stmt = $conn->prepare("UPDATE users SET avatar_url = ? WHERE id = ?");
+                    $stmt->bind_param("si", $target_file_db, $user_id);
+                    $stmt->execute();
+
+                    // Only append success message if previous updates didn't fail
+                    if ($message_type !== 'danger') {
+                        $message = "Profile updated successfully!";
+                        if ($requires_reverification) {
+                            $message .= " (Note: LRN changed. Admin re-verification required.)";
+                        }
                     }
+                } else {
+                    $message = "Error uploading file. Please try again.";
+                    $message_type = 'danger';
                 }
             }
         }
@@ -150,34 +161,6 @@ $avatar_path = !empty($user['avatar_url']) ? htmlspecialchars($user['avatar_url'
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="css/profile.css" />
 
-    <style>
-        /* Floating Modern Alert CSS */
-        .floating-alert {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            min-width: 350px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            border-radius: 50px;
-            border: none;
-            text-align: center;
-            animation: slideDown 0.5s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                top: -100px;
-                opacity: 0;
-            }
-
-            to {
-                top: 20px;
-                opacity: 1;
-            }
-        }
-    </style>
 </head>
 
 <body class="bg-light">
@@ -197,79 +180,100 @@ $avatar_path = !empty($user['avatar_url']) ? htmlspecialchars($user['avatar_url'
 
     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            <div class="col-lg-9">
                 <div class="card shadow-sm profile-card">
-                    <div class="card-header">
-                        <h4 class="mb-0">My Profile</h4>
+                    <div class="profile-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 fw-bold text-dark">My Profile</h4>
+                        <span class="badge bg-light text-dark border"><?= ucfirst($user['role']) ?> Account</span>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
 
                         <form action="profile.php" method="post" enctype="multipart/form-data">
-                            <div class="row">
-                                <div class="col-md-4 text-center">
-                                    <?php if (!empty($avatar_path)): ?>
-                                        <img src="<?= $avatar_path ?>" class="img-thumbnail rounded-circle mb-3" alt="User Avatar" style="width: 150px; height: 150px; object-fit: cover;">
-                                    <?php else: ?>
-                                        <i class="bi bi-person-circle mb-3" style="font-size: 150px; color: #6c757d;"></i>
-                                    <?php endif; ?>
+                            <div class="row g-4">
+                                <div class="col-md-4 text-center border-end">
+                                    <div class="mb-3 position-relative d-inline-block">
+                                        <?php if (!empty($avatar_path)): ?>
+                                            <img src="<?= $avatar_path ?>" class="rounded-circle shadow-sm" alt="User Avatar" style="width: 160px; height: 160px; object-fit: cover; border: 4px solid #fff;">
+                                        <?php else: ?>
+                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 160px; height: 160px;">
+                                                <i class="bi bi-person-fill text-secondary" style="font-size: 80px;"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
                                     <div class="mb-3">
-                                        <label for="avatar_image" class="form-label small">Change Picture</label>
-                                        <input class="form-control form-control-sm" type="file" name="avatar_image" id="avatar_image">
+                                        <label for="avatar_image" class="btn btn-outline-secondary btn-sm w-100">
+                                            <i class="bi bi-camera me-2"></i>Change Photo
+                                        </label>
+                                        <input class="d-none" type="file" name="avatar_image" id="avatar_image" onchange="document.getElementById('file-name').textContent = this.files[0].name">
+                                        <div id="file-name" class="small text-muted mt-2 text-truncate"></div>
+                                    </div>
+
+                                    <div class="text-muted small">
+                                        Allowed: JPG, PNG. Max 10MB.
                                     </div>
                                 </div>
-                                <div class="col-md-8">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
+
+                                <div class="col-md-8 ps-md-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
                                             <label for="fname" class="form-label small">First Name</label>
                                             <input type="text" class="form-control" name="fname" id="fname" value="<?= htmlspecialchars($user['fname']) ?>" required>
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-6">
                                             <label for="lname" class="form-label small">Last Name</label>
                                             <input type="text" class="form-control" name="lname" id="lname" value="<?= htmlspecialchars($user['lname']) ?>" required>
                                         </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label small">Email Address</label>
-                                        <input type="email" class="form-control" name="email" id="email" value="<?= htmlspecialchars($user['email']) ?>" disabled>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="phone" class="form-label small">Phone Number</label>
-                                        <input type="tel" class="form-control" name="phone" id="phone" value="<?= htmlspecialchars($user['phone']) ?>">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="address" class="form-label small">Address</label>
-                                        <textarea class="form-control" name="address" id="address" rows="3"><?= htmlspecialchars($user['address']) ?></textarea>
-                                    </div>
 
-                                    <?php if ($user['role'] === 'student'): ?>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
+                                        <div class="col-md-12">
+                                            <label for="email" class="form-label small">Email Address</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope"></i></span>
+                                                <input type="email" class="form-control border-start-0 bg-light" name="email" id="email" value="<?= htmlspecialchars($user['email']) ?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label for="phone" class="form-label small">Phone Number</label>
+                                            <input type="tel" class="form-control" name="phone" id="phone" value="<?= htmlspecialchars($user['phone']) ?>">
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label for="address" class="form-label small">Address</label>
+                                            <textarea class="form-control" name="address" id="address" rows="2"><?= htmlspecialchars($user['address']) ?></textarea>
+                                        </div>
+
+                                        <?php if ($user['role'] === 'student'): ?>
+                                            <div class="col-md-12">
+                                                <hr class="my-2">
+                                            </div>
+                                            <div class="col-md-6">
                                                 <label for="gradeLevel" class="form-label small">Grade Level</label>
                                                 <select class="form-select" name="gradeLevel" id="gradeLevel">
-                                                    <option value="" <?= empty($user['grade_level']) ? 'selected' : '' ?>>Select your grade level</option>
+                                                    <option value="" <?= empty($user['grade_level']) ? 'selected' : '' ?>>Select Grade</option>
                                                     <option value="grade_11" <?= ($user['grade_level'] === 'grade_11') ? 'selected' : '' ?>>Grade 11</option>
                                                     <option value="grade_12" <?= ($user['grade_level'] === 'grade_12') ? 'selected' : '' ?>>Grade 12</option>
                                                 </select>
                                             </div>
 
-                                            <div class="col-md-6 mb-3">
+                                            <div class="col-md-6">
                                                 <label for="lrn" class="form-label small">LRN (12 Digits)</label>
                                                 <input type="text" class="form-control" name="lrn" id="lrn"
                                                     value="<?= htmlspecialchars($user['lrn'] ?? '') ?>"
                                                     minlength="12" maxlength="12" pattern="[0-9]{12}"
+                                                    placeholder="e.g. 109876543210"
                                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                                <div class="form-text text-muted" style="font-size: 0.75rem;">
-                                                    Changing this will require Admin verification.
-                                                </div>
                                             </div>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
+                                        <?php endif; ?>
+                                    </div>
 
-                            <div class="d-flex justify-content-end">
-                                <a href="<?= $dashboard_link ?>" class="btn btn-secondary rounded-pill px-3 me-2">Back</a>
-                                <button type="submit" class="btn btn-primary rounded-pill px-3"><i class="bi bi-save me-2"></i>Save Changes</button>
+                                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                                        <a href="<?= $dashboard_link ?>" class="btn btn-light text-secondary rounded-pill px-4 me-2 fw-medium">Cancel</a>
+                                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm">
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>

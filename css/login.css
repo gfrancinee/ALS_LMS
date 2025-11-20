@@ -174,3 +174,93 @@ body {
 .login-card {
     animation: fadeInUp 0.5s ease-out;
 }
+
+@media screen and (max-width: 768px) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        /* Ensure background covers everything */
+        background-size: cover;
+        background-position: center;
+        background-attachment: scroll;
+    }
+
+    .login-wrapper {
+        /* FORCE CENTER ALIGNMENT */
+        min-height: 100vh;
+        display: flex;
+        align-items: center !important;
+        /* Vertical Center */
+        justify-content: center !important;
+        /* Horizontal Center */
+        padding: 20px;
+        /* Keep some breathing room on edges */
+    }
+
+    .login-card {
+        max-width: 100%;
+        /* Allow it to fit smaller screens */
+        padding: 2rem;
+    }
+
+    /* CRITICAL FOR IPHONES: Prevents zooming on input focus */
+    .form-control {
+        font-size: 16px !important;
+        padding: 0.7rem 1rem;
+    }
+}
+
+/* --- 2. SMARTPHONES (iPhone 13/14/15, Samsung Galaxy, Pixel) --- 
+   Target: Width 576px and below */
+@media screen and (max-width: 576px) {
+    .login-wrapper {
+        padding: 15px;
+        /* Slightly tighter edges */
+    }
+
+    .login-card {
+        padding: 1.5rem;
+        /* Compact padding inside card */
+        border-radius: 12px;
+    }
+
+    .brand-title h1 {
+        font-size: 1.75rem;
+    }
+
+    .brand-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .btn-login {
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+}
+
+/* --- 3. SMALL IPHONES (iPhone SE, iPhone 8, Older Androids) --- 
+   Target: Width 375px and below */
+@media screen and (max-width: 375px) {
+    .login-wrapper {
+        padding: 10px;
+        /* Minimal edge padding */
+    }
+
+    .login-card {
+        padding: 1.25rem;
+        /* Very compact card */
+    }
+
+    .brand-title h1 {
+        font-size: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+    }
+}

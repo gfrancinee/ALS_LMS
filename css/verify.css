@@ -1,47 +1,155 @@
-/* === 1. BODY & BACKGROUND === */
+/* === 1. BODY & BACKGROUND (Flexbox Centering) === */
 body {
     background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
         url('../img/classroom.jpg');
-    /* Or your classroom image */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
+
+    /* Centering Magic */
     min-height: 100vh;
-    font-family: 'Segoe UI', sans-serif;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    /* Fallback color */
 }
 
-/* === 2. VERIFY CONTAINER (No conflict!) === */
-.verify-container {
-    width: 1000px;
-    /* The "shorter" (narrower) width */
-    max-width: 100%;
-    padding: 2.5rem 2.5rem 1rem 2.5rem;
-    /* This padding will make it "fit the content" */
-
-    /* These styles come from your screenshot */
-    background-color: #ffffff;
-    border-radius: 1rem;
+/* === 2. MAIN CARD STYLING (Combined Modern Design) === */
+/* Note: Using .verify-card as the main styling class */
+.verify-card {
+    background: #ffffff;
+    border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 3rem 2.5rem;
+    border: none;
 
-    /* The correct "fade in down" animation */
+    /* Sizing */
+    width: 100%;
+    max-width: 450px;
+    /* Keeps it compact */
+
+    /* Animation */
     animation: fadeInDown 0.7s ease-out forwards;
 }
 
-/* === 3. INPUT FOCUS STYLE === */
-#verification_code:focus {
-    border-color: #dc3545;
-    /* Red border */
-    border-width: 2px;
-    box-shadow: none;
+/* Legacy support if you used .verify-container class in PHP */
+.verify-container {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 450px;
+    animation: fadeInDown 0.7s ease-out forwards;
 }
 
-/* === 4. ANIMATION DEFINITION === */
+/* === 3. ICONS & HEADER === */
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    background-color: #e7f1ff;
+    color: #0d6efd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+    font-size: 2.5rem;
+}
+
+/* === 4. INPUT FIELDS === */
+.verification-input,
+#verification_code {
+    text-align: center;
+    font-size: 2rem;
+    letter-spacing: 0.75rem;
+    font-weight: 600;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    height: 60px;
+    transition: all 0.3s ease;
+}
+
+/* Focus State */
+.verification-input:focus,
+#verification_code:focus {
+    border-color: #0d6efd;
+    /* Blue border on focus */
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    /* Blue glow */
+    outline: none;
+}
+
+/* === 5. BUTTONS & LINKS === */
+.btn-verify,
+.btn-primary {
+    padding: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.btn-verify:active,
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Pill shape for buttons */
+.rounded-pill {
+    border-radius: 50rem !important;
+}
+
+#resendLink {
+    text-decoration: none;
+    font-weight: 500;
+    color: #6c757d;
+    transition: color 0.2s;
+}
+
+#resendLink:hover {
+    color: #0d6efd;
+    text-decoration: underline;
+}
+
+#resendFeedback {
+    min-height: 24px;
+    font-size: 0.9em;
+    margin-top: 0.5rem;
+}
+
+/* === 6. SUCCESS MODAL === */
+.modal-content.shadow-lg {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.success-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.success-icon i {
+    font-size: 2.5rem !important;
+}
+
+.modal-footer {
+    justify-content: center;
+}
+
+/* === 7. ANIMATIONS === */
 @keyframes fadeInDown {
     from {
         opacity: 0;
         transform: translateY(-20px);
-        /* "fade in down" (from top) */
     }
 
     to {
@@ -50,11 +158,89 @@ body {
     }
 }
 
-#resendLink {
-    text-decoration: none;
+/* =========================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================= */
+
+/* --- 1. TABLETS (iPad Air, iPad Mini) --- 
+   Target: Width 768px and below */
+@media screen and (max-width: 768px) {
+    body {
+        height: auto;
+        /* Allow scrolling */
+        padding: 20px 0;
+        /* Add padding to top/bottom */
+    }
+
+    .verify-card,
+    .verify-container {
+        padding: 2rem;
+        /* Slightly less padding */
+        max-width: 80%;
+        /* Responsive width */
+    }
+
+    /* Fix iOS Zoom on Input Focus */
+    .verification-input,
+    #verification_code {
+        font-size: 1.5rem !important;
+        /* Smaller font, stops zoom */
+    }
 }
 
-/* Optional: Add the underline back on hover so users know it's clickable */
-#resendLink:hover {
-    color: blue;
+/* --- 2. SMARTPHONES (Samsung Galaxy, Pixel, iPhone 13/14/15) --- 
+   Target: Width 576px and below */
+@media screen and (max-width: 576px) {
+
+    .verify-card,
+    .verify-container {
+        max-width: 92%;
+        /* Almost full width */
+        padding: 1.5rem;
+        /* Compact padding */
+        border-radius: 16px;
+    }
+
+    h1.text-center {
+        font-size: 1.5rem;
+        /* Smaller Title */
+    }
+
+    p.text-muted {
+        font-size: 0.9rem;
+    }
+
+    .icon-circle {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Adjust input height for touch */
+    .verification-input,
+    #verification_code {
+        height: 55px;
+        font-size: 1.5rem;
+        letter-spacing: 0.5rem;
+    }
+}
+
+/* --- 3. SMALL IPHONES (iPhone SE, iPhone 8, Older Androids) --- 
+   Target: Width 375px and below */
+@media screen and (max-width: 375px) {
+
+    .verify-card,
+    .verify-container {
+        padding: 1.25rem;
+        /* Minimal padding */
+        border-radius: 12px;
+    }
+
+    .verification-input,
+    #verification_code {
+        letter-spacing: 0.3rem;
+        /* Fit code on tiny screen */
+        font-size: 1.2rem;
+    }
 }

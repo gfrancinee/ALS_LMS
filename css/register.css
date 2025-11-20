@@ -115,3 +115,96 @@ h1.register-title {
     /* 0.5s is smoother than 0.3s, and ease-out makes it settle gently */
     animation: fadeInUp 0.5s ease-out;
 }
+
+@media screen and (max-width: 768px) {
+    body {
+        height: auto;
+        /* Allow scrolling for long form */
+        min-height: 100vh;
+        background-attachment: scroll;
+        /* Performance fix for mobile */
+        padding-bottom: 30px;
+        /* Extra space at bottom for scrolling */
+    }
+
+    .register-container {
+        margin-top: 30px;
+        padding: 2rem;
+        width: 90%;
+        /* Breathing room on sides */
+        max-width: 100%;
+    }
+
+    h1.register-title {
+        font-size: 1.6rem;
+    }
+
+    /* CRITICAL FOR IPHONES: Prevents zooming on input focus */
+    .form-control,
+    .form-select {
+        font-size: 16px !important;
+        padding: 0.7rem;
+    }
+}
+
+/* --- 2. SMARTPHONES (iPhone 13/14/15, Samsung Galaxy, Pixel) --- 
+   Target: Width 576px and below */
+@media screen and (max-width: 576px) {
+    .register-container {
+        padding: 1.5rem;
+        /* Tighter padding */
+        margin-top: 15px;
+        width: 95%;
+        /* Use more screen width */
+        border-radius: 12px;
+    }
+
+    h1.register-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+    }
+
+    /* Make inputs slightly taller for easier tapping */
+    .form-control,
+    .form-select {
+        min-height: 48px;
+    }
+
+    /* Adjust button for touch */
+    .btn-register {
+        padding: 0.85rem;
+        font-size: 1rem;
+    }
+}
+
+/* --- 3. SMALL IPHONES (iPhone SE, iPhone 8, Older Androids) --- 
+   Target: Width 375px and below */
+@media screen and (max-width: 375px) {
+    .register-container {
+        padding: 1.25rem;
+        /* Minimal padding */
+        width: 100%;
+        /* Full width */
+        margin-top: 10px;
+        border-radius: 0;
+        /* Optional: flat edges on tiny screens looks cleaner */
+    }
+
+    h1.register-title {
+        font-size: 1.35rem;
+    }
+
+    /* Reduce gap between stacked inputs */
+    .row-gap-3 {
+        row-gap: 0.8rem;
+    }
+
+    /* Helper text size */
+    .text-muted {
+        font-size: 0.8rem !important;
+    }
+}

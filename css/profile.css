@@ -1,33 +1,152 @@
 .profile-card {
     border: none;
-    box-shadow: 0 0.1rem 1rem rgba(0, 0, 0, 0.1) !important;
-    background-color: #ffffff;
+    border-radius: 15px;
+    overflow: hidden;
 }
 
-.profile-card .card-header {
-    margin-top: 15px;
-    background-color: transparent;
-    border-bottom: none;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-}
-
-.profile-card form .d-flex {
-    padding-top: 1.25rem;
-}
-
-.form-control:focus {
-    border-color: #dc3545;
-    border-width: 2px;
+.profile-header {
     background-color: #fff;
-    /* Return background to white for readability while typing */
-    box-shadow: none;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 1.5rem;
 }
 
+.form-label.small {
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+/* Default State (Unfocused) */
+.form-control,
+.form-select {
+    border: 2px solid #e9ecef;
+    /* Make it 2px here too so layout doesn't shift */
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+}
+
+/* Focus State */
+.form-control:focus,
 .form-select:focus {
     border-color: #dc3545;
-    border-width: 2px;
-    background-color: #fff;
-    /* Return background to white for readability while typing */
+    /* Just change the color to Red */
     box-shadow: none;
+}
+
+.floating-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    min-width: 350px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 50px;
+    border: none;
+    text-align: center;
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        top: -100px;
+        opacity: 0;
+    }
+
+    to {
+        top: 20px;
+        opacity: 1;
+    }
+}
+
+/* =========================================
+   RESPONSIVE MEDIA QUERIES
+   ================================********* */
+
+/* --- 1. TABLETS (iPad Mini, Air, Android Tablets) --- 
+   Targets screens 768px and smaller */
+@media screen and (max-width: 768px) {
+    .container {
+        margin-top: 20px !important;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .profile-header,
+    .card-body {
+        padding: 1.5rem !important;
+        /* Reduce padding slightly */
+    }
+
+    /* CRITICAL FOR IPHONES: 
+       Prevents the browser from zooming in when clicking an input */
+    .form-control,
+    .form-select {
+        font-size: 16px !important;
+    }
+
+    /* Adjust Avatar size for tablets */
+    .col-md-4 img {
+        width: 140px !important;
+        height: 140px !important;
+    }
+}
+
+/* --- 2. SMARTPHONES (Most Androids & standard iPhones) --- 
+   Targets screens 576px and smaller */
+@media screen and (max-width: 576px) {
+
+    /* Fix the Floating Alert width on small screens */
+    .floating-alert {
+        min-width: auto;
+        /* Remove fixed width */
+        width: 90%;
+        /* Take up 90% of screen */
+        font-size: 0.9rem;
+        /* Smaller text */
+        padding: 0.75rem;
+        top: 10px;
+        /* Closer to top */
+    }
+
+    /* Stack the Action Buttons (Back / Save) vertically */
+    form .d-flex.justify-content-end {
+        flex-direction: column-reverse;
+        /* Save on top, Back on bottom */
+        gap: 10px;
+        width: 100%;
+    }
+
+    form .d-flex.justify-content-end .btn {
+        width: 100%;
+        /* Full width buttons */
+        margin-right: 0 !important;
+        /* Remove margin */
+    }
+
+    /* Center the avatar column */
+    .col-md-4 {
+        border-right: none !important;
+        /* Remove side border */
+        border-bottom: 1px solid #e9ecef;
+        /* Add bottom border */
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* --- 3. SMALL PHONES (iPhone SE, Older devices) --- 
+   Targets screens 375px and smaller */
+@media screen and (max-width: 375px) {
+    .profile-header h4 {
+        font-size: 1.25rem;
+        /* Smaller Header Text */
+    }
+
+    .badge {
+        font-size: 0.7rem;
+        /* Smaller Badge */
+    }
 }
