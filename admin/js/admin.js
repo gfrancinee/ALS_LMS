@@ -32,51 +32,65 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessageInput = document.getElementById('chat-message-input');
         let debounceTimer;
 
-        // --- 1. Function to fetch conversations (UPDATED) ---
+        // --- UPDATED fetchConversations FUNCTION (With Loading Spinner) ---
         const fetchConversations = async () => {
+            // 1. Show Loading Spinner immediately
+            conversationList.innerHTML = `
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
             try {
                 const response = await fetch('../ajax/get_conversations.php');
                 const conversations = await response.json();
+
+                // 2. Clear the spinner
                 conversationList.innerHTML = '';
+
                 if (conversations && conversations.length > 0) {
                     conversations.forEach(convo => {
                         const avatarElement = convo.avatar_url
                             ? `<img src="../${convo.avatar_url}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">`
                             : `<i class="bi bi-person-circle me-3" style="font-size: 50px; color: #6c757d;"></i>`;
 
-                        // --- NEW BOLDING LOGIC ---
                         const isUnread = convo.unread_count > 0;
                         const otherUserName = convo.other_user_name;
-                        const lastMessageText = convo.last_message ? (isUnread ? `<strong>${convo.last_message}</strong>` : convo.last_message) : 'No messages yet.';
+                        const lastMessageText = convo.last_message
+                            ? (isUnread ? `<strong>${convo.last_message}</strong>` : convo.last_message)
+                            : 'No messages yet.';
                         const lastMessageTime = convo.last_message_time || '';
-                        // --- END BOLDING LOGIC ---
 
                         const convoItemHTML = `
-                        <a href="#" class="list-group-item list-group-item-action" 
-                           data-conversation-id="${convo.conversation_id}" 
-                           data-user-name="${convo.other_user_name}" 
-                           data-user-avatar="${convo.avatar_url || ''}">
-                           
-                            <div class="d-flex align-items-center">
-                                ${avatarElement}
-                                <div class="flex-grow-1" style="min-width: 0;">
-                                    <div class="d-flex justify-content-between">
-                                        <h6 class="mb-0 text-truncate">${isUnread ? `<strong>${otherUserName}</strong>` : otherUserName}</h6>
-                                        <small class="text-muted flex-shrink-0 ms-2">${isUnread ? `<strong>${lastMessageTime}</strong>` : lastMessageTime}</small>
-                                    </div>
-                                    <p class="mb-0 text-muted text-truncate" style="max-width: 250px;">
-                                        ${lastMessageText}
-                                    </p>
+                    <a href="#" class="list-group-item list-group-item-action" 
+                       data-conversation-id="${convo.conversation_id}" 
+                       data-user-name="${convo.other_user_name}" 
+                       data-user-avatar="${convo.avatar_url || ''}">
+                        
+                        <div class="d-flex align-items-center">
+                            ${avatarElement}
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-0 text-truncate">${isUnread ? `<strong>${otherUserName}</strong>` : otherUserName}</h6>
+                                    <small class="text-muted flex-shrink-0 ms-2">${isUnread ? `<strong>${lastMessageTime}</strong>` : lastMessageTime}</small>
                                 </div>
-                                ${isUnread ? '<span class="badge bg-primary rounded-pill ms-3 p-1"></span>' : ''}
+                                <p class="mb-0 text-muted text-truncate" style="max-width: 250px;">
+                                    ${lastMessageText}
+                                </p>
                             </div>
-                        </a>`;
+                            ${isUnread ? '<span class="badge bg-primary rounded-pill ms-3 p-1"></span>' : ''}
+                        </div>
+                    </a>`;
                         conversationList.insertAdjacentHTML('beforeend', convoItemHTML);
                     });
                 } else {
                     conversationList.innerHTML = '<div class="text-center text-muted p-5" id="no-messages-placeholder">No messages yet.</div>';
                 }
-            } catch (error) { console.error('Fetch conversations failed:', error); }
+            } catch (error) {
+                console.error('Fetch conversations failed:', error);
+                conversationList.innerHTML = '<div class="text-center text-danger p-3">Failed to load messages.</div>';
+            }
         };
 
         // --- 2. Function to show search results (Unchanged) ---

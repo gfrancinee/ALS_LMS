@@ -59,35 +59,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessageInput = document.getElementById('chat-message-input');
         let debounceTimer;
 
-        // --- THIS IS THE UPDATED fetchConversations FUNCTION ---
+        // --- UPDATED fetchConversations FUNCTION (With Loading Spinner) ---
         const fetchConversations = async () => {
+            // 1. Show Loading Spinner immediately
+            conversationList.innerHTML = `
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
             try {
                 const response = await fetch('../ajax/get_conversations.php');
                 const conversations = await response.json();
+
+                // 2. Clear the spinner
                 conversationList.innerHTML = '';
+
                 if (conversations && conversations.length > 0) {
                     conversations.forEach(convo => {
                         const avatarElement = convo.avatar_url
                             ? `<img src="../${convo.avatar_url}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">`
                             : `<i class="bi bi-person-circle me-3" style="font-size: 50px; color: #6c757d;"></i>`;
 
-                        // Check if unread
                         const isUnread = convo.unread_count > 0;
-
-                        // --- NEW BOLDING LOGIC ---
-                        const otherUserName = convo.other_user_name; // This name comes from get_conversations.php
+                        const otherUserName = convo.other_user_name;
                         const lastMessageText = convo.last_message
                             ? (isUnread ? `<strong>${convo.last_message}</strong>` : convo.last_message)
                             : 'No messages yet.';
                         const lastMessageTime = convo.last_message_time || '';
 
-                        // Build the new HTML
                         const convoItemHTML = `
                     <a href="#" class="list-group-item list-group-item-action" 
                        data-conversation-id="${convo.conversation_id}" 
                        data-user-name="${convo.other_user_name}" 
                        data-user-avatar="${convo.avatar_url || ''}">
-                       
+                        
                         <div class="d-flex align-items-center">
                             ${avatarElement}
                             <div class="flex-grow-1" style="min-width: 0;">
@@ -107,7 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     conversationList.innerHTML = '<div class="text-center text-muted p-5" id="no-messages-placeholder">No messages yet.</div>';
                 }
-            } catch (error) { console.error('Fetch conversations failed:', error); }
+            } catch (error) {
+                console.error('Fetch conversations failed:', error);
+                conversationList.innerHTML = '<div class="text-center text-danger p-3">Failed to load messages.</div>';
+            }
         };
 
         const displaySearchResults = (users) => {
@@ -423,42 +433,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const notificationDot = document.getElementById('general-notification-dot');
 
         const fetchNotifications = async () => {
+            // 1. Show Spinner immediately
+            notificationList.innerHTML = `
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
             try {
+                // This calls 'get_notifications.php' which returns a raw array
                 const response = await fetch('../ajax/get_notifications.php');
                 const notifications = await response.json();
 
-                notificationList.innerHTML = ''; // Clear current list
+                notificationList.innerHTML = ''; // Clear spinner
 
                 if (notifications && notifications.length > 0) {
                     notifications.forEach(notif => {
                         const itemClass = notif.is_read == 0 ? 'bg-light' : '';
-                        const link = notif.link ? `../${notif.link}` : '#';
 
-                        // --- FIX #1: Added the count badge logic ---
-                        const countBadge = notif.count > 1 ? `<span class="badge bg-primary rounded-pill">${notif.count}</span>` : '';
+                        // --- FIX #1: Don't add '../' to the link ---
+                        const link = notif.link ? notif.link : '#';
+
+                        // --- FIX #2: Add the count badge logic ---
+                        const countBadge = notif.count > 1 ? `<span class="badge text-danger rounded-pill">${notif.count}</span>` : '';
 
                         const notifHTML = `
                         <a href="${link}" class="list-group-item list-group-item-action ${itemClass}" data-notif-id="${notif.id}">
-                            <div class="d-flex w-100 justify-content-between">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
                                 <p class="mb-1 small">${notif.message}</p>
                                 ${countBadge}
                             </div>
-                            <!-- --- FIX #2: Sorted by updated_at, not created_at --- -->
                             <small class="text-muted">${new Date(notif.updated_at).toLocaleString('en-US', {
                             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
                         })}</small>
-                        </a>
-                    `;
+                        </a>`;
                         notificationList.insertAdjacentHTML('beforeend', notifHTML);
                     });
                 } else {
-                    // Use the placeholder from your HTML
-                    notificationList.innerHTML = '';
-                    notificationList.appendChild(noNotificationsPlaceholder.cloneNode(true));
+                    // This logic is fine and will show your placeholder
+                    notificationList.innerHTML = '<div class="text-center text-muted p-5" id="no-notifications-placeholder">No new notifications.</div>';
                 }
             } catch (error) {
                 console.error("Failed to fetch notifications:", error);
-                notificationList.innerHTML = '<div class="p-3 text-danger">Could not load notifications.</div>';
+                notificationList.innerHTML = '<div class="p-3 text-danger text-center">Could not load notifications.</div>';
             }
         };
 

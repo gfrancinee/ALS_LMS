@@ -83,7 +83,7 @@ if ($currentUser) {
                 <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" id="message-notification-dot"></span>
             </a>
             <div class="dropdown-menu shadow" id="messages-dropdown" aria-labelledby="messages-icon-wrapper">
-                <div class="px-3 pt-2" style="width: 350px;">
+                <div class="px-3 pt-2 message-header-wrapper">
                     <h5 class="mb-0">Messages</h5>
                     <hr class="my-2">
                     <div class="search-wrapper mb-2">
@@ -111,7 +111,7 @@ if ($currentUser) {
                     <h5 class="mb-0">Notifications</h5>
                     <hr class="my-2">
                 </div>
-                <div class="list-group list-group-flush" id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                <div class="list-group list-group-flush" id="notification-list">
                     <div class="text-center text-muted p-5" id="no-notifications-placeholder">
                         No new notifications.
                     </div>

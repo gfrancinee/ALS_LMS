@@ -260,6 +260,125 @@ body::-webkit-scrollbar {
     /* Red border on focus */
 }
 
+#messages-dropdown {
+    position: fixed !important;
+    top: 12rem !important;
+    left: 19% !important;
+
+    transform: translateX(-50%) !important;
+
+    /* Dynamic Width */
+    width: 85vw !important;
+    max-width: 350px !important;
+
+    margin: 0 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    z-index: 1050;
+    /* Ensure it sits on top */
+}
+
+#notifications-dropdown {
+    position: fixed !important;
+    top: 17rem !important;
+    left: 19% !important;
+
+    transform: translateX(-50%) !important;
+
+    /* Dynamic Width */
+    width: 85vw !important;
+    max-width: 350px !important;
+
+    margin: 0 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    z-index: 1050;
+    /* Ensure it sits on top */
+}
+
+/* Default Desktop Width for Dropdowns */
+#messages-dropdown,
+#notifications-dropdown {
+    width: 350px !important;
+    min-width: 350px !important;
+}
+
+.message-header-wrapper {
+    width: 350px;
+    /* Default width for Desktop */
+}
+
+#conversation-list {
+    max-height: 250px;
+    /* Force limit: roughly 5 notifications visible */
+    overflow-y: auto;
+    /* Show scrollbar if needed */
+    overflow-x: hidden;
+}
+
+/* Optional: Make the scrollbar look nicer on Chrome/Edge */
+#conversation-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+#conversation-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#conversation-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#conversation-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* === FIXED HEIGHT FOR NOTIFICATIONS === */
+#notification-list {
+    max-height: 250px;
+    /* Force limit: roughly 5 notifications visible */
+    overflow-y: auto;
+    /* Show scrollbar if needed */
+    overflow-x: hidden;
+}
+
+/* Optional: Make the scrollbar look nicer on Chrome/Edge */
+#notification-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+#notification-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#notification-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#notification-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+#notification-list .badge,
+#conversation-list .badge {
+    align-self: flex-start !important;
+    flex-shrink: 0 !important;
+    margin-top: 4px;
+    /* Align perfectly with text */
+}
+
+/* FIX: Ensure text doesn't overlap badge */
+#notification-list p,
+#conversation-list p {
+    margin-right: 10px;
+    /* Space between text and badge */
+    margin-bottom: 0;
+    word-wrap: break-word;
+    /* Prevent long words breaking layout */
+}
+
 @media screen and (max-width: 992px) {
 
     /* Slightly smaller Header Title */
@@ -426,5 +545,114 @@ body::-webkit-scrollbar {
     .strand-card .badge {
         font-size: 0.6rem !important;
         padding: 0.2em 0.4em !important;
+    }
+}
+
+/* --- DESKTOP & LAPTOP DEFAULT --- */
+/* Keeps dropdowns next to the sidebar, fixed width */
+#messages-dropdown,
+#notifications-dropdown {
+    width: 360px !important;
+    /* Standard wide width */
+    max-width: 360px !important;
+}
+
+/* --- TABLETS & MOBILES (768px and below) --- */
+/* Switch to a "Modal-like" floating style for smaller screens */
+@media screen and (max-width: 768px) {
+
+    #messages-dropdown,
+    #notifications-dropdown {
+        position: fixed !important;
+        top: 75px !important;
+        /* Below the header */
+        left: 50% !important;
+        /* Center Horizontal start */
+        transform: translateX(-50%) !important;
+        /* Center Horizontal adjustment */
+
+        /* Flexible Width Logic */
+        width: 90vw !important;
+        /* Take 90% of screen width */
+        max-width: 350px !important;
+        /* But stop growing at 350px */
+        min-width: 280px !important;
+        /* Don't get too small */
+
+        margin: 0 !important;
+        z-index: 9999 !important;
+        /* Ensure it's on top of everything */
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+        /* Stronger shadow to separate from bg */
+        border-radius: 12px !important;
+    }
+
+    /* Fix: Ensure the internal container matches the parent width */
+    #messages-dropdown>div:first-child,
+    #notifications-dropdown>div:first-child {
+        width: 100% !important;
+    }
+
+    /* Compact Content for Mobile */
+    .search-wrapper input.pill-search {
+        font-size: 14px;
+        height: 40px;
+    }
+
+    #conversation-list,
+    #notification-list {
+        max-height: 300px !important;
+        /* Limit height so it fits on phone screens */
+    }
+}
+
+/* --- SMALL PHONES (480px and below) --- */
+@media screen and (max-width: 480px) {
+
+    #messages-dropdown {
+        position: fixed !important;
+        top: 10rem !important;
+        left: 39% !important;
+
+        transform: translateX(-50%) !important;
+
+        /* Dynamic Width */
+        width: 85vw !important;
+        max-width: 200px !important;
+
+        margin: 0 !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        z-index: 1050;
+        /* Ensure it sits on top */
+    }
+
+    #notifications-dropdown {
+        position: fixed !important;
+        top: 17rem !important;
+        left: 19% !important;
+
+        transform: translateX(-50%) !important;
+
+        /* Dynamic Width */
+        width: 85vw !important;
+        max-width: 350px !important;
+
+        margin: 0 !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        z-index: 1050;
+        /* Ensure it sits on top */
+    }
+
+    /* Shrink text slightly */
+    #conversation-list h6,
+    #notification-list h6 {
+        font-size: 0.9rem;
+    }
+
+    #conversation-list p,
+    #notification-list p {
+        font-size: 0.8rem;
     }
 }
